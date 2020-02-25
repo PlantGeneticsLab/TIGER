@@ -1,0 +1,37 @@
+Author: Fei Lu
+Email: flu@genetics.ac.cn; dr.lufei@gmail.com
+Homepage: http://plantgeneticslab.weebly.com/
+
+#This IlluminaQC pipeline is used to conduct a quality check on Illumina PE raw reads. It estimates the sequence coverage, performs a fastQC analysis, and examine the insert size of library (max: 1000bp).
+#To run the pipeline, the machine should have BWA, FastQC, R, and Java 8 installed. Command (e.g.): java -Xmx20g -jar IlluminaQC.jar parameter.txt > log.txt &
+#Please edit the parameters below and keep the order of parameters.
+
+
+!Parameter1:	Reference genome with BWA index database in the same directory. The reference should be in FastA format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...). Please also include the plastid genomes (mitochondria and chloroplast) as chromosomes adding to the end the chromosome list
+/Users/feilu/Documents/database/maize/reference/bwaLib/maizeAGPv4.fa
+
+!Parameter2:	Mitochondria chromosome ID, -1 means mitochondrial genome is not included.
+11
+
+!Parameter3:	Chloroplast chromosome ID, -1 means chloroplast genome is not included
+12
+
+!Parameter4:	FastQC path
+/Users/feilu/Software/FastQC/fastQC
+
+!Parameter5:	BWA path
+/Users/feilu/Software/bwa-0.7.15/bwa
+
+!Parameter6:	R path
+/usr/local/bin/Rscript
+
+
+!Parameter7:	Input fastq directory, it is assumed that the files are in the form of "Taxon_1.fq.gz" and "Taxon_2.fq.gz"
+/Users/feilu/Documents/analysisL/pipelineTest/maize2k/rawdata
+
+!Parameter8:	Working directory
+/Users/feilu/Documents/analysisL/pipelineTest/maize2k/IlluminaQC/
+
+!Parameter9:	if estimate sequencing coverage, T or F. Without estimating coverage, reads will be sampled from fastq and the analysis will be much faster.
+F
+

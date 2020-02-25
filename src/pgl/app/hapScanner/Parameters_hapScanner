@@ -1,0 +1,24 @@
+HapScanner
+Author: Aoyue Bi, Xuebo Zhao, Fei Lu
+Email: biaoyue17@genetics.ac.cn; xuebozhao@genetics.ac.cn; flu@genetics.ac.cn
+Homepage: http://plantgeneticslab.weebly.com/
+#This program is used to genotype whole genome sequenced (WGS) individuals by scanning an existing haplotype library.
+#The usage is java -Xms10g -Xmx20g -jar HapScanner.jar parameters_hapScanner.txt > log.txt &
+#Please keep the order of following parameters.
+#Note: Only integers can be recegonized for Chr.
+#The taxaRefBam file containing information of taxon and its corresponding refernece genome and bam files. The bam file should have .bai file in the same folder
+/Users/feilu/Documents/analysisL/softwareTest/HapScanner/hapScanner2/TaxaRefBAM
+#The posAllele file (with header), the format is Chr\tPos\tRef\tAlt (from VCF format). The positions come from haplotype library.
+/Users/feilu/Documents/analysisL/softwareTest/HapScanner/hapScanner2/posAllele/chr044.posAllele.txt
+#The pos files (without header), the format is Chr\tPos. The positions come from haplotype library, which is used in mpileup.
+/Users/feilu/Documents/analysisL/softwareTest/HapScanner/hapScanner2/hapPos/chr044.pos.txt
+#The chromosome which will be scanned
+44
+#The path of samtools
+/usr/local/bin/samtools
+#Number of threads
+16
+#The directory of output
+/Users/feilu/Documents/analysisL/softwareTest/HapScanner/hapScanner2/out
+#Combined error rate of sequencing and misalignment. Heterozygous read mapping are more likely to be genotyped as homozygote when the combined error rate is high.
+0.05
