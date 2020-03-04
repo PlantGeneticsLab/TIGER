@@ -1,4 +1,6 @@
 <img src="https://contattafiles.s3.us-west-1.amazonaws.com/tnt22006/DhRSlDOsdlFY6WL/tiger.png" height=100 align="center"> 
 
 # Toolkits Integrated for Genetic and Evolutionary Research
-Code packages and tools developed in the lab to conduct efficient genetic and evolutionary analysis
+*Code packages and apps to conduct efficient genetic and evolutionary analysis*
+
+TIGER are integrated toolkits facilitating research analysis on genetics and evolution. It combines efficiency and flexibility to realize high-performance computation of various types of research analysis. TIGER is a java based program, which is divided into two major packages, “infra” and “app”. The package “infra” means infrastructure. The goal is to develop extremely efficient code/class/packages for low-level bioinformatic computation, for example, table, sequence, DNA, alignment, genotype, popgen utilities, bit operation/storage/conversion, hyperthreading IO, self-structured data storage, etc. The package “app” means application. The goal is to develop various flexible and high-level bioinformatic applications, which run on “infra.” It is like apps run on operating systems in iOS and take advantage of the well-designed system. Currently, available apps include SNP calling from whole genome sequencing, genotyping, kmer analysis, RNA-seq profiling, etc. TIGER will be developed in a long-term basis and new apps will be added in.
