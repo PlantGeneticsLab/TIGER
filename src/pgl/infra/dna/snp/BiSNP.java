@@ -141,7 +141,7 @@ public class BiSNP extends ChrPos {
     public byte getReferenceAlleleByte() {
         return reference.getAlleleByte();
     }
-
+    
     /**
      * Return the base of the reference allele
      * @return
