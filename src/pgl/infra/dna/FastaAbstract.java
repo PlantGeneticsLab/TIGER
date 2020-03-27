@@ -21,7 +21,7 @@ import pgl.infra.utils.IOUtils;
  */
 public abstract class FastaAbstract implements FastaInterface {
     FastaRecordInterface[] records = null;
-    protected enum sortType {byName, byID, byLengthAscending, byLengthDescending}
+    protected enum sortType {byName, byNameValue, byID, byLengthAscending, byLengthDescending}
     sortType sType = null;
     
     @Override
@@ -234,6 +234,12 @@ public abstract class FastaAbstract implements FastaInterface {
     
 
     @Override
+    public void sortByNameValue () {
+        Arrays.parallelSort(records, new sortByName());
+        this.sType = sortType.byNameValue;
+    }
+    
+    @Override
     public void sortByID () {
         Arrays.parallelSort (records, new sortByID());
         this.sType = sortType.byID;
@@ -285,6 +291,17 @@ public abstract class FastaAbstract implements FastaInterface {
         @Override
         public int compare (FastaRecordInterface o1, FastaRecordInterface o2) {
             return o1.getName().compareTo(o2.getName());
+        }
+    }
+    
+    protected class sortByNameValue implements Comparator <FastaRecordInterface> {
+        @Override
+        public int compare (FastaRecordInterface o1, FastaRecordInterface o2) {
+            int n1 = Integer.parseInt(o1.getName());
+            int n2 = Integer.parseInt(o2.getName());
+            if (n1 < n2) return -1;
+            else if (n1 > n2) return 1;
+            return 0;
         }
     }
     

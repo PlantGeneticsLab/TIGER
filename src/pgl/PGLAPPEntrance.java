@@ -5,13 +5,23 @@
  */
 package pgl;
 
+import pgl.app.speedCall.SpeedCall;
+
 /**
  *
  * @author feilu
  */
 public class PGLAPPEntrance {
-    
+
+    public PGLAPPEntrance (String[] args) {
+        //this.speedCall(args);
+    }
+
+    public void speedCall (String[] args) {
+        new SpeedCall(args);
+    }
+
     public static void main (String[] args) {
-        
+        new PGLAPPEntrance(args);
     }
 }

@@ -118,10 +118,16 @@ public interface FastaInterface {
      * @param index 
      */
     public void setName (String newName, int index) ;
+    
     /**
      * Sort the sequences of Fasta by name
      */
     public void sortByName () ;
+    
+    /**
+     * Sort the sequences of Fasta by name as value, e.g. when the names are numbers, 1, 2, 3...
+     */
+    public void sortByNameValue ();
     
     /**
      * Sort the sequences of Fasta by ID
