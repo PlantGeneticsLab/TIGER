@@ -113,6 +113,13 @@ public interface FastaInterface {
     public String getSeq (int index, int startIndex, int endIndex) ;
     
     /**
+     * Return a FastaRecord {@link FastaRecordInterface}
+     * @param index
+     * @return 
+     */ 
+    public FastaRecordInterface getFastaRecord (int index);
+    
+    /**
      * Set sequence name
      * @param newName
      * @param index 

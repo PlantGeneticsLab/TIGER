@@ -67,6 +67,10 @@ public class FastCall {
         this.callSNP(args[0]);
     }
 
+    public FastCall (String parameterFileS) {
+        this.callSNP(parameterFileS);
+    }
+
     public void callSNP (String parameterFileS) {
         ArrayList<String> pLineList = new ArrayList();
         try {

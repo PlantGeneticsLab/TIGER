@@ -19,6 +19,13 @@ import java.util.Arrays;
 public class SequenceByte implements SequenceInterface {
     
     byte[] seqByte = null;
+
+    /**
+     * Construct an object
+     */
+    public SequenceByte () {
+        
+    }
     
     /**
      * Constructs a {@code SequenceByte} from {@code String}. The lower case bases are converted to upper case.
@@ -27,6 +34,10 @@ public class SequenceByte implements SequenceInterface {
      */
     public SequenceByte (String seq) {
         seqByte = seq.toUpperCase().getBytes();
+    }
+    
+    public SequenceByte (byte[] seqByte) {
+        this.seqByte = seqByte;
     }
     
     @Override
@@ -102,7 +113,24 @@ public class SequenceByte implements SequenceInterface {
     public String getSequence(int startIndex, int endIndex) {
         return new String(this.seqByte, startIndex, endIndex-startIndex);
     }
+    
+    @Override
+    public SequenceInterface getSequenceInterface(int startIndex, int endIndex) {
+        return this.getSequenceByte(startIndex, endIndex);
+    }
 
+    /**
+     * Return a {@link SequenceByte} based on positions
+     * @param startIndex inclusive
+     * @param endIndex exclusive
+     * @return
+     */
+    public SequenceByte getSequenceByte (int startIndex, int endIndex) {
+        byte[] bs = new byte[endIndex-startIndex];
+        System.arraycopy(this.seqByte, startIndex, bs, 0, endIndex-startIndex);
+        return new SequenceByte(bs);
+    }
+    
     @Override
     public String getReverseComplementarySeq() {
         return this.getReverseComplementarySeq(0, this.getSequenceLength());

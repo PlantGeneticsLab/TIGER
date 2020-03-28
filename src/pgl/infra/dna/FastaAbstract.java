@@ -217,6 +217,11 @@ public abstract class FastaAbstract implements FastaInterface {
     }
     
     @Override
+    public FastaRecordInterface getFastaRecord(int index) {
+        return this.records[index];
+    }
+    
+    @Override
     public String getSeq (int index, int startIndex, int endIndex) {
         return records[index].getSequence(startIndex, endIndex);
     }
@@ -266,19 +271,6 @@ public abstract class FastaAbstract implements FastaInterface {
         }
         return false;
     }
-    
-    protected interface FastaRecordInterface {
-        public String getName ();
-        public int getID ();
-        public int getSequenceLength ();
-        public String getSequence ();
-        public String getSequence (int startIndex, int endIndex);
-        public void setName (String newName);
-        public void setID (int id);
-        public boolean isThereN();
-        public boolean isThereNonACGTNBase();
-    }
-    
     
     protected class sortByID implements Comparator <FastaRecordInterface> {
         @Override

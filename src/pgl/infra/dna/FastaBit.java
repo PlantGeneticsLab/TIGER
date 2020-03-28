@@ -48,9 +48,9 @@ public class FastaBit extends FastaAbstract {
      * @param ids 
      */
     public FastaBit (String[] names, String[] seqs, int[] ids) {
-        records = new FastaRecord[names.length];
+        records = new FastaRecordBit[names.length];
         for (int i = 0; i < records.length; i++) {
-            records[i] = new FastaRecord(names[i], seqs[i], ids[i]);
+            records[i] = new FastaRecordBit(names[i], seqs[i], ids[i]);
         }
     }
     
@@ -64,7 +64,7 @@ public class FastaBit extends FastaAbstract {
         for (int i = 0; i < fArray.length; i++) {
             size += fArray[i].getSeqNumber();
         }
-        records = new FastaRecord[size];
+        records = new FastaRecordBit[size];
         int cnt = 0;
         for (int i = 0; i < fArray.length; i++) {
             for (int j = 0; j < fArray[i].getSeqNumber(); j++) {
@@ -77,11 +77,35 @@ public class FastaBit extends FastaAbstract {
         }
         sType = sortType.byID;
     }
+
+    /**
+     * Construct an object from a FastaRecord
+     * @param f
+     */
+    public FastaBit (FastaRecordBit f) {
+        records = new FastaRecordBit[1];
+        records[0] = f;
+        records[0].setID(1);
+        sType = sortType.byID;
+    }
+
+    /**
+     * Construct an object from a group of FastaRecord
+     * @param fs
+     */
+    public FastaBit (FastaRecordBit[] fs) {
+        records = new FastaRecordBit[fs.length];
+        for (int i = 0; i < fs.length; i++) {
+            records[i] = fs[i];
+            records[i].setID(i+1);
+        }
+        sType = sortType.byID;
+    }
     
     @Override
     public void readFasta (String infileS, IOFileFormat format) {
         System.out.println("Reading Fasta file...");
-        List<FastaRecord> fl = new ArrayList<>();
+        List<FastaRecordBit> fl = new ArrayList<>();
         try {
             BufferedReader br = null;
             if (format == IOFileFormat.Text) {
@@ -95,14 +119,14 @@ public class FastaBit extends FastaAbstract {
             }
             String temp = null, name = null, seq = null;
             StringBuilder sb = new StringBuilder();
-            FastaRecord fr;
+            FastaRecordBit fr;
             boolean first = true;
             int cnt = 1;
             while ((temp = br.readLine()) != null) {
                 if (temp.startsWith(">")) {
                     if (first == false) {
                         seq = sb.toString();
-                        fr = new FastaRecord(name, seq, cnt);
+                        fr = new FastaRecordBit(name, seq, cnt);
                         fl.add(fr);
                         sb = new StringBuilder();
                         if (cnt%1000000 == 0) {
@@ -119,10 +143,10 @@ public class FastaBit extends FastaAbstract {
             }
             if (!name.equals("")) {
                 seq = sb.toString();
-                fr = new FastaRecord(name, seq, cnt);
+                fr = new FastaRecordBit(name, seq, cnt);
                 fl.add(fr);
             }
-            records = fl.toArray(new FastaRecord[fl.size()]);
+            records = fl.toArray(new FastaRecordBit[fl.size()]);
             sType = sortType.byID;
             System.out.println(records.length + " sequences in the file " + infileS);
         }
@@ -137,42 +161,26 @@ public class FastaBit extends FastaAbstract {
         if (this.sType != sortType.byName) {
             this.sortByName();
         }
-        return Arrays.binarySearch(records, new FastaRecord(name,"A",-1), new sortByName());
+        return Arrays.binarySearch(records, new FastaRecordBit(name,"A",-1), new sortByName());
     }
     
     @Override
     public boolean isThereNonACGTNBase() {
         return false;
     }
-    
-    protected class FastaRecord extends Sequence3Bit implements FastaRecordInterface {
-        String name;
-        int id;
 
-        public FastaRecord (String name, String seq, int id) {
-            super(seq);
-            this.name = name;
-            this.id = id;
-        }
+    /**
+     * Return an FastaRecord
+     * @param index
+     * @return
+     */
+    public FastaRecordBit getFastaRecordBit (int index) {
+        return (FastaRecordBit)this.records[index];
+    }
 
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public int getID() {
-            return id;
-        }
-
-        @Override
-        public void setName(String newName) {
-            name = newName;
-        }
-
-        @Override
-        public void setID(int id) {
-            this.id = id;
-        }
+    public FastaRecordBit getFastaRecordBit (int index, int startPositionIndex, int endPositionIndex) {
+        Sequence3Bit b3 = (Sequence3Bit)this.records[index].getSequenceInterface(startPositionIndex, endPositionIndex);
+        FastaRecordBit frb = new FastaRecordBit(this.getName(index), b3, this.records[index].getID());
+        return frb;
     }
 }

@@ -59,7 +59,7 @@ public interface SequenceInterface {
      * Return the DNA sequence
      * @return 
      */
-    public String getSequence ();
+    public String getSequence();
     
     /**
      * Return a sub DNA sequence
@@ -67,8 +67,16 @@ public interface SequenceInterface {
      * @param endIndex exclusive
      * @return 
      */
-    public String getSequence (int startIndex, int endIndex);
-    
+    public String getSequence(int startIndex, int endIndex);
+
+    /**
+     * Return a sub DNA sequence
+     * @param startIndex inclusive
+     * @param endIndex exclusive
+     * @return
+     */
+    public SequenceInterface getSequenceInterface(int startIndex, int endIndex);
+
     /**
      * Return the reverse complementary sequence
      * @return 

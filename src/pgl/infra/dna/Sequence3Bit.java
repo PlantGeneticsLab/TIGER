@@ -24,6 +24,10 @@ public class Sequence3Bit implements SequenceInterface {
     int sequenceLength;
     protected int wordSize = 3;
     
+    public Sequence3Bit () {
+        
+    }
+    
     /**
      * Constructs the object from DNA sequence {@link java.lang.String}
      * @param seq 
@@ -31,7 +35,16 @@ public class Sequence3Bit implements SequenceInterface {
     public Sequence3Bit (String seq) {
         this.initialize(seq); 
     }
-    
+
+    /**
+     * Construct the object from a BitSet, with 3bits for each base
+     * @param seqS
+     */
+    public Sequence3Bit (BitSet seqS, int sequenceLength) {
+        this.seqS = seqS;
+        this.sequenceLength = sequenceLength;
+    }
+
     /**
      * Constructs the object from DNA sequence {@link java.lang.String}
      * @param seq
@@ -213,6 +226,22 @@ public class Sequence3Bit implements SequenceInterface {
     @Override
     public String getSequence(int startIndex, int endIndex) {
         return new String(getSequenceAscII(startIndex, endIndex));
+    }
+    
+    @Override
+    public SequenceInterface getSequenceInterface(int startIndex, int endIndex) {
+        return this.getSequence3Bit(startIndex, endIndex);
+    }
+
+    /**
+     * Return a {@link Sequence3Bit} based on position
+     * @param startIndex inclusive
+     * @param endIndex exclusive
+     * @return
+     */
+    public Sequence3Bit getSequence3Bit (int startIndex, int endIndex) {
+        BitSet bs = this.seqS.get((startIndex)*this.wordSize, (endIndex)*this.wordSize+1);
+        return new Sequence3Bit (bs, endIndex-startIndex);
     }
     
     /**
