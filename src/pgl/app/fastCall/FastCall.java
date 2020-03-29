@@ -62,11 +62,6 @@ public class FastCall {
     double segregationPValueThresh = 0.001;
     double sequencingErrorRate = 0.1;
 
-    
-    public FastCall (String[] args) {
-        this.callSNP(args[0]);
-    }
-
     public FastCall (String parameterFileS) {
         this.callSNP(parameterFileS);
     }
