@@ -1,0 +1,33 @@
+@App:	FastCall
+@Author:	Fei Lu
+@Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+@Homepage:	https://plantgeneticslab.weebly.com/
+
+#FastCall is designed to perform SNP calling and genotyping of diploid ourcrossing/incrossing species, based on whole-genome sequencing data.
+#To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
+#Command line example. java -Xmx100g -jar TIGER.jar -a FastCall -p parameter_fastcall.txt > log.txt &
+#To specify reference, please edit the the parameters below. Also, please keep the order of parameters.
+
+#Parameter1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
+/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa
+
+#Parameter2:	Taxa bam information file, including the info about what bams are included for each taxon
+/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/inputfile/taxaBamMap.txt
+
+#Parameter3:	Combined error rate from sequencing and alignment. It is 0.05 by default. When the error rate is low, orginal heterozygous genotype has higher likelyhood to be heterozygous, and vice versa.
+0.05
+
+#Parameter4:	P-value threshold of Mendelian segregation test. It is 1 by default. Lower threshold (e.g. 1, the test will be removed) is recommanded if rare alleles are the major interest.
+1
+
+#Parameter5:	Minor allele occurance threshhold, representing the minimum number of taxa where the minor allele exist. It is 2 by default.
+2
+
+#Parameter6:	Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. Region 1bp to 100000bp on chromosome 1 is 1:1,100000)
+1:1,200000
+
+#Parameter7:	VCF output directory
+/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/vcf
+
+#Parameter8:	Number of threads for pileup
+32

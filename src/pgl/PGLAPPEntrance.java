@@ -57,10 +57,10 @@ public class PGLAPPEntrance implements CLIInterface {
             this.printIntroductionAndUsage();
             System.exit(0);
         }
-        if (app.equals("FastCall")) {
+        if (app.equals(AppNames.FastCall.getName())) {
             new FastCall (this.parameterPath);
         }
-        else if (app.equals("HapScanner")) {
+        else if (app.equals(AppNames.HapScanner.getName())) {
             
         }
         else {
