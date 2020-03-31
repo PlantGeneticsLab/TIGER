@@ -26,11 +26,11 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 
 ***
 ## Developer Manual
-Coming soon...
+* [Developer's documentation](https://github.com/PlantGeneticsLab/TIGER/wiki/Developer's-documentation)
 
 ***
 ## Releases
-Coming soon...
+* [V1.0.0](https://github.com/PlantGeneticsLab/TIGER/releases/tag/V1.0.0) 03/31/2020
 
 ***
 ## Citations
