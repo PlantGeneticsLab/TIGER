@@ -3,4 +3,37 @@
 # Toolkits Integrated for Genetic and Evolutionary Research
 *Code packages and apps to conduct efficient genetic and evolutionary analysis*
 
-TIGER is integrated toolkits facilitating research analysis on genetics and evolution. It combines efficiency and flexibility to realize high-performance computation of various types of research analysis. TIGER is a java based program, which is divided into two major packages, “infra” and “app”. The package “infra” means infrastructure. The goal is to develop extremely efficient code/class/packages for low-level bioinformatic computation, for example, table, sequence, DNA, alignment, genotype, popgen utilities, bit operation/storage/conversion, hyperthreading IO, self-structured data storage, etc. The package “app” means application. The goal is to develop various flexible and high-level bioinformatic applications, which run on “infra.” It is like apps run on operating systems in iOS and take advantage of the well-designed system. Currently, available apps include SNP calling from whole genome sequencing, genotyping, kmer analysis, RNA-seq profiling, etc. TIGER will be developed in a long-term basis and new apps will be added in.
+***
+## Overview
+TIGER integrats a collection of toolkits facilitating research analysis on genetics and evolution. It is a Java based program, combining efficiency and flexibility to realize high-performance computation of various types of analysis. 
+
+***
+## Usage
+TIGER is designed to simpliy its usage for the convinience of end users. It has a list of applications (Apps). Each app has a parameter file, where its parameters can be specified in the parameter file. Users can run apps in TIGER by selecting an app and specifify its parameters. TIGER has only two options,  
+* -a, the name of an app  
+* -p, the path of the parameter file 
+
+
+Take running app FastCall as an example, the commnand line is,  
+* java -Xmx100g -jar TIGER.jar -a FastCall -p ./parameter_fastcall.txt > log.txt &
+
+TIGER will be developed in a long-term basis. Detailed usage of apps can be seen below.
+
+***
+## User Manual
+
+* [FastCall](https://github.com/PlantGeneticsLab/TIGER/wiki/FastCall) -Superfast variant calling and genotyping for whole-genome shotgun (WGS) sequencing data.
+
+***
+## Developer Manual
+Coming soon...
+
+***
+## Releases
+Coming soon...
+
+***
+## Citations
+
+* FastCall  
+[Punna Ramu, Williams Esuma, Robert Kawuki, Ismail Y Rabbi, Chiedozie Egesi, Jessen V Bredeson, Rebecca S Bart, Janu Verma, Edward S Buckler, Fei Lu. (2017). Cassava haplotype map highlights fixation of deleterious mutations during clonal propagation. Nature Genetics. doi: 10.1038/ng.3845!](https://www.nature.com/ng/journal/vaop/ncurrent/full/ng.3845.html)
