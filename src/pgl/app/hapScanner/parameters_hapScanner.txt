@@ -3,7 +3,7 @@
 @Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
 @Homepage:	https://plantgeneticslab.weebly.com/
 
-#HapScanner is used to perform genotyping of diploid species from whole genome sequenceing data, based on an existing haplotype library.
+#HapScanner is used to perform genotyping of diploid species from whole genome sequenceing data, based on an existing genetic variation library.
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a HapScanner -p parameter_hapscanner.txt > log.txt &
 #To specify options, please edit the the parameters below. Also, please keep the order of parameters.
@@ -12,7 +12,7 @@
 #If one taxon has n bam files, please list them in n rows.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/hapScanner/inputfile/taxaRefBAM_hapscanner.txt
 
-#Parameter 2: The posAllele file (with header), the format is Chr\tPos\tRef\tAlt (from VCF format). The positions come from haplotype library. 
+#Parameter 2: The posAllele file (with header), the format is Chr\tPos\tRef\tAlt (from VCF format). The positions come from genetic variation library.
 #A maximum of 2 alternative alleles are supported, which is seperated by ",", e.g. A,C.
 #Deletion and insertion are supported, denoted as "D" and "I".
 /Users/feilu/Documents/analysisL/softwareTest/pgl/hapScanner/inputfile/posAllele_hapscanner.txt
