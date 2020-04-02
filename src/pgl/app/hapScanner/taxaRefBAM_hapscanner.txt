@@ -1,0 +1,11 @@
+Taxa	Reference	BamPath
+TW0060	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0060.sub.bam
+TW0061	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0061.sub.bam
+TW0062	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0062.sub.bam
+TW0063	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0063.sub.bam
+TW0064	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0064.sub.bam
+TW0065	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0065.sub.bam
+TW0066	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0066.sub.bam
+TW0067	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0067.sub.bam
+TW0068	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0068.sub.bam
+TW0069	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0069.sub.bam

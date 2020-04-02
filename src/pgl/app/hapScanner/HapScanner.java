@@ -62,137 +62,6 @@ public class HapScanner {
         this.mkFinalVCF();
     }
 
-    /**
-     * Multiple threading for merging VCF, but slow
-     * @deprecated
-     */
-    public void mkFinalVCF2 () {
-        Set<String> taxaSet = taxaBamsMap.keySet();
-        String[] taxa = taxaSet.toArray(new String[taxaSet.size()]);
-        Arrays.sort(taxa);
-        List<String> taxaList = Arrays.asList(taxa);
-        String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
-        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chr)+".vcf.gz").getAbsolutePath();
-        int blockSize = 10000;
-        int actualSize = 100000;
-        String[][] indiVCF = new String[blockSize][taxa.length];
-        String[] blockVCF = new String[blockSize];
-        List<Integer> blockIndexList = new ArrayList<>();
-        for (int i = 0; i < blockSize; i++) {
-            blockIndexList.add(i);
-        }
-        try {
-            BufferedWriter bw = IOUtils.getTextGzipWriter(outfileS);
-            bw.write("##fileformat=VCFv4.1\n");
-            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
-            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">\n");
-            bw.write("##FORMAT=<ID=GL,Number=.,Type=Integer,Description=\"Genotype likelihoods for 0/0, 0/1, 1/1, or  0/0, 0/1, 0/2, 1/1, 1/2, 2/2 if 2 alt alleles\">\n");
-            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
-            bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
-            bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
-            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of ALT alleles in order listed\">\n");
-            bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
-            bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
-            bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
-            bw.write("##ALT=<ID=DEL,Description=\"Deletion\">\n");
-            bw.write("##ALT=<ID=INS,Description=\"Insertion\">\n");
-            bw.write("##HapMapVersion=\"3.2.1\"\n");
-            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
-            for (int i = 0; i < taxa.length; i++) {
-                sb.append("\t").append(taxa[i]);
-            }
-            bw.write(sb.toString());
-            bw.newLine();
-            
-            HashMap<String, Integer> taxaIndexMap = new HashMap<>();
-            BufferedReader[] brs = new BufferedReader[taxa.length];
-            String indiVCFFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
-            for (int i = 0; i < brs.length; i++) {
-                String indiVCFFileS = new File (indiVCFFolderS, taxa[i]+".indi.vcf").getAbsolutePath();
-                brs[i] = IOUtils.getTextReader(indiVCFFileS);
-                taxaIndexMap.put(taxa[i], i);
-            }
-            BufferedReader br = IOUtils.getTextGzipReader(posAlleleFileS);
-            List<String> temList = null;
-            String temp = br.readLine();
-            int cntBlock = 0;
-            int cnt = 0;
-            StringBuilder[] sbs = new StringBuilder[blockSize];
-            String[] alts = new String[blockSize];
-            for (int i = 0; i < sbs.length; i++) {
-                sbs[i] = new StringBuilder();
-            }
-            while ((temp = br.readLine()) != null) {
-                sbs[cntBlock].setLength(0);
-                temList = PStringUtils.fastSplit(temp);
-                sbs[cntBlock].append(temList.get(0)).append("\t").append(temList.get(1)).append("\t").append(temList.get(0)).append("-").append(temList.get(1)).append("\t");
-                sbs[cntBlock].append(temList.get(2)).append("\t").append(temList.get(3)).append("\t.\t.\t");
-                alts[cntBlock] = temList.get(3);
-                cntBlock++;
-                if (cntBlock%blockSize == 0) {
-                    actualSize = blockSize;
-                    this.updateBlockVCF(actualSize, brs, taxaList, blockVCF, taxaIndexMap, indiVCF, alts, blockIndexList);
-                    for (int i = 0; i < actualSize; i++) {
-                        sbs[i].append(blockVCF[i]);
-                        bw.write(sbs[i].toString());
-                        bw.newLine();
-                    }
-                    cntBlock = 0;
-                    for (int i = 0; i < sbs.length; i++) {
-                        sbs[i].setLength(0);
-                    }
-                }
-                cnt++;
-                if (cnt%100000 == 0) System.out.println(String.valueOf(cnt)+" SNPs output to " + outfileS);
-            }
-            if (cntBlock != 0) {
-                actualSize = cntBlock;
-                this.updateBlockVCF(actualSize, brs, taxaList, blockVCF, taxaIndexMap, indiVCF, alts, blockIndexList);
-                for (int i = 0; i < actualSize; i++) {
-                    sbs[i].append(blockVCF[i]);
-                    bw.write(sbs[i].toString());
-                    bw.newLine();
-                }
-                for (int i = 0; i < sbs.length; i++) {
-                    sbs[i].setLength(0);
-                }
-            }
-            bw.flush();
-            bw.close();
-            br.close();
-            for (int i = 0; i < brs.length; i++) {
-                brs[i].close();
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("Final VCF is completed at " + outfileS);
-    }
-    
-    public void updateBlockVCF (int actualSize, BufferedReader[] brs, List<String> taxaList, String[] blockVCF, HashMap<String, Integer> taxaIndexMap, String[][] indiVCF, String[] alts, List<Integer> blockIndexList) {
-        taxaList.parallelStream().forEach(taxon -> {
-            int taxonIndex = taxaIndexMap.get(taxon);
-            try {
-                for (int i = 0; i < actualSize; i++) {
-                    indiVCF[i][taxonIndex] = brs[taxonIndex].readLine();
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-        });
-        blockIndexList.parallelStream().forEach(i -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append(this.getInfo(indiVCF[i], alts[i])).append("\tGT:AD:GL");
-            for (int j = 0; j < indiVCF[i].length; j++) {
-                sb.append("\t").append(indiVCF[i][j]);
-            }
-            blockVCF[i] = sb.toString();
-        });
-    }
-    
     public void mkFinalVCF () {
         Set<String> taxaSet = taxaBamsMap.keySet();
         String[] taxa = taxaSet.toArray(new String[taxaSet.size()]);
@@ -269,7 +138,8 @@ public class HapScanner {
         catch (Exception e) {
             e.printStackTrace();
         }
-        
+        new File(outputDirS, subDirS[0]).delete();
+        new File(outputDirS, subDirS[1]).delete();
         System.out.println("Final VCF is completed at " + outfileS);
     }
     
@@ -477,9 +347,7 @@ public class HapScanner {
                     System.exit(1);
                 }
             });
-        }        
-       
-        
+        }
     }
     
     private String getGenotype (int[] cnt) {
@@ -547,10 +415,10 @@ public class HapScanner {
             BufferedReader br = IOUtils.getTextReader(infileS);
             String temp = null;
             boolean ifOut = false;
-            if (!(temp = br.readLine()).equals("HapScanner")) ifOut = true;
-            if (!(temp = br.readLine()).equals("Author: Aoyue Bi, Xuebo Zhao, Fei Lu")) ifOut = true;
-            if (!(temp = br.readLine()).equals("Email: biaoyue17@genetics.ac.cn; xuebozhao@genetics.ac.cn; flu@genetics.ac.cn")) ifOut = true;
-            if (!(temp = br.readLine()).equals("Homepage: http://plantgeneticslab.weebly.com/")) ifOut = true;
+            if (!(temp = br.readLine()).equals("@App:\tHapScanner")) ifOut = true;
+            if (!(temp = br.readLine()).equals("@Author:\tFei Lu")) ifOut = true;
+            if (!(temp = br.readLine()).equals("@Email:\tflu@genetics.ac.cn; dr.lufei@gmail.com")) ifOut = true;
+            if (!(temp = br.readLine()).equals("@Homepage:\thttps://plantgeneticslab.weebly.com/")) ifOut = true;
             if (ifOut) {
                 System.out.println("Thanks for using HapScanner.");
                 System.out.println("Please keep the authorship in the parameter file. Program stops.");
@@ -570,10 +438,11 @@ public class HapScanner {
         posAlleleFileS = pLineList.get(1);
         posFileS = pLineList.get(2);
         chr = Integer.valueOf(pLineList.get(3));
-        samtoolsPath = pLineList.get(4);
-        this.nThreads = Integer.parseInt(pLineList.get(5));
-        outputDirS = pLineList.get(6);
-        this.combinedErrorRate = Double.parseDouble(pLineList.get(7));
+        this.combinedErrorRate = Double.parseDouble(pLineList.get(4));
+        samtoolsPath = pLineList.get(5);
+        this.nThreads = Integer.parseInt(pLineList.get(6));
+        outputDirS = pLineList.get(7);
+
         new File(outputDirS).mkdir();
         RowTable<String> t = new RowTable<>(taxaRefBamFileS);
         Set<String> taxaSet = new HashSet<>();
@@ -594,8 +463,136 @@ public class HapScanner {
             taxaRefMap.put(key, t.getCell(i, 1));
         }
     }
-    
-    public static void main (String[] args) {
-        new HapScanner(args[0]);
+
+    /**
+     * Multiple threading for merging VCF, but slow
+     * @deprecated
+     */
+    public void mkFinalVCF2 () {
+        Set<String> taxaSet = taxaBamsMap.keySet();
+        String[] taxa = taxaSet.toArray(new String[taxaSet.size()]);
+        Arrays.sort(taxa);
+        List<String> taxaList = Arrays.asList(taxa);
+        String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
+        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chr)+".vcf.gz").getAbsolutePath();
+        int blockSize = 10000;
+        int actualSize = 100000;
+        String[][] indiVCF = new String[blockSize][taxa.length];
+        String[] blockVCF = new String[blockSize];
+        List<Integer> blockIndexList = new ArrayList<>();
+        for (int i = 0; i < blockSize; i++) {
+            blockIndexList.add(i);
+        }
+        try {
+            BufferedWriter bw = IOUtils.getTextGzipWriter(outfileS);
+            bw.write("##fileformat=VCFv4.1\n");
+            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">\n");
+            bw.write("##FORMAT=<ID=GL,Number=.,Type=Integer,Description=\"Genotype likelihoods for 0/0, 0/1, 1/1, or  0/0, 0/1, 0/2, 1/1, 1/2, 2/2 if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
+            bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
+            bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
+            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
+            bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
+            bw.write("##ALT=<ID=DEL,Description=\"Deletion\">\n");
+            bw.write("##ALT=<ID=INS,Description=\"Insertion\">\n");
+            bw.write("##HapMapVersion=\"3.2.1\"\n");
+            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
+            for (int i = 0; i < taxa.length; i++) {
+                sb.append("\t").append(taxa[i]);
+            }
+            bw.write(sb.toString());
+            bw.newLine();
+
+            HashMap<String, Integer> taxaIndexMap = new HashMap<>();
+            BufferedReader[] brs = new BufferedReader[taxa.length];
+            String indiVCFFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+            for (int i = 0; i < brs.length; i++) {
+                String indiVCFFileS = new File (indiVCFFolderS, taxa[i]+".indi.vcf").getAbsolutePath();
+                brs[i] = IOUtils.getTextReader(indiVCFFileS);
+                taxaIndexMap.put(taxa[i], i);
+            }
+            BufferedReader br = IOUtils.getTextGzipReader(posAlleleFileS);
+            List<String> temList = null;
+            String temp = br.readLine();
+            int cntBlock = 0;
+            int cnt = 0;
+            StringBuilder[] sbs = new StringBuilder[blockSize];
+            String[] alts = new String[blockSize];
+            for (int i = 0; i < sbs.length; i++) {
+                sbs[i] = new StringBuilder();
+            }
+            while ((temp = br.readLine()) != null) {
+                sbs[cntBlock].setLength(0);
+                temList = PStringUtils.fastSplit(temp);
+                sbs[cntBlock].append(temList.get(0)).append("\t").append(temList.get(1)).append("\t").append(temList.get(0)).append("-").append(temList.get(1)).append("\t");
+                sbs[cntBlock].append(temList.get(2)).append("\t").append(temList.get(3)).append("\t.\t.\t");
+                alts[cntBlock] = temList.get(3);
+                cntBlock++;
+                if (cntBlock%blockSize == 0) {
+                    actualSize = blockSize;
+                    this.updateBlockVCF(actualSize, brs, taxaList, blockVCF, taxaIndexMap, indiVCF, alts, blockIndexList);
+                    for (int i = 0; i < actualSize; i++) {
+                        sbs[i].append(blockVCF[i]);
+                        bw.write(sbs[i].toString());
+                        bw.newLine();
+                    }
+                    cntBlock = 0;
+                    for (int i = 0; i < sbs.length; i++) {
+                        sbs[i].setLength(0);
+                    }
+                }
+                cnt++;
+                if (cnt%100000 == 0) System.out.println(String.valueOf(cnt)+" SNPs output to " + outfileS);
+            }
+            if (cntBlock != 0) {
+                actualSize = cntBlock;
+                this.updateBlockVCF(actualSize, brs, taxaList, blockVCF, taxaIndexMap, indiVCF, alts, blockIndexList);
+                for (int i = 0; i < actualSize; i++) {
+                    sbs[i].append(blockVCF[i]);
+                    bw.write(sbs[i].toString());
+                    bw.newLine();
+                }
+                for (int i = 0; i < sbs.length; i++) {
+                    sbs[i].setLength(0);
+                }
+            }
+            bw.flush();
+            bw.close();
+            br.close();
+            for (int i = 0; i < brs.length; i++) {
+                brs[i].close();
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Final VCF is completed at " + outfileS);
     }
+
+    public void updateBlockVCF (int actualSize, BufferedReader[] brs, List<String> taxaList, String[] blockVCF, HashMap<String, Integer> taxaIndexMap, String[][] indiVCF, String[] alts, List<Integer> blockIndexList) {
+        taxaList.parallelStream().forEach(taxon -> {
+            int taxonIndex = taxaIndexMap.get(taxon);
+            try {
+                for (int i = 0; i < actualSize; i++) {
+                    indiVCF[i][taxonIndex] = brs[taxonIndex].readLine();
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+        });
+        blockIndexList.parallelStream().forEach(i -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append(this.getInfo(indiVCF[i], alts[i])).append("\tGT:AD:GL");
+            for (int j = 0; j < indiVCF[i].length; j++) {
+                sb.append("\t").append(indiVCF[i][j]);
+            }
+            blockVCF[i] = sb.toString();
+        });
+    }
+
 }

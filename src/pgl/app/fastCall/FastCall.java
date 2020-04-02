@@ -461,7 +461,7 @@ public class FastCall {
             }
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(currentChr).append("\t").append(position).append("\t.\t").append((char)refBase).append("\t");
+        sb.append(currentChr).append("\t").append(position).append("\t").append(currentChr).append("-").append(position).append("\t").append((char)refBase).append("\t");
         for (int i = 0; i < altAllele.length; i++) sb.append(String.valueOf((char)altAllele[altAlleleDepthDesendingIndex[i]])).append(",");
         sb.deleteCharAt(sb.length()-1);
         sb.append("\t.\t.\t").append("DP=").append(totalDepth).append(";AD=").append(refTotalDepth);
@@ -696,7 +696,7 @@ public class FastCall {
             subBamList.parallelStream().forEach(bamFileS -> {
                 String pileupFileS = this.bamPathPileupPathMap.get(bamFileS);
                 StringBuilder sb = new StringBuilder();
-                sb.append("samtools mpileup -A -B -q 30 -Q 10 -f ").append(referenceFileS).append(" ").append(bamFileS).append(" -r ");
+                sb.append("samtools mpileup -A -B -q 30 -Q 20 -f ").append(referenceFileS).append(" ").append(bamFileS).append(" -r ");
                 sb.append(currentChr).append(":").append(startPos).append("-").append(endPos).append(" -o ").append(pileupFileS);
                 String command = sb.toString();
                 //System.out.println(command);

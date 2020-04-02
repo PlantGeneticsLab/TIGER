@@ -6,7 +6,7 @@
 #FastCall is designed to perform SNP calling and genotyping of diploid ourcrossing/incrossing species, based on whole-genome sequencing data.
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a FastCall -p parameter_fastcall.txt > log.txt &
-#To specify reference, please edit the the parameters below. Also, please keep the order of parameters.
+#To specify options, please edit the the parameters below. Also, please keep the order of parameters.
 
 #Parameter1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa

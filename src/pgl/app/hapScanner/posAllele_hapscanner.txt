@@ -1,0 +1,11 @@
+Chr	Pos	Ref	Alt(maximum 2 alternative alleles, which is seperated by ",", e.g. A,C)
+1	7	C	G
+1	12	A	D
+1	33	A	D
+1	37	C	T
+1	38	T	A
+1	48	C	T
+1	56	A	T
+1	364	G	A
+1	492	T	C
+1	661	G	T
