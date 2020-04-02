@@ -23,10 +23,11 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 ## User Manual
 
 * [FastCall](https://github.com/PlantGeneticsLab/TIGER/wiki/FastCall) -Superfast variant calling and genotyping for whole-genome shotgun (WGS) sequencing data.
+* [HapScanner](https://github.com/PlantGeneticsLab/TIGER/wiki/HapScanner) -Superfast genotyper for whole-genome shotgun (WGS) sequencing data, based on an existing genetic variation library.
 
 ***
 ## Developer Manual
-* [Developer's documentation](https://github.com/PlantGeneticsLab/TIGER/wiki/Developer's-documentation)
+* [TIGER Developer Manual](https://docs.google.com/document/d/1BU99b3joz0yItsJi2VabWbl6EyYfJmbo2oGUybl4PoM/edit?usp=sharing)
 
 ***
 ## Releases
@@ -37,3 +38,5 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 
 * FastCall  
 [Punna Ramu, Williams Esuma, Robert Kawuki, Ismail Y Rabbi, Chiedozie Egesi, Jessen V Bredeson, Rebecca S Bart, Janu Verma, Edward S Buckler, Fei Lu. (2017). Cassava haplotype map highlights fixation of deleterious mutations during clonal propagation. Nature Genetics. doi: 10.1038/ng.3845!](https://www.nature.com/articles/ng.3845)
+* HapScanner
+Coming soon.
