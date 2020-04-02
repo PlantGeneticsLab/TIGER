@@ -20,7 +20,7 @@ Take running app FastCall as an example, the commnand line is,
 TIGER will be developed in a long-term basis. Detailed usage of apps can be seen below.
 
 ***
-## User Manual
+## User Manual of Apps
 
 * [FastCall](https://github.com/PlantGeneticsLab/TIGER/wiki/FastCall) -Superfast variant calling and genotyping for whole-genome shotgun (WGS) sequencing data.
 * [HapScanner](https://github.com/PlantGeneticsLab/TIGER/wiki/HapScanner) -Superfast genotyper for whole-genome shotgun (WGS) sequencing data, based on an existing genetic variation library.
