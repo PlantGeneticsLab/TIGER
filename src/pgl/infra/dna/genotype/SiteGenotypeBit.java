@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * Class holding SNP and genotype information per site
+ * Only one alternative allele is supported
  * @author feilu
  */
 public class SiteGenotypeBit extends BiSNP {

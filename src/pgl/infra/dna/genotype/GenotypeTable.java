@@ -172,7 +172,7 @@ public interface GenotypeTable {
      * @param siteIndex
      * @return
      */
-    public float getSiteHeterozygoteFraction (int siteIndex);
+    public double getSiteHeterozygoteFraction (int siteIndex);
 
     /**
      * Return byte value of the minor allele
@@ -182,11 +182,18 @@ public interface GenotypeTable {
     public byte getMinorAlleleByte(int siteIndex);
 
     /**
+     * Return base of the minor allele
+     * @param siteIndex
+     * @return
+     */
+    public char getMinorAlleleBase(int siteIndex);
+
+    /**
      * Return the minor allele frequency
      * @param siteIndex
      * @return
      */
-    public float getMinorAlleleFrequency (int siteIndex);
+    public double getMinorAlleleFrequency (int siteIndex);
 
     /**
      * Return the byte value of the major allele
@@ -194,6 +201,13 @@ public interface GenotypeTable {
      * @return
      */
     public byte getMajorAlleleByte(int siteIndex);
+
+    /**
+     * Return base of the major allele
+     * @param siteIndex
+     * @return
+     */
+    public char getMajorAlleleBase(int siteIndex);
 
     /**
      * Return the major allele frequency
@@ -210,11 +224,18 @@ public interface GenotypeTable {
     public byte getReferenceAlleleByte(int siteIndex);
 
     /**
+     * Return the base of the reference allele
+     * @param siteIndex
+     * @return
+     */
+    public char getReferenceAlleleBase(int siteIndex);
+
+    /**
      * Return the reference allele frequency
      * @param siteIndex
      * @return
      */
-    public float getReferenceAlleleFrequency (int siteIndex);
+    public double getReferenceAlleleFrequency (int siteIndex);
 
     /**
      * Return the byte value of the alternative allele
@@ -224,11 +245,18 @@ public interface GenotypeTable {
     public byte getAlternativeAlleleByte(int siteIndex);
 
     /**
+     * Return base of the alternative allele
+     * @param siteIndex
+     * @return
+     */
+    public char getAlternativeAlleleBase(int siteIndex);
+
+    /**
      * Return the alternative allele frequency
      * @param siteIndex
      * @return
      */
-    public float getAlternativeAlleleFrequency (int siteIndex);
+    public double getAlternativeAlleleFrequency (int siteIndex);
 
     /**
      * Return the start index of a chromosome, inclusive
@@ -244,6 +272,52 @@ public interface GenotypeTable {
      */
     public int getEndIndexOfChromosome (short chromosome);
 
+    /**
+     * Return the genetic divergence of two taxa, Dxy is defined as 1 - IBS (Identify by state)
+     * @param taxonIndex1
+     * @param taxonIndex2
+     * @return Double.NaN if no shared non-missing sites exist
+     */
+    public double getDxy (int taxonIndex1, int taxonIndex2);
+
+    /**
+     * Return the genetic divergence of two taxa in a specified region, Dxy is defined as 1 - IBS (Identify by state)
+     * @param taxonIndex1
+     * @param taxonIndex2
+     * @param startSiteIndex inclusive
+     * @param endSiteIndex exclusive
+     * @return Double.NaN if no shared non-missing sites exist
+     */
+    public double getDxy (int taxonIndex1, int taxonIndex2, int startSiteIndex, int endSiteIndex);
+
+    /**
+     * Return the genetic divergence of two taxa based on a list of sites, Dxy is defined as 1 - IBS (Identify by state)
+     * @param taxonIndex1
+     * @param taxonIndex2
+     * @param siteIndices
+     * @return Double.NaN if no shared non-missing sites exist
+     */
+    public double getDxy (int taxonIndex1, int taxonIndex2, int[] siteIndices);
+
+    /**
+     * Return a matrix of genetic divergence of all taxa based on all sites
+     * @return
+     */
+    public double[][] getDxyMatrix ();
+
+    /**
+     * Return a matrix of genetic divergence of all taxa based on 10K evenly distributed sites
+     * When total site number > 10K, size = 10K; or size = total site number
+     * @return
+     */
+    public double[][] getDxyMatrixFast10K ();
+
+    /**
+     * Return a matrix of genetic divergence of all taxa based selected sites
+     * @param siteIndices
+     * @return
+     */
+    public double[][] getDxyMatrix (int[] siteIndices);
     /**
      * Return a genotype table by sub-setting the current table by sites
      * @param siteIndices

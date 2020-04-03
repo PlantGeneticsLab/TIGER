@@ -1,6 +1,7 @@
 package pgl.infra.dna.genotype;
 
 import pgl.PGLConstraints;
+import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 import pgl.infra.utils.PStringUtils;
@@ -210,7 +211,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public float getSiteHeterozygoteFraction(int siteIndex) {
+    public double getSiteHeterozygoteFraction(int siteIndex) {
         return (float)((double)this.getHeterozygoteNumberBySite(siteIndex)/this.getNonMissingNumberBySite(siteIndex));
     }
     
@@ -220,7 +221,12 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public float getMinorAlleleFrequency(int siteIndex) {
+    public char getMinorAlleleBase(int siteIndex) {
+        return AlleleEncoder.getAlleleBaseFromByte(this.getMinorAlleleByte(siteIndex));
+    }
+
+    @Override
+    public double getMinorAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getMinorAlleleFrequency();
     }
     
@@ -228,7 +234,12 @@ public class GenotypeBit implements GenotypeTable {
     public byte getMajorAlleleByte(int siteIndex) {
         return geno[siteIndex].getMinorAlleleByte();
     }
-    
+
+    @Override
+    public char getMajorAlleleBase(int siteIndex) {
+        return AlleleEncoder.getAlleleBaseFromByte(this.getMinorAlleleByte(siteIndex));
+    }
+
     @Override
     public float getMajorAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getMajorAlleleFrequency();
@@ -240,7 +251,12 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public float getReferenceAlleleFrequency(int siteIndex) {
+    public char getReferenceAlleleBase(int siteIndex) {
+        return AlleleEncoder.getAlleleBaseFromByte(this.getReferenceAlleleByte(siteIndex));
+    }
+
+    @Override
+    public double getReferenceAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getReferenceAlleleFrequency();
     }
     
@@ -250,7 +266,12 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public float getAlternativeAlleleFrequency(int siteIndex) {
+    public char getAlternativeAlleleBase(int siteIndex) {
+        return AlleleEncoder.getAlleleBaseFromByte(this.getAlternativeAlleleByte(siteIndex));
+    }
+
+    @Override
+    public double getAlternativeAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getReferenceAlleleFrequency();
     }
 
@@ -294,6 +315,107 @@ public class GenotypeBit implements GenotypeTable {
             }
             return index+1;
         }
+    }
+
+    @Override
+    public double getDxy(int taxonIndex1, int taxonIndex2) {
+        return this.getDxy(taxonIndex1, taxonIndex2, 0, this.getSiteNumber());
+    }
+
+    @Override
+    public double getDxy(int taxonIndex1, int taxonIndex2, int startSiteIndex, int endSiteIndex) {
+        int size = endSiteIndex - startSiteIndex;
+        int cnt = 0;
+        double dxy = 0;
+        for (int i = 0; i < size; i++) {
+            double dxySite = this.getDxySite(taxonIndex1,taxonIndex2, startSiteIndex+i);
+            if (dxySite == Double.NaN) continue;
+            dxy+=dxySite;
+            cnt++;
+        }
+        return dxy/cnt;
+    }
+
+    @Override
+    public double getDxy(int taxonIndex1, int taxonIndex2, int[] siteIndices) {
+        int cnt = 0;
+        double dxy = 0;
+        for (int i = 0; i < siteIndices.length; i++) {
+            double dxySite = this.getDxySite(taxonIndex1,taxonIndex2, siteIndices[i]);
+            if (dxySite == Double.NaN) continue;
+            dxy+=dxySite;
+            cnt++;
+        }
+        return dxy/cnt;
+    }
+
+    @Override
+    public double[][] getDxyMatrix () {
+        double[][] matrix = new double[this.getTaxaNumber()][this.getTaxaNumber()];
+        List<Integer> indexList = new ArrayList<>();
+        for (int i = 0; i < matrix.length-1; i++) {
+            indexList.add(i);
+        }
+        indexList.parallelStream().forEach(i -> {
+            for (int j = i + 1; j < this.getTaxaNumber(); j++) {
+                matrix[i][j] = this.getDxy(i, j);
+                matrix[j][i] = matrix[i][j];
+            }
+        });
+        return matrix;
+    }
+
+    @Override
+    public double[][] getDxyMatrixFast10K() {
+        int size = 10_000;
+        double[][] matrix = new double[this.getTaxaNumber()][this.getTaxaNumber()];
+        if (this.getSiteNumber() > size) {
+            int[] siteIndices = new int[size];
+            double add = this.getSiteNumber()/size;
+            for (int i = 0; i < size; i++) {
+                siteIndices[i] = (int)(i*add);
+            }
+            return this.getDxyMatrix(siteIndices);
+        }
+        else {
+            return this.getDxyMatrix();
+        }
+    }
+
+    @Override
+    public double[][] getDxyMatrix(int[] siteIndices) {
+        double[][] matrix = new double[this.getTaxaNumber()][this.getTaxaNumber()];
+        List<Integer> indexList = new ArrayList<>();
+        for (int i = 0; i < matrix.length-1; i++) {
+            indexList.add(i);
+        }
+        indexList.parallelStream().forEach(i -> {
+            for (int j = i + 1; j < this.getTaxaNumber(); j++) {
+                matrix[i][j] = this.getDxy(i, j, siteIndices);
+                matrix[j][i] = matrix[i][j];
+            }
+        });
+        return matrix;
+    }
+
+    /**
+     * Return the
+     * @param taxonIndex1
+     * @param taxonIndex2
+     * @param siteIndex
+     * @return Double.NaN if no shared non-missing site available
+     */
+    private double getDxySite (int taxonIndex1, int taxonIndex2, int siteIndex) {
+        if (this.isMissing(taxonIndex1, siteIndex)) return Double.NaN;
+        if (this.isMissing(taxonIndex2, siteIndex)) return Double.NaN;
+        double cnt1 = 0;
+        double cnt2 = 0;
+        if (this.geno[taxonIndex1].isPhase1Alternative(siteIndex)) cnt1++;
+        if (this.geno[taxonIndex1].isPhase2Alternative(siteIndex)) cnt1++;
+        if (this.geno[taxonIndex2].isPhase1Alternative(siteIndex)) cnt2++;
+        if (this.geno[taxonIndex2].isPhase2Alternative(siteIndex)) cnt2++;
+        if (cnt1 > cnt2) return (cnt1-cnt2)/2;
+        return (cnt2-cnt1)/2;
     }
 
     @Override
