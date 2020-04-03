@@ -9,8 +9,8 @@ TIGER integrats a collection of toolkits facilitating research analysis on genet
 
 ***
 ## Usage
-TIGER is designed to simpliy its usage for the convinience of end users. It has a list of applications (Apps). Each app has a parameter file, where its parameters can be specified in the parameter file. Users can run apps in TIGER by selecting an app and specifify its parameters. TIGER has only two options,  
-* -a, the name of an app  
+TIGER is designed to simpliy its usage for the convinience of end users. It has a list of applications (Apps). Each app has a parameter file, where app parameters can be specified in the parameter file. Users can run apps in TIGER by selecting an app and specifify its parameters. TIGER has only two options,  
+* -a, the name of the selected app  
 * -p, the path of the parameter file 
 
 
