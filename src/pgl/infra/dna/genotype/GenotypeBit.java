@@ -143,7 +143,7 @@ public class GenotypeBit implements GenotypeTable {
 
     @Override
     public boolean isMissing(int siteIndex, int taxonIndex) {
-        return geno[siteIndex].isMissing(siteIndex);
+        return geno[siteIndex].isMissing(taxonIndex);
     }
 
     @Override
@@ -329,7 +329,7 @@ public class GenotypeBit implements GenotypeTable {
         double dxy = 0;
         for (int i = 0; i < size; i++) {
             double dxySite = this.getDxySite(taxonIndex1,taxonIndex2, startSiteIndex+i);
-            if (dxySite == Double.NaN) continue;
+            if (Double.isNaN(dxySite)) continue;
             dxy+=dxySite;
             cnt++;
         }
@@ -342,7 +342,7 @@ public class GenotypeBit implements GenotypeTable {
         double dxy = 0;
         for (int i = 0; i < siteIndices.length; i++) {
             double dxySite = this.getDxySite(taxonIndex1,taxonIndex2, siteIndices[i]);
-            if (dxySite == Double.NaN) continue;
+            if (Double.isNaN(dxySite)) continue;
             dxy+=dxySite;
             cnt++;
         }
@@ -410,10 +410,10 @@ public class GenotypeBit implements GenotypeTable {
         if (this.isMissing(taxonIndex2, siteIndex)) return Double.NaN;
         double cnt1 = 0;
         double cnt2 = 0;
-        if (this.geno[taxonIndex1].isPhase1Alternative(siteIndex)) cnt1++;
-        if (this.geno[taxonIndex1].isPhase2Alternative(siteIndex)) cnt1++;
-        if (this.geno[taxonIndex2].isPhase1Alternative(siteIndex)) cnt2++;
-        if (this.geno[taxonIndex2].isPhase2Alternative(siteIndex)) cnt2++;
+        if (this.geno[siteIndex].isPhase1Alternative(taxonIndex1)) cnt1++;
+        if (this.geno[siteIndex].isPhase2Alternative(taxonIndex1)) cnt1++;
+        if (this.geno[siteIndex].isPhase1Alternative(taxonIndex2)) cnt2++;
+        if (this.geno[siteIndex].isPhase2Alternative(taxonIndex2)) cnt2++;
         if (cnt1 > cnt2) return (cnt1-cnt2)/2;
         return (cnt2-cnt1)/2;
     }

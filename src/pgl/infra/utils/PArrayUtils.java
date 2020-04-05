@@ -6,9 +6,7 @@
 
 package pgl.infra.utils;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Random;
+import java.util.*;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -281,4 +279,16 @@ public class PArrayUtils {
         return index;
     }
 
+    /**
+     * Return a list of index with a give size
+     * @param size
+     * @return
+     */
+    public static List<Integer> getIndexList (int size) {
+        List<Integer> l = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            l.add(i);
+        }
+        return l;
+    }
 }

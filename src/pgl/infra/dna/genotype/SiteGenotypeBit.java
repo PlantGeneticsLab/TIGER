@@ -375,7 +375,7 @@ public class SiteGenotypeBit extends BiSNP {
     public ByteBuffer getBinaryOutput (ByteBuffer bb) {
         bb.putShort(this.getChromosome());
         bb.putInt(this.getPosition());
-        bb.put(AlleleEncoder.getGenotypeByte(this.getReferenceAlleleByte(), this.getMinorAlleleByte()));
+        bb.put(AlleleEncoder.getGenotypeByte(this.getReferenceAlleleByte(), this.getAlternativeAlleleByte()));
         bb.put(this.getReferenceAlleleFeature());
         bb.put(this.getAlternativeAlleleFeature());
         int size = (bb.capacity()-GenotypeExport.getByteSizeOfSNPInBinary())/3;
