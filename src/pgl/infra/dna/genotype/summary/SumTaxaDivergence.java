@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SumTaxaDivergence {
-    double[][] dxyMatrix = null;
+    float[][] dxyMatrix = null;
     String[] taxa;
 
     public SumTaxaDivergence (GenotypeTable gt) {

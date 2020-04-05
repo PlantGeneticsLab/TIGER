@@ -211,7 +211,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double getSiteHeterozygoteFraction(int siteIndex) {
+    public float getSiteHeterozygoteFraction(int siteIndex) {
         return (float)((double)this.getHeterozygoteNumberBySite(siteIndex)/this.getNonMissingNumberBySite(siteIndex));
     }
     
@@ -226,7 +226,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double getMinorAlleleFrequency(int siteIndex) {
+    public float getMinorAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getMinorAlleleFrequency();
     }
     
@@ -256,7 +256,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double getReferenceAlleleFrequency(int siteIndex) {
+    public float getReferenceAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getReferenceAlleleFrequency();
     }
     
@@ -271,7 +271,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double getAlternativeAlleleFrequency(int siteIndex) {
+    public float getAlternativeAlleleFrequency(int siteIndex) {
         return geno[siteIndex].getReferenceAlleleFrequency();
     }
 
@@ -318,40 +318,40 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double getDxy(int taxonIndex1, int taxonIndex2) {
+    public float getDxy(int taxonIndex1, int taxonIndex2) {
         return this.getDxy(taxonIndex1, taxonIndex2, 0, this.getSiteNumber());
     }
 
     @Override
-    public double getDxy(int taxonIndex1, int taxonIndex2, int startSiteIndex, int endSiteIndex) {
+    public float getDxy(int taxonIndex1, int taxonIndex2, int startSiteIndex, int endSiteIndex) {
         int size = endSiteIndex - startSiteIndex;
         int cnt = 0;
         double dxy = 0;
         for (int i = 0; i < size; i++) {
-            double dxySite = this.getDxySite(taxonIndex1,taxonIndex2, startSiteIndex+i);
-            if (Double.isNaN(dxySite)) continue;
+            float dxySite = this.getDxySite(taxonIndex1,taxonIndex2, startSiteIndex+i);
+            if (Float.isNaN(dxySite)) continue;
             dxy+=dxySite;
             cnt++;
         }
-        return dxy/cnt;
+        return (float)(dxy/cnt);
     }
 
     @Override
-    public double getDxy(int taxonIndex1, int taxonIndex2, int[] siteIndices) {
+    public float getDxy(int taxonIndex1, int taxonIndex2, int[] siteIndices) {
         int cnt = 0;
         double dxy = 0;
         for (int i = 0; i < siteIndices.length; i++) {
-            double dxySite = this.getDxySite(taxonIndex1,taxonIndex2, siteIndices[i]);
-            if (Double.isNaN(dxySite)) continue;
+            float dxySite = this.getDxySite(taxonIndex1,taxonIndex2, siteIndices[i]);
+            if (Float.isNaN(dxySite)) continue;
             dxy+=dxySite;
             cnt++;
         }
-        return dxy/cnt;
+        return (float)(dxy/cnt);
     }
 
     @Override
-    public double[][] getDxyMatrix () {
-        double[][] matrix = new double[this.getTaxaNumber()][this.getTaxaNumber()];
+    public float[][] getDxyMatrix () {
+        float[][] matrix = new float[this.getTaxaNumber()][this.getTaxaNumber()];
         List<Integer> indexList = new ArrayList<>();
         for (int i = 0; i < matrix.length-1; i++) {
             indexList.add(i);
@@ -366,9 +366,8 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double[][] getDxyMatrixFast10K() {
+    public float[][] getDxyMatrixFast10K() {
         int size = 10_000;
-        double[][] matrix = new double[this.getTaxaNumber()][this.getTaxaNumber()];
         if (this.getSiteNumber() > size) {
             int[] siteIndices = new int[size];
             double add = this.getSiteNumber()/size;
@@ -383,8 +382,8 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public double[][] getDxyMatrix(int[] siteIndices) {
-        double[][] matrix = new double[this.getTaxaNumber()][this.getTaxaNumber()];
+    public float[][] getDxyMatrix(int[] siteIndices) {
+        float[][] matrix = new float[this.getTaxaNumber()][this.getTaxaNumber()];
         List<Integer> indexList = new ArrayList<>();
         for (int i = 0; i < matrix.length-1; i++) {
             indexList.add(i);
@@ -403,19 +402,19 @@ public class GenotypeBit implements GenotypeTable {
      * @param taxonIndex1
      * @param taxonIndex2
      * @param siteIndex
-     * @return Double.NaN if no shared non-missing site available
+     * @return Float.NaN if no shared non-missing site available
      */
-    private double getDxySite (int taxonIndex1, int taxonIndex2, int siteIndex) {
-        if (this.isMissing(taxonIndex1, siteIndex)) return Double.NaN;
-        if (this.isMissing(taxonIndex2, siteIndex)) return Double.NaN;
-        double cnt1 = 0;
-        double cnt2 = 0;
+    private float getDxySite (int taxonIndex1, int taxonIndex2, int siteIndex) {
+        if (this.isMissing(taxonIndex1, siteIndex)) return Float.NaN;
+        if (this.isMissing(taxonIndex2, siteIndex)) return Float.NaN;
+        int cnt1 = 0;
+        int cnt2 = 0;
         if (this.geno[siteIndex].isPhase1Alternative(taxonIndex1)) cnt1++;
         if (this.geno[siteIndex].isPhase2Alternative(taxonIndex1)) cnt1++;
         if (this.geno[siteIndex].isPhase1Alternative(taxonIndex2)) cnt2++;
         if (this.geno[siteIndex].isPhase2Alternative(taxonIndex2)) cnt2++;
-        if (cnt1 > cnt2) return (cnt1-cnt2)/2;
-        return (cnt2-cnt1)/2;
+        if (cnt1 > cnt2) return (float)((double)(cnt1-cnt2)/2);
+        return (float)((double)(cnt2-cnt1)/2);
     }
 
     @Override
