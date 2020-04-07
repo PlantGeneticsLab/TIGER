@@ -1,5 +1,7 @@
 package pgl.infra.dna.genotype;
 
+import pgl.infra.dna.allele.AlleleType;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -105,6 +107,54 @@ public interface GenotypeTable {
     public boolean isMissing (int siteIndex, int taxonIndex);
 
     /**
+     * Return if the allele of phase 1 (homologous chromosome 1) is the alternative allele
+     * @param siteIndex
+     * @param taxonIndex
+     * @return
+     */
+    public boolean isPhase1Alternative (int siteIndex, int taxonIndex);
+
+    /**
+     * Return if the allele of phase 2 (homologous chromosome 2) is the alternative allele
+     * @param siteIndex
+     * @param taxonIndex
+     * @return
+     */
+    public boolean isPhase2Alternative (int siteIndex, int taxonIndex);
+
+    /**
+     * Return if the allele of phase 1 (homologous chromosome 1) is the reference allele
+     * @param siteIndex
+     * @param taxonIndex
+     * @return
+     */
+    public boolean isPhase1Reference (int siteIndex, int taxonIndex);
+
+    /**
+     * Return if the allele of phase 2 (homologous chromosome 1) is the reference allele
+     * @param siteIndex
+     * @param taxonIndex
+     * @return
+     */
+    public boolean isPhase2Reference (int siteIndex, int taxonIndex);
+
+    /**
+     * Return if the alternative allele is a certain allele type
+     * @param at
+     * @param siteIndex
+     * @return
+     */
+    public boolean isAlternativeAlleleTypeOf (AlleleType at, int siteIndex);
+
+    /**
+     * Return if the reference allele is a certain allele type
+     * @param at
+     * @param siteIndex
+     * @return
+     */
+    public boolean isReferenceAlleleTypeOf (AlleleType at, int siteIndex);
+
+    /**
      * Return the total number of missing genotype at a specific site
      * @param siteIndex
      * @return
@@ -159,6 +209,13 @@ public interface GenotypeTable {
      * @return
      */
     public int getHeterozygoteNumberByTaxon (int taxonIndex);
+
+    /**
+     * Return the total number of alternative allele at a specific site
+     * @param siteIndex
+     * @return
+     */
+    public int getAlternativeAlleleNumberBySite (int siteIndex);
 
     /**
      * Return the heterozygosity of a specific taxon
@@ -306,11 +363,12 @@ public interface GenotypeTable {
     public float[][] getDxyMatrix ();
 
     /**
-     * Return a matrix of genetic divergence of all taxa based on 10K evenly distributed sites
-     * When total site number > 10K, size = 10K; or size = total site number
+     * Return a matrix of genetic divergence of all taxa of a specified region
+     * @param startIndex
+     * @param endIndex
      * @return
      */
-    public float[][] getDxyMatrixFast10K ();
+    public float[][] getDxyMatrix (int startIndex, int endIndex);
 
     /**
      * Return a matrix of genetic divergence of all taxa based selected sites
@@ -318,15 +376,16 @@ public interface GenotypeTable {
      * @return
      */
     public float[][] getDxyMatrix (int[] siteIndices);
+
     /**
-     * Return a genotype table by sub-setting the current table by sites
+     * Return a new genotype table by sub-setting the current table by sites
      * @param siteIndices
      * @return
      */
     public GenotypeTable getSubGenotypeTableBySite (int[] siteIndices);
 
     /**
-     * Return a genotype table by sub-setting the current table by taxa
+     * Return a new genotype table by sub-setting the current table by taxa
      * @param taxaIndices
      * @return
      */
@@ -345,4 +404,18 @@ public interface GenotypeTable {
      * @return
      */
     ByteBuffer getBinaryOutput(int index, ByteBuffer bb);
+
+    /**
+     * Set the alternative allele to a specified allele type
+     * @param at
+     * @param siteIndex
+     */
+    public void setAlternativeAlleleType (AlleleType at, int siteIndex);
+
+    /**
+     * Set the reference allele to a specified allele type
+     * @param at
+     * @param siteIndex
+     */
+    public void setReferenceAlleleType (AlleleType at, int siteIndex);
 }

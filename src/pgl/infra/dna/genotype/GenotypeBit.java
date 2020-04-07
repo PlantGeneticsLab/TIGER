@@ -2,6 +2,7 @@ package pgl.infra.dna.genotype;
 
 import pgl.PGLConstraints;
 import pgl.infra.dna.allele.AlleleEncoder;
+import pgl.infra.dna.allele.AlleleType;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 import pgl.infra.utils.PStringUtils;
@@ -59,7 +60,7 @@ public class GenotypeBit implements GenotypeTable {
             this.buildFromBinary(infileS);
         }
         else if (format == GenoIOFormat.HDF5) {
-            this.buildFromHDF5(infileS);
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
 
@@ -147,6 +148,36 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
+    public boolean isPhase1Alternative(int siteIndex, int taxonIndex) {
+        return geno[siteIndex].isPhase1Alternative(taxonIndex);
+    }
+
+    @Override
+    public boolean isPhase2Alternative(int siteIndex, int taxonIndex) {
+        return geno[siteIndex].isPhase2Alternative(taxonIndex);
+    }
+
+    @Override
+    public boolean isPhase1Reference(int siteIndex, int taxonIndex) {
+        return geno[siteIndex].isPhase1Reference(taxonIndex);
+    }
+
+    @Override
+    public boolean isPhase2Reference(int siteIndex, int taxonIndex) {
+        return geno[siteIndex].isPhase2Reference(taxonIndex);
+    }
+
+    @Override
+    public boolean isAlternativeAlleleTypeOf(AlleleType at, int siteIndex) {
+        return geno[siteIndex].isAlternativeAlleleTypeOf(at);
+    }
+
+    @Override
+    public boolean isReferenceAlleleTypeOf(AlleleType at, int siteIndex) {
+        return geno[siteIndex].isReferenceAlleleTypeOf(at);
+    }
+
+    @Override
     public int getSiteIndex(short chromosome, int position) {
         ChrPos query = new ChrPos (chromosome, position);
         int index = Arrays.binarySearch(geno, query);
@@ -204,7 +235,12 @@ public class GenotypeBit implements GenotypeTable {
         }
         return cnt;
     }
-    
+
+    @Override
+    public int getAlternativeAlleleNumberBySite(int siteIndex) {
+        return geno[siteIndex].getAlternativeAlleleNumber();
+    }
+
     @Override
     public float getTaxonHeterozygosity(int taxonIndex) {
         return (float)((double)this.getHeterozygoteNumberByTaxon(taxonIndex)/this.getNonMissingNumberByTaxon(taxonIndex));
@@ -286,6 +322,16 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
+    public void setAlternativeAlleleType(AlleleType at, int siteIndex) {
+        geno[siteIndex].setAlternativeAlleleType(at);
+    }
+
+    @Override
+    public void setReferenceAlleleType(AlleleType at, int siteIndex) {
+        geno[siteIndex].setReferenceAlleleType(at);
+    }
+
+    @Override
     public int getStartIndexOfChromosome(short chromosome) {
         int index = this.getSiteIndex(chromosome, Integer.MIN_VALUE);
         if (index < 0) {
@@ -351,6 +397,11 @@ public class GenotypeBit implements GenotypeTable {
 
     @Override
     public float[][] getDxyMatrix () {
+        return this.getDxyMatrix(0, this.getSiteNumber());
+    }
+
+    @Override
+    public float[][] getDxyMatrix(int startIndex, int endIndex) {
         float[][] matrix = new float[this.getTaxaNumber()][this.getTaxaNumber()];
         List<Integer> indexList = new ArrayList<>();
         for (int i = 0; i < matrix.length-1; i++) {
@@ -358,14 +409,13 @@ public class GenotypeBit implements GenotypeTable {
         }
         indexList.parallelStream().forEach(i -> {
             for (int j = i + 1; j < this.getTaxaNumber(); j++) {
-                matrix[i][j] = this.getDxy(i, j);
+                matrix[i][j] = this.getDxy(i, j, startIndex, endIndex);
                 matrix[j][i] = matrix[i][j];
             }
         });
         return matrix;
     }
 
-    @Override
     public float[][] getDxyMatrixFast10K() {
         int size = 10_000;
         if (this.getSiteNumber() > size) {
@@ -442,14 +492,6 @@ public class GenotypeBit implements GenotypeTable {
             nGeno[index] = geno[index].getSubGenotypeByTaxa(taxaIndices);
         });
         return new GenotypeBit(nGeno, nTaxa);
-    }
-
-    /**
-     * Reader of an HDF5 file
-     * @param infileS
-     */
-    private void buildFromHDF5 (String infileS) {
-
     }
 
     /**

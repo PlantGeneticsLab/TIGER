@@ -182,10 +182,26 @@ public class BiSNP extends ChrPos {
     }
 
     /**
+     * Return the annotation information of the SNP
+     * @return
+     */
+    public String getSNPInfo () {
+        return this.info;
+    }
+
+    /**
      * Set the information of the current SNP
      * @param info
      */
     public void setSNPInfo (String info) {
         this.info = info;
+    }
+
+    /**
+     * Make a copy of the current object, without allele feature replicated (initialized to 0)
+     * @return
+     */
+    public BiSNP replicateWithoutFeature() {
+        return new BiSNP(this.getChromosome(), this.getPosition(), this.getReferenceAlleleBase(), this.getAlternativeAlleleBase(), this.getSNPInfo());
     }
 }

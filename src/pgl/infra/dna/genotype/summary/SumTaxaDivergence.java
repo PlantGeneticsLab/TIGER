@@ -15,7 +15,7 @@ public class SumTaxaDivergence {
     String[] taxa;
 
     public SumTaxaDivergence (GenotypeTable gt) {
-        dxyMatrix = gt.getDxyMatrixFast10K();
+        dxyMatrix = gt.getDxyMatrix();
         taxa = gt.getTaxaNames();
     }
 
