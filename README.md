@@ -5,7 +5,7 @@
 
 ***
 ## Overview
-TIGER integrats a collection of toolkits facilitating research analysis on genetics and evolution. It is a Java based program, combining efficiency and flexibility to realize high-performance computation of various types of analysis. 
+TIGER integrates a collection of toolkits facilitating research analysis on genetics and evolution. It is a Java based program, combining efficiency and flexibility to realize high-performance computation of various types of analysis. 
 
 ***
 ## Usage
