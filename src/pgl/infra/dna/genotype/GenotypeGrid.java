@@ -663,6 +663,9 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
         catch (Exception e) {
             e.printStackTrace();
         }
+        this.transposeSiteToTaxon();
+        mafs = new float[this.getSiteNumber()];
+        Arrays.fill(mafs, Float.MIN_VALUE);
     }
 
     private void buildFromVCF (String infileS) {

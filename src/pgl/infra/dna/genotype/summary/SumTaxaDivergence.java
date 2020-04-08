@@ -1,13 +1,14 @@
 package pgl.infra.dna.genotype.summary;
 
+import pgl.infra.dna.genotype.GenotypeBit;
+import pgl.infra.dna.genotype.GenotypeGrid;
 import pgl.infra.dna.genotype.GenotypeTable;
+import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.IOFileFormat;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SumTaxaDivergence {
@@ -15,33 +16,45 @@ public class SumTaxaDivergence {
     String[] taxa;
 
     public SumTaxaDivergence (GenotypeTable gt) {
-        dxyMatrix = gt.getDxyMatrix();
+        long start = System.nanoTime();
+        if (gt instanceof GenotypeGrid) {
+            dxyMatrix = gt.getDxyMatrix();
+        }
+        else if (gt instanceof GenotypeBit) {
+            dxyMatrix = ((GenotypeBit) gt).getDxyMatrixFast10K();
+        }
+        else {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        StringBuilder sb = new StringBuilder("Dxy matrix calculation takes ");
+        sb.append(Benchmark.getTimeSpanSeconds(start)).append(" seconds");
+        System.out.println(sb.toString());
         taxa = gt.getTaxaNames();
     }
 
-    private String getSumHeader () {
-        StringBuilder sb = new StringBuilder("SumTaxaDivergence");
+    private String getDxyMatrixHeader() {
+        StringBuilder sb = new StringBuilder("Dxy");
         for (int i = 0; i < taxa.length; i++) {
             sb.append("\t").append(taxa[i]);
         }
         return sb.toString();
     }
 
-    public String[] getSumContent () {
+    private String[] getDxyMatrixLine() {
         String[] content = new String[taxa.length];
         List<Integer> l = PArrayUtils.getIndexList(taxa.length);
         l.parallelStream().forEach(i ->{
             StringBuilder sb = new StringBuilder();
             sb.append(taxa[i]);
             for (int j = 0; j < taxa.length; j++) {
-                sb.append("\t").append((float)dxyMatrix[i][j]);
+                sb.append("\t").append(String.format("%.3f", dxyMatrix[i][j]));
             }
             content[i] = sb.toString();
         });
         return content;
     }
 
-    public void writeSummary (String outfileS, IOFileFormat format) {
+    public void writeDxyMatrix(String outfileS, IOFileFormat format) {
         try {
             BufferedWriter bw = null;
             if (format == IOFileFormat.Text) {
@@ -53,9 +66,9 @@ public class SumTaxaDivergence {
             else {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
-            bw.write(this.getSumHeader());
+            bw.write(this.getDxyMatrixHeader());
             bw.newLine();
-            String[] content = this.getSumContent();
+            String[] content = this.getDxyMatrixLine();
             for (int i = 0; i < content.length; i++) {
                 bw.write(content[i]);
                 bw.newLine();
@@ -68,5 +81,4 @@ public class SumTaxaDivergence {
             System.exit(0);
         }
     }
-
 }
