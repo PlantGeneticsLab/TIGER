@@ -8,8 +8,15 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+/**
+ * Multithreading reading facilities of {@link GenotypeGrid}
+ * <p>
+ * Support VCF format, see {@link GenoIOFormat}
+ *
+ * @author feilu
+ */
 public class GenoSiteBlockVCF implements Callable<GenoSiteBlockVCF> {
-    public static int blockSize = 4096;
+    public static final int blockSize = 4096;
     List<String> lines = null;
     int startIndex = Integer.MIN_VALUE;
     int actBlockSize = Integer.MIN_VALUE;

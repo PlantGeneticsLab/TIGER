@@ -8,6 +8,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 
+/**
+ * Data output utilities for genotype object implemented {@link GenotypeTable}
+ *
+ * @author feilu
+ */
 public class GenotypeExport {
 
     public static void output(GenotypeTable gt, String outfileS, GenoIOFormat format) {
@@ -59,12 +64,21 @@ public class GenotypeExport {
             e.printStackTrace();
         }
     }
-    
+
+    /**
+     * Return the number of byte for a {@link pgl.infra.dna.snp.BiSNP}
+     * @return
+     */
     public static int getByteSizeOfSNPInBinary () {
         //short chr, int pos, genotype (ref+alt), byte feature *2
         return 9;
     }
-    
+
+    /**
+     * Return the number of byte for genotype of a site (chr, pos, ref+alt, alternative at phase 1 and phase 2, and missing)
+     * @param taxaNumber
+     * @return
+     */
     public static int getByteSizeOfSiteInBinary (int taxaNumber) {
         //short chr, int pos, genotype (ref+alt), byte feature *2, BitSet phase1, BitSet phase2, BitSet missing
         int n = getByteSizeOfSNPInBinary();

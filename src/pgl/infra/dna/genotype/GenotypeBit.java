@@ -20,8 +20,13 @@ import java.util.concurrent.TimeUnit;
 import pgl.infra.position.ChrPos;
 
 /**
- * The bit version implementation of a genotype table
- * see {@link GenotypeTable}
+ * The bit version implementation of a genotype table, see {@link GenotypeTable}
+ * <p>
+ * The class implements bitset genotype by site, which means it is smaller than {@link GenotypeGrid} in memory,
+ * but slower in taxon based calculation, e.g. matrix of genetic divergence between taxa
+ * <p>
+ *  * Supports only bi-allelic SNPs, 3rd+ allele will be ignored. Allele depth is ignored.
+ *
  * @author feilu
  */
 public class GenotypeBit implements GenotypeTable {
@@ -448,7 +453,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     /**
-     * Return the
+     * Return the dxy bwteen two taxa at a specific site
      * @param taxonIndex1
      * @param taxonIndex2
      * @param siteIndex
@@ -495,7 +500,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     /**
-     * Reader of a binary genotype file
+     * Build an object from a binary genotype file
      * @param infileS
      */
     private void buildFromBinary (String infileS) {
@@ -564,7 +569,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     /**
-     * Class for parallel reading in binary
+     * Class for parallel reading in a binary genotype file
      */
     class SGBBlockBinary implements Callable<SGBBlockBinary> {
         public static final int blockSize = 4096;
@@ -603,7 +608,7 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     /**
-     * Reader of an VCF file
+     * Build an object from a VCF file
      * @param infileS
      */
     private void buildFromVCF (String infileS) {
@@ -672,39 +677,39 @@ public class GenotypeBit implements GenotypeTable {
             e.printStackTrace();
         }
     }
-}
 
-/**
- * Class for parallel reading in VCF
- */
-class SGBBlockVCF implements Callable<SGBBlockVCF> {
-    public static int blockSize = 4096;
-    List<String> lines = null;
-    int startIndex = Integer.MIN_VALUE;
-    int actBlockSize = Integer.MIN_VALUE;
-    SiteGenotypeBit[] sgbArray = null;
+    /**
+     * Class for parallel reading in VCF
+     */
+    class SGBBlockVCF implements Callable<SGBBlockVCF> {
+        public static final int blockSize = 4096;
+        List<String> lines = null;
+        int startIndex = Integer.MIN_VALUE;
+        int actBlockSize = Integer.MIN_VALUE;
+        SiteGenotypeBit[] sgbArray = null;
 
-    public SGBBlockVCF (List<String> lines, int startIndex) {
-        this.lines = lines;
-        this.startIndex = startIndex;
-        this.actBlockSize = lines.size();
-    }
-
-    public int getStartIndex () {
-        return this.startIndex;
-    }
-
-    public SiteGenotypeBit[] getSiteGenotypes () {
-        return this.sgbArray;
-    }
-
-    @Override
-    public SGBBlockVCF call() throws Exception {
-        this.sgbArray = new SiteGenotypeBit[this.actBlockSize];
-        for (int i = 0; i < this.actBlockSize; i++) {
-            sgbArray[i] = SiteGenotypeBit.buildFromVCFLine(lines.get(i));
+        public SGBBlockVCF (List<String> lines, int startIndex) {
+            this.lines = lines;
+            this.startIndex = startIndex;
+            this.actBlockSize = lines.size();
         }
-        lines = null;
-        return this;
+
+        public int getStartIndex () {
+            return this.startIndex;
+        }
+
+        public SiteGenotypeBit[] getSiteGenotypes () {
+            return this.sgbArray;
+        }
+
+        @Override
+        public SGBBlockVCF call() throws Exception {
+            this.sgbArray = new SiteGenotypeBit[this.actBlockSize];
+            for (int i = 0; i < this.actBlockSize; i++) {
+                sgbArray[i] = SiteGenotypeBit.buildFromVCFLine(lines.get(i));
+            }
+            lines = null;
+            return this;
+        }
     }
 }

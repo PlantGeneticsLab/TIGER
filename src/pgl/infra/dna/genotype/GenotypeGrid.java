@@ -18,6 +18,13 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.*;
 
+/**
+ * Class holding genotype data. Genotypes are presented by both site and taxon in bitset.
+ * <p>
+ * Supports only bi-allelic SNPs, 3rd+ allele will be ignored. Allele depth is ignored.
+ *
+ * @author feilu
+ */
 public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
     /**
      * The direction of the grid, either by site (Row of VCF) or by taxon (Column of VCF)

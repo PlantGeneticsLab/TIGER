@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- *
+ * incomplete
  * @author feilu
  */
 public class VCFUtils {

@@ -10,8 +10,10 @@ import java.util.BitSet;
 import java.util.List;
 
 /**
- * Class holding SNP and genotype information per site
- * Only one alternative allele is supported
+ * Class holding SNP and genotype information per site,
+ * <p>
+ * Supports only bi-allelic SNPs, 3rd+ allele will be ignored. Allele depth is ignored.
+ *
  * @author feilu
  */
 public class SiteGenotypeBit extends BiSNP {

@@ -8,6 +8,13 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.concurrent.Callable;
 
+/**
+ * Multithreading reading facilities of {@link GenotypeGrid}
+ * <p>
+ * Support binary format, see {@link GenoIOFormat}
+ *
+ * @author feilu
+ */
 public class GenoSiteBlockBinary implements Callable<GenoSiteBlockBinary> {
     public static final int blockSize = 4096;
     byte[][] lines = null;
@@ -63,6 +70,7 @@ public class GenoSiteBlockBinary implements Callable<GenoSiteBlockBinary> {
         BitSet[] genoSite = new BitSet[3];
         for (int i = 0; i < genoSite.length; i++) {
             byte[] ba = new byte[size];
+            bb.get(ba);
             genoSite[i] = BitSet.valueOf(ba);
         }
         BiSNP snp = new BiSNP(chr, pos, refBase, altBase, null);
