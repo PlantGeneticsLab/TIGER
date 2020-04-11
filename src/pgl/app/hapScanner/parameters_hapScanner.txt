@@ -9,7 +9,6 @@
 #To specify options, please edit the the parameters below. Also, please keep the order of parameters.
 
 #Parameter 1: The taxaRefBam file containing information of taxon and its corresponding refernece genome and bam files. The bam file should have .bai file in the same folder
-#If one taxon has n bam files, please list them in n rows.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/hapScanner/inputfile/taxaRefBAM_hapscanner.txt
 
 #Parameter 2: The posAllele file (with header), the format is Chr\tPos\tRef\tAlt (from VCF format). The positions come from genetic variation library.

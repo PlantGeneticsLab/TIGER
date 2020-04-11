@@ -445,21 +445,13 @@ public class HapScanner {
 
         new File(outputDirS).mkdir();
         RowTable<String> t = new RowTable<>(taxaRefBamFileS);
-        Set<String> taxaSet = new HashSet<>();
-        for (int i = 0; i < t.getRowNumber(); i++) {
-            taxaSet.add(t.getCell(i, 0));
-        }
-        String[] taxaArray = taxaSet.toArray(new String[taxaSet.size()]);
-        Arrays.sort(taxaArray);
-        for (int i = 0; i < taxaArray.length; i++) {
-            List<String> bamList = new ArrayList<>();
-            taxaBamsMap.put(taxaArray[i], bamList);
-        }
         for (int i = 0; i < t.getRowNumber(); i++) {
             String key = t.getCell(i, 0);
-            List<String> bamList = taxaBamsMap.get(key);
-            bamList.add(t.getCell(i, 2));
-            taxaBamsMap.replace(key, bamList);
+            List<String> bamList = new ArrayList<>();
+            for (int j = 0; j < t.getColumnNumber()-2; j++) {
+                bamList.add(t.getCell(i, j+2));
+            }
+            taxaBamsMap.put(key, bamList);
             taxaRefMap.put(key, t.getCell(i, 1));
         }
     }

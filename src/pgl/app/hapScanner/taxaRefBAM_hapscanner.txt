@@ -1,4 +1,4 @@
-Taxa	Reference	BamPath
+Taxa	Reference	Bams(A list of bams of the taxon, seperated by the delimiter of Tab)
 TW0060	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0060.sub.bam
 TW0061	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0061.sub.bam
 TW0062	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa	/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/bams/TW0062.sub.bam
