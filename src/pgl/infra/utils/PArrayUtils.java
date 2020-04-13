@@ -291,4 +291,18 @@ public class PArrayUtils {
         }
         return l;
     }
+
+    /**
+     * Return a list of index from startIndex to the endIndex
+     * @param startIndex inclusive
+     * @param endIndex exclusive
+     * @return
+     */
+    public static List<Integer> getIndexList (int startIndex, int endIndex) {
+        List<Integer> l = new ArrayList<>(endIndex - startIndex);
+        for (int i = startIndex; i < endIndex; i++) {
+            l.add(i);
+        }
+        return l;
+    }
 }

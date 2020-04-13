@@ -21,7 +21,12 @@ public enum AppNames implements Comparable <AppNames> {
     /**
      * Genotyping from bam files based on a genetic variation library
      */
-    HapScanner ("HapScanner");
+    HapScanner ("HapScanner"),
+
+    /**
+     * Depth profiling in a population using whole-genome sequence data
+     */
+    PopDep ("PopDep");
     
     public final String name;
     

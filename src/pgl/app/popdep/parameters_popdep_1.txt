@@ -1,0 +1,36 @@
+@App:	PopDep
+@Author:	Fei Lu
+@Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+@Homepage:	https://plantgeneticslab.weebly.com/
+@Step:	1
+
+#PopDep is used to perform perform depth profiling in a population, based on media/high depth (e.g. >5X) whole genome sequencing data. They are useful to identify conserved regions of a genome.
+#It outputs 4 statistics, 
+#Mean depth of all taxa at a specific site
+#SD of depth of all taxa
+#Mean of standardized depth (relative to single copy regions)
+#SD of standardized depth across taxa.
+#To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
+#It has 2 steps, the first is to identify depth mode of all taxa, the second is to output depth statistics described above.
+#Command line example for step 1,
+#java -Xmx100g -jar TIGER.jar -a PopDep -p parameter_popdep_1.txt > log.txt &
+#Command line example for step 2,
+#java -Xmx100g -jar TIGER.jar -a PopDep -p parameter_popdep_2.txt > log.txt &
+#This file is the parameter file of step 1.
+#To specify options, please edit the the parameters below. Also, please keep the order of parameters.
+
+#Parameter 1: The taxaBam file containing information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder
+/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/inputfile/taxaBam.txt
+
+#Parameter 2: The taxaDepthMode file containing information of taxon and its corresponding depth mode across bam files.
+#Make sure this file is writable
+/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/inputfile/taxaDepthMode.txt
+
+#Parameter 3: The chromosome length file
+/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/inputfile/chromosomeLength.txt
+
+#Parameter 4: The path of samtools
+/usr/local/bin/samtools
+
+#Parameter 5: Number of threads
+16

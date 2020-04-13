@@ -13,6 +13,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import pgl.app.fastCall.FastCall;
+import pgl.app.popdep.PopDep;
 import pgl.app.speedCall.SpeedCall;
 import pgl.infra.utils.CLIInterface;
 
@@ -60,8 +61,11 @@ public class PGLAPPEntrance implements CLIInterface {
         if (app.equals(AppNames.FastCall.getName())) {
             new FastCall (this.parameterPath);
         }
+        else if (app.equals(AppNames.PopDep.getName())) {
+            new PopDep(this.parameterPath);
+        }
         else if (app.equals(AppNames.HapScanner.getName())) {
-            
+
         }
         else {
             System.out.println("App does not exist");
