@@ -19,8 +19,8 @@
 #This file is the parameter file of step 1.
 #To specify options, please edit the the parameters below. Also, please keep the order of parameters.
 
-#Parameter 1: The taxaBam file containing information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder
-/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/inputfile/taxaBam.txt
+#Parameter 1: The taxaRefBam file containing information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder
+/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/inputfile/taxaRefBam.txt
 
 #Parameter 2: The taxaDepthMode file containing information of taxon and its corresponding depth mode across bam files.
 #Make sure this file is writable

@@ -1,7 +1,6 @@
 package pgl.app.popdep;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import pgl.infra.table.RowTable;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
@@ -17,7 +16,7 @@ public class PopDep {
     /**
      * File path of taxa and there corresponding bams
      */
-    String taxaBamFileS = null;
+    String taxaRefBamFileS = null;
     /**
      * File with info of each taxon and its depth mode
      */
@@ -44,6 +43,7 @@ public class PopDep {
     int threadNum = 16;
     String outfileS = null;
     String[] taxa = null;
+    String[] references = null;
     HashMap<String, String[]> taxaBamPathsMap = new HashMap<>();
     double[] mode = null;
     /**
@@ -57,7 +57,7 @@ public class PopDep {
     /**
      * Sampling size for estimating mode
      */
-    int samplingSize = 50000;
+    int samplingSize = 10000;
     /**
      * Window size to profile depth
      */
@@ -132,7 +132,7 @@ public class PopDep {
                     bw.newLine();
                 }
                 sb.setLength(0);
-                sb.append("Current position: ").append(windows[i][1]);
+                sb.append("Current position: ").append(windows[i][1]).append(" on chromosome ").append(this.chromosome);
                 System.out.println(sb.toString());
             }
             bw.flush();
@@ -217,8 +217,8 @@ public class PopDep {
                     while ((temp = br.readLine()) != null) {
                         v = 0;
                         l = PStringUtils.fastSplit(temp);
-                        for (int k = 0; k < l.size()-2; k+=2) {
-                            v+=Integer.parseInt(l.get(k+2));
+                        for (int k = 0; k < l.size()-3; k+=3) {
+                            v+=Integer.parseInt(l.get(k+3));
                         }
                         if (v > this.maxDepthRange) continue;
                         depth[v]++;
@@ -239,6 +239,7 @@ public class PopDep {
                 }
                 modes[j] = maxDepth;
             });
+            System.out.println(String.valueOf(subIndices[i][1])+ " depth calculation finished in Step 1");
         }
         try {
             BufferedWriter bw = IOUtils.getTextWriter(this.taxaDepthModeFileS);
@@ -265,11 +266,12 @@ public class PopDep {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < commands.length; i++) {
             sb.setLength(0);
-            sb.append(this.samPath).append(" depth -Q 20 -b ").append(siteFileS);
+            sb.append(this.samPath).append(" mpileup -A -B -Q 20 -f ").append(this.references[i]);
             String[] paths = this.taxaBamPathsMap.get(taxa[i]);
             for (int j = 0; j < paths.length; j++) {
                 sb.append(" ").append(paths[j]);
             }
+            sb.append(" -l ").append(siteFileS);
             commands[i] = sb.toString();
         }
         return commands;
@@ -310,26 +312,32 @@ public class PopDep {
     }
 
     private void parseStep1(List<String> pLineList) {
-        this.taxaBamFileS = pLineList.get(0);
+        this.taxaRefBamFileS = pLineList.get(0);
         this.taxaDepthModeFileS = pLineList.get(1);
         this.chrLengthFileS = pLineList.get(2);
         this.samPath = pLineList.get(3);
         this.threadNum = Integer.parseInt(pLineList.get(4));
+        HashMap<String, String> taxaRefMap = new HashMap<>();
         try {
-            BufferedReader br = IOUtils.getTextReader(this.taxaBamFileS);
+            BufferedReader br = IOUtils.getTextReader(this.taxaRefBamFileS);
             String temp = br.readLine();
             List<String> l = new ArrayList<>();
             while ((temp = br.readLine()) != null) {
                 l = PStringUtils.fastSplit(temp);
-                String[] bams = new String[l.size()-1];
+                String[] bams = new String[l.size()-2];
                 for (int i = 0; i < bams.length; i++) {
-                    bams[i] = l.get(i+1);
+                    bams[i] = l.get(i+2);
                 }
                 this.taxaBamPathsMap.put(l.get(0), bams);
+                taxaRefMap.put(l.get(0), l.get(1));
             }
             Set<String> tSet= this.taxaBamPathsMap.keySet();
             this.taxa = tSet.toArray(new String[tSet.size()]);
             Arrays.sort(taxa);
+            this.references = new String[taxa.length];
+            for (int i = 0; i < taxa.length; i++) {
+                this.references[i] = taxaRefMap.get(taxa[i]);
+            }
             br.close();
         }
         catch (Exception e) {
@@ -338,28 +346,34 @@ public class PopDep {
     }
 
     private void parseStep2(List<String> pLineList) {
-        this.taxaBamFileS = pLineList.get(0);
+        this.taxaRefBamFileS = pLineList.get(0);
         this.taxaDepthModeFileS = pLineList.get(1);
         this.chromosome = Short.parseShort(pLineList.get(2));
         this.chrLength = Integer.parseInt(pLineList.get(3));
         this.samPath = pLineList.get(4);
         this.threadNum = Integer.parseInt(pLineList.get(5));
+        HashMap<String, String> taxaRefMap = new HashMap<>();
         this.outfileS = pLineList.get(6);
         try {
-            BufferedReader br = IOUtils.getTextReader(this.taxaBamFileS);
+            BufferedReader br = IOUtils.getTextReader(this.taxaRefBamFileS);
             String temp = br.readLine();
             List<String> l = new ArrayList<>();
             while ((temp = br.readLine()) != null) {
                 l = PStringUtils.fastSplit(temp);
-                String[] bams = new String[l.size()-1];
+                String[] bams = new String[l.size()-2];
                 for (int i = 0; i < bams.length; i++) {
-                    bams[i] = l.get(i+1);
+                    bams[i] = l.get(i+2);
                 }
                 this.taxaBamPathsMap.put(l.get(0), bams);
+                taxaRefMap.put(l.get(0), l.get(1));
             }
             Set<String> tSet= this.taxaBamPathsMap.keySet();
             this.taxa = tSet.toArray(new String[tSet.size()]);
             Arrays.sort(taxa);
+            this.references = new String[taxa.length];
+            for (int i = 0; i < taxa.length; i++) {
+                this.references[i] = taxaRefMap.get(taxa[i]);
+            }
             br.close();
         }
         catch (Exception e) {
