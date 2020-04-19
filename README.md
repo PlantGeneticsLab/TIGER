@@ -24,6 +24,7 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 
 * [FastCall](https://github.com/PlantGeneticsLab/TIGER/wiki/FastCall) -Superfast variant calling and genotyping for whole-genome shotgun (WGS) sequencing data.
 * [HapScanner](https://github.com/PlantGeneticsLab/TIGER/wiki/HapScanner) -Superfast genotyper for whole-genome shotgun (WGS) sequencing data, based on an existing genetic variation library.
+* [PopDep](https://github.com/PlantGeneticsLab/TIGER/wiki/PopDep) -Read depth profiler profiling of a population, based on whole-genome shotgun (WGS) sequencing data..
 
 ***
 ## Developer Manual
