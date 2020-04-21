@@ -33,11 +33,14 @@
 #Parameter 4: The length of the chromosome
 1000000
 
-#Parameter 5: The path of samtools
+#Parameter 5: The minimum depth mode requried to calculate the standardized depth. By default, 5
+5
+
+#Parameter 6: The path of samtools
 /usr/local/bin/samtools
 
-#Parameter 6: Number of threads
+#Parameter 7: Number of threads
 16
 
-#Parameter 7: The output file in gz format
+#Parameter 8: The output file in gz format
 /Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/out/chr001_popdep.txt.gz

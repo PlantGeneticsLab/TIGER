@@ -1,5 +1,6 @@
 package pgl.app.popdep;
 
+import gnu.trove.list.array.TIntArrayList;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import pgl.infra.table.RowTable;
 import pgl.infra.utils.IOUtils;
@@ -46,6 +47,10 @@ public class PopDep {
     String[] references = null;
     HashMap<String, String[]> taxaBamPathsMap = new HashMap<>();
     double[] mode = null;
+    double minMode = 5;
+    double[] depWithMinMode = null;
+    int[] taxaMinModeIndices = null;
+
     /**
      * Estimated range of mode
      */
@@ -123,10 +128,15 @@ public class PopDep {
                     sb.setLength(0);
                     d = new DescriptiveStatistics(depth[j]);
                     sb.append(j+windows[i][0]+1).append("\t").append((float)d.getMean()).append("\t").append((float)d.getStandardDeviation());
-                    for (int k = 0; k < taxa.length; k++) {
-                        depth[j][k] = depth[j][k]/mode[k];
+                    Arrays.fill(this.depWithMinMode, 0);
+                    for (int k = 0; k < this.taxaMinModeIndices.length; k++) {
+                        this.depWithMinMode[k] = depth[j][this.taxaMinModeIndices[k]]/mode[this.taxaMinModeIndices[k]];
                     }
-                    d = new DescriptiveStatistics(depth[j]);
+
+//                    for (int k = 0; k < taxa.length; k++) {
+//                        depth[j][k] = depth[j][k]/mode[k];
+//                    }
+                    d = new DescriptiveStatistics(this.depWithMinMode);
                     sb.append("\t").append((float)d.getMean()).append("\t").append((float)d.getStandardDeviation());
                     bw.write(sb.toString());
                     bw.newLine();
@@ -350,10 +360,11 @@ public class PopDep {
         this.taxaDepthModeFileS = pLineList.get(1);
         this.chromosome = Short.parseShort(pLineList.get(2));
         this.chrLength = Integer.parseInt(pLineList.get(3));
-        this.samPath = pLineList.get(4);
-        this.threadNum = Integer.parseInt(pLineList.get(5));
+        this.minMode = Double.parseDouble(pLineList.get(4));
+        this.samPath = pLineList.get(5);
+        this.threadNum = Integer.parseInt(pLineList.get(6));
         HashMap<String, String> taxaRefMap = new HashMap<>();
-        this.outfileS = pLineList.get(6);
+        this.outfileS = pLineList.get(7);
         try {
             BufferedReader br = IOUtils.getTextReader(this.taxaRefBamFileS);
             String temp = br.readLine();
@@ -381,9 +392,15 @@ public class PopDep {
         }
         HashMap<String, Double> taxaModeMap = new HashMap<>();
         RowTable<String> t = new RowTable<>(this.taxaDepthModeFileS);
+        TIntArrayList minModeIndexList = new TIntArrayList();
         for (int i = 0; i < t.getRowNumber(); i++) {
-            taxaModeMap.put(t.getCell(i,0), Double.parseDouble(t.getCell(i,1)));
+            double mode = Double.parseDouble(t.getCell(i,1));
+            taxaModeMap.put(t.getCell(i,0), mode);
+            if (mode < this.minMode) continue;
+            minModeIndexList.add(i);
         }
+        this.depWithMinMode = new double[minModeIndexList.size()];
+        this.taxaMinModeIndices = minModeIndexList.toArray();
         this.mode = new double[this.taxa.length];
         for (int i = 0; i < taxa.length; i++) {
             mode[i] = taxaModeMap.get(taxa[i]);
