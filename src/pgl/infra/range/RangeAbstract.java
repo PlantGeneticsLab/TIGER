@@ -128,9 +128,10 @@ public abstract class RangeAbstract implements RangeInterface {
     public int compareTo(RangeInterface ri) {
         if (chr == ri.getRangeChromosome()) {
             if (start == ri.getRangeStart()) {
-                if (end == ri.getRangeEnd()) return 0;
-                else if (end < ri.getRangeEnd()) return -1;
-                return 1;
+                return 0;
+//                if (end == ri.getRangeEnd()) return 0;
+//                else if (end < ri.getRangeEnd()) return -1;
+//                return 1;
             }
             else if (start < ri.getRangeStart()) return -1;
             return 1;

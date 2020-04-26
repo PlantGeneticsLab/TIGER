@@ -96,4 +96,12 @@ public interface RangeInterface extends Comparable<RangeInterface> {
      */
     public RangeInterface getIntersection (RangeInterface other);
     
+    /**
+     * Compare ranges by starting position
+     * @param ri
+     * @return 
+     */
+    @Override
+    public int compareTo(RangeInterface ri);
+    
 }
