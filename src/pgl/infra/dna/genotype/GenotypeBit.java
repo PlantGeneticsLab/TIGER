@@ -247,12 +247,12 @@ public class GenotypeBit implements GenotypeTable {
     }
 
     @Override
-    public float getTaxonHeterozygosity(int taxonIndex) {
+    public float getHeterozygousProportionByTaxon(int taxonIndex) {
         return (float)((double)this.getHeterozygoteNumberByTaxon(taxonIndex)/this.getNonMissingNumberByTaxon(taxonIndex));
     }
 
     @Override
-    public float getSiteHeterozygoteFraction(int siteIndex) {
+    public float getHeterozygousProportionBySite(int siteIndex) {
         return (float)((double)this.getHeterozygoteNumberBySite(siteIndex)/this.getNonMissingNumberBySite(siteIndex));
     }
     

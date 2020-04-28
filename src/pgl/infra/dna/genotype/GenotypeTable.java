@@ -222,14 +222,14 @@ public interface GenotypeTable {
      * @param taxonIndex
      * @return
      */
-    public float getTaxonHeterozygosity (int taxonIndex);
+    public float getHeterozygousProportionByTaxon(int taxonIndex);
 
     /**
      * Return the fraction of heterozygous genotype at a specific site
      * @param siteIndex
      * @return
      */
-    public float getSiteHeterozygoteFraction (int siteIndex);
+    public float getHeterozygousProportionBySite(int siteIndex);
 
     /**
      * Return byte value of the minor allele
