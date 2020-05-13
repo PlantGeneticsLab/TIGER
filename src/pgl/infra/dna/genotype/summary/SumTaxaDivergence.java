@@ -1,6 +1,6 @@
 package pgl.infra.dna.genotype.summary;
 
-import pgl.infra.dna.genotype.GenotypeBit;
+import pgl.infra.dna.genotype.GenotypeRows;
 import pgl.infra.dna.genotype.GenotypeGrid;
 import pgl.infra.dna.genotype.GenotypeTable;
 import pgl.infra.utils.Benchmark;
@@ -20,8 +20,8 @@ public class SumTaxaDivergence {
         if (gt instanceof GenotypeGrid) {
             dxyMatrix = gt.getDxyMatrix();
         }
-        else if (gt instanceof GenotypeBit) {
-            dxyMatrix = ((GenotypeBit) gt).getDxyMatrixFast10K();
+        else if (gt instanceof GenotypeRows) {
+            dxyMatrix = ((GenotypeRows) gt).getDxyMatrixFast10K();
         }
         else {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

@@ -29,7 +29,7 @@ import pgl.infra.position.ChrPos;
  *
  * @author feilu
  */
-public class GenotypeBit implements GenotypeTable {
+public class GenotypeRows implements GenotypeTable {
     /**
      * The taxa in the genotype table
      */
@@ -42,7 +42,7 @@ public class GenotypeBit implements GenotypeTable {
     /**
      * Construct an object
      */
-    public GenotypeBit () {
+    public GenotypeRows() {
         
     }
 
@@ -51,7 +51,7 @@ public class GenotypeBit implements GenotypeTable {
      * @param infileS
      * @param format
      */
-    public GenotypeBit (String infileS, GenoIOFormat format) {
+    public GenotypeRows(String infileS, GenoIOFormat format) {
         if (format == GenoIOFormat.VCF) {
             this.buildFromVCF(infileS);
         }
@@ -74,7 +74,7 @@ public class GenotypeBit implements GenotypeTable {
      * @param geno
      * @param taxa
      */
-    private GenotypeBit (SiteGenotypeBit[] geno, String[] taxa) {
+    public GenotypeRows (SiteGenotypeBit[] geno, String[] taxa) {
         this.taxa = taxa;
         this.geno = geno;
     }
@@ -91,9 +91,10 @@ public class GenotypeBit implements GenotypeTable {
 
     @Override
     public String[] getTaxaNames () {
-        String nTaxa[]  = new String[this.getTaxaNumber()];
-        System.arraycopy(taxa, 0, nTaxa, 0, nTaxa.length);
-        return nTaxa;
+//        String nTaxa[]  = new String[this.getTaxaNumber()];
+//        System.arraycopy(taxa, 0, nTaxa, 0, nTaxa.length);
+//        return nTaxa;
+        return this.taxa;
     }
 
     @Override
@@ -478,7 +479,7 @@ public class GenotypeBit implements GenotypeTable {
         for (int i = 0; i < siteIndices.length; i++) {
             ge[i] = geno[siteIndices[i]];
         }
-        GenotypeBit gb = new GenotypeBit(ge, taxa);
+        GenotypeRows gb = new GenotypeRows(ge, taxa);
         return gb;
     }
 
@@ -496,7 +497,7 @@ public class GenotypeBit implements GenotypeTable {
         indexList.parallelStream().forEach(index -> {
             nGeno[index] = geno[index].getSubGenotypeByTaxa(taxaIndices);
         });
-        return new GenotypeBit(nGeno, nTaxa);
+        return new GenotypeRows(nGeno, nTaxa);
     }
 
     /**

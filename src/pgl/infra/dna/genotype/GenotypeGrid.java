@@ -111,9 +111,10 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
 
     @Override
     public String[] getTaxaNames() {
-        String nTaxa[]  = new String[this.getTaxaNumber()];
-        System.arraycopy(taxa, 0, nTaxa, 0, nTaxa.length);
-        return nTaxa;
+//        String nTaxa[]  = new String[this.getTaxaNumber()];
+//        System.arraycopy(taxa, 0, nTaxa, 0, nTaxa.length);
+//        return nTaxa;
+        return this.taxa;
     }
 
     @Override
@@ -385,8 +386,7 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
     public float getAlternativeAlleleFrequency(int siteIndex) {
         if (this.isAlternativeAlleleTypeOf(AlleleType.Minor, siteIndex)) return mafs[siteIndex];
         if (this.isAlternativeAlleleTypeOf(AlleleType.Major, siteIndex)) return (float)(1-mafs[siteIndex]);
-        this.getMinorAlleleFrequency(siteIndex);
-        return this.getAlternativeAlleleFrequency(siteIndex);
+        return (float)((double)this.getAlternativeAlleleNumberBySite(siteIndex)/(this.getNonMissingNumberBySite(siteIndex)*2));
     }
 
     @Override
@@ -512,16 +512,14 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
         BitSet[][] bArray = new BitSet[siteIndices.length][3];
         for (int i = 0; i < siteIndices.length; i++) {
             for (int j = 0; j < bArray[0].length; j++) {
-                bArray[i][j] = (BitSet)this.genoSite[siteIndices[i]][j].clone();
+                bArray[i][j] = this.genoSite[siteIndices[i]][j];
             }
         }
-        String[] nTaxa = new String[this.getTaxaNumber()];
-        System.arraycopy(this.taxa, 0, nTaxa, 0, this.getTaxaNumber());
         BiSNP[] nsnps = new BiSNP[siteIndices.length];
         for (int i = 0; i < siteIndices.length; i++) {
-            nsnps[i] = this.snps[siteIndices[i]].replicateWithoutFeature();
+            nsnps[i] = this.snps[siteIndices[i]];
         }
-        return new GenotypeGrid(bArray, GridDirection.BySite, nTaxa, nsnps);
+        return new GenotypeGrid(bArray, GridDirection.BySite, this.taxa, nsnps);
     }
 
     @Override
@@ -529,7 +527,7 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
         BitSet[][] bArray = new BitSet[taxaIndices.length][3];
         for (int i = 0; i < taxaIndices.length; i++) {
             for (int j = 0; j < bArray[0].length; j++) {
-                bArray[i][j] = (BitSet)this.genoTaxon[taxaIndices[i]][j].clone();
+                bArray[i][j] = this.genoTaxon[taxaIndices[i]][j];
             }
         }
         String[] nTaxa = new String[taxaIndices.length];

@@ -204,4 +204,15 @@ public class BiSNP extends ChrPos {
     public BiSNP replicateWithoutFeature() {
         return new BiSNP(this.getChromosome(), this.getPosition(), this.getReferenceAlleleBase(), this.getAlternativeAlleleBase(), this.getSNPInfo());
     }
+
+    /**
+     * Make a copy of the current object, with allele feature replicated
+     * @return
+     */
+    public BiSNP replicateWithFeature() {
+        BiSNP s = this.replicateWithoutFeature();
+        s.setReferenceAlleleFeature(this.getReferenceAlleleFeature());
+        s.setAlternativeAlleleFeature(this.getAlternativeAlleleFeature());
+        return s;
+    }
 }
