@@ -24,30 +24,27 @@ public class GenotypeOperation {
         for (int i = 0; i < gt1.getSiteNumber(); i++) {
             for (int j = 0; j < gt1.genoSite[0].length; j++) {
                 bArray[cnt][j] = gt1.genoSite[i][j];
-                cnt++;
             }
+            cnt++;
         }
         for (int i = 0; i < gt2.getSiteNumber(); i++) {
             for (int j = 0; j < gt2.genoSite[0].length; j++) {
                 bArray[cnt][j] = gt2.genoSite[i][j];
-                cnt++;
             }
+            cnt++;
         }
         BiSNP[] nsnps = new BiSNP[snpCount];
         cnt = 0;
         for (int i = 0; i < gt1.getSiteNumber(); i++) {
-            for (int j = 0; j < gt1.getSiteNumber(); j++) {
-                nsnps[cnt] = gt1.snps[i];
-                cnt++;
-            }
+            nsnps[cnt] = gt1.snps[i];
+            cnt++;
         }
         for (int i = 0; i < gt2.getSiteNumber(); i++) {
-            for (int j = 0; j < gt2.getSiteNumber(); j++) {
-                nsnps[cnt] = gt2.snps[i];
-                cnt++;
-            }
+            nsnps[cnt] = gt2.snps[i];
+            cnt++;
         }
         gt1 = new GenotypeGrid(bArray, GenotypeGrid.GridDirection.BySite, gt1.taxa, nsnps);
+        System.out.println("Merging genotype table is successful.");
         return true;
     }
 
@@ -90,14 +87,14 @@ public class GenotypeOperation {
         for (int i = 0; i < gt1.getTaxaNumber(); i++) {
             for (int j = 0; j < gt1.genoTaxon[0].length; j++) {
                 bArray[cnt][j] = gt1.genoTaxon[i][j];
-                cnt++;
             }
+            cnt++;
         }
         for (int i = 0; i < gt2.getTaxaNumber(); i++) {
             for (int j = 0; j < gt2.genoTaxon[0].length; j++) {
                 bArray[cnt][j] = gt2.genoTaxon[i][j];
-                cnt++;
             }
+            cnt++;
         }
         BiSNP[] nsnps = new BiSNP[gt1.getSiteNumber()];
         for (int i = 0; i < nsnps.length; i++) {

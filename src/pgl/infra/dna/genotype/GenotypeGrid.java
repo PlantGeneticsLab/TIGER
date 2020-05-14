@@ -292,7 +292,7 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
 
     @Override
     public float getHeterozygousProportionByTaxon(int taxonIndex) {
-        return (float)(this.getHeterozygoteNumberByTaxon(taxonIndex)/this.getNonMissingNumberByTaxon(taxonIndex));
+        return (float)((double)this.getHeterozygoteNumberByTaxon(taxonIndex)/this.getNonMissingNumberByTaxon(taxonIndex));
     }
 
     @Override
