@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,7 +59,7 @@ public class HapScanner {
     public HapScanner (String infileS) {
         this.parseParameters(infileS);
         this.mkDir();
-        this.scanIndiVCF();
+        this.scanIndiVCFByStream();
         this.mkFinalVCF();
     }
 
@@ -204,6 +205,138 @@ public class HapScanner {
         return sb.toString();
     }
     
+    public void scanIndiVCFByStream () {
+        this.creatFactorialMap();
+        RowTable<String> t = new RowTable<> (posAlleleFileS);
+        HashMap<Integer, String> posRefMap = new HashMap<>();
+        HashMap<Integer, String[]> posAltMap = new HashMap<>();
+        int[] positions = new int[t.getRowNumber()];
+        for (int i = 0; i < t.getRowNumber(); i++) {
+            positions[i] = t.getCellAsInteger(i, 1);
+            posRefMap.put(positions[i], t.getCell(i, 2));
+            String[] tem = t.getCell(i, 3).split(",");
+            posAltMap.put(t.getCellAsInteger(i, 1), tem);
+        }
+        Set<String> taxaSet = taxaBamsMap.keySet();
+        ArrayList<String> taxaList = new ArrayList(taxaSet);
+        Collections.sort(taxaList);
+
+        int[][] indices = PArrayUtils.getSubsetsIndicesBySubsetSize(taxaList.size(), this.nThreads);
+        LongAdder counter = new LongAdder();
+        for (int u = 0; u < indices.length; u++) {
+            List<String> subTaxaList = taxaList.subList(indices[u][0], indices[u][1]);
+            subTaxaList.parallelStream().forEach(e -> {
+                String indiVCFFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+                String indiVCFFileS = new File (indiVCFFolderS, e+".chr"+PStringUtils.getNDigitNumber(3, chr)+".indi.vcf").getAbsolutePath();
+                List<String> bamPaths = taxaBamsMap.get(e);
+                StringBuilder sb = new StringBuilder(samtoolsPath);
+                sb.append(" mpileup -A -B -q 20 -Q 20 -f ").append(this.taxaRefMap.get(e));
+                for (int i = 0; i < bamPaths.size(); i++) {
+                    sb.append(" ").append(bamPaths.get(i));
+                }
+                sb.append(" -l ").append(posFileS).append(" -r ");
+                sb.append(chr);
+                String command = sb.toString();
+                //System.out.println(command);
+                try {
+                    Runtime rt = Runtime.getRuntime();
+                    Process p = rt.exec(command);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    BufferedWriter bw = IOUtils.getTextWriter(indiVCFFileS);
+                    String current = br.readLine();
+                    List<String> currentList = null;
+                    int currentPosition = -1;
+                    if (current != null) {
+                        currentList = PStringUtils.fastSplit(current);
+                        currentPosition = Integer.parseInt(currentList.get(1));
+                    }
+                    for (int i = 0; i < positions.length; i++) {
+                        if (current == null) {
+                            bw.write("./.");
+                            bw.newLine();
+                        }
+                        else {
+                            if (positions[i] == currentPosition) {
+                                String ref = posRefMap.get(currentPosition);
+                                String[] alts = posAltMap.get(currentPosition);
+                                char[] alleleC = new char[alts.length+1];
+                                alleleC[0] = ref.charAt(0);
+                                for (int j = 0; j < alts.length; j++) {
+                                    if (alts[j].startsWith("I") || alts[j].startsWith("<I")) {
+                                        alleleC[j+1] = '+';
+                                    }
+                                    else if (alts[j].startsWith("D") || alts[j].startsWith("<D")) {
+                                        alleleC[j+1] = '-';
+                                    }
+                                    alleleC[j+1] = alts[j].charAt(0);
+                                }
+                                int[] cnts = new int[alts.length+1];
+                                sb = new StringBuilder();
+                                for (int j = 0; j < bamPaths.size(); j++) {
+                                    sb.append(currentList.get(4+j*3));
+                                }
+                                StringBuilder ssb = new StringBuilder();
+                                int curIndex = 0;
+                                for (int j = 0; j < sb.length(); j++) {
+                                    char cChar = sb.charAt(j);
+                                    if (cChar == '+') {
+                                        ssb.append(sb.subSequence(curIndex, j+1));
+                                        curIndex = j+2+Character.getNumericValue(sb.charAt(j+1));
+                                    }
+                                    else if (cChar == '-') {
+                                        ssb.append(sb.subSequence(curIndex, j+1));
+                                        curIndex = j+2+Character.getNumericValue(sb.charAt(j+1));
+                                    }
+                                }
+                                ssb.append(sb.subSequence(curIndex, sb.length()));
+                                sb = ssb;
+                                String s = sb.toString().toUpperCase();
+                                for (int j = 0; j < s.length(); j++) {
+                                    char cChar = s.charAt(j);
+                                    if (cChar == '.' || cChar == ',') cnts[0]++;
+                                    for (int k = 1; k < alleleC.length; k++) {
+                                        if (cChar == alleleC[k]) cnts[k]++;
+                                    }
+                                }
+                                for (int j = 1; j < alleleC.length; j++) {
+                                    if (alleleC[j] == '+') cnts[0] = cnts[0]-cnts[j];
+                                    else if (alleleC[j] == '-') cnts[0] = cnts[0]-cnts[j];
+                                }
+                                String vcf = this.getGenotype(cnts);
+                                bw.write(vcf);
+                                bw.newLine();
+
+                                current = br.readLine();
+                                if (current != null) {
+                                    currentList = PStringUtils.fastSplit(current);
+                                    currentPosition = Integer.parseInt(currentList.get(1));
+                                }
+                            }
+                            else if (positions[i] < currentPosition) {
+                                bw.write("./.");
+                                bw.newLine();
+                            }
+                            else {
+                                System.out.println("Current position is greater than pileup position. It should not happen. Program quits");
+                                System.exit(1);
+                            }
+                        }
+                    }
+                    p.waitFor();
+                    bw.flush();
+                    bw.close();
+                    br.close();
+                }
+                catch (Exception ee) {
+                    ee.printStackTrace();
+                }
+                counter.increment();
+                int cnt = counter.intValue();
+                if (cnt%10 == 0) System.out.println("Finished individual genotyping in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
+            });
+        }
+    }
+
     public void scanIndiVCF () {
         this.creatFactorialMap();
         RowTable<String> t = new RowTable<> (posAlleleFileS);
@@ -332,7 +465,7 @@ public class HapScanner {
                                 bw.newLine();    
                             }
                             else {
-                                System.out.println("Currentposition is greater than pileup position. It should not happen. Program quits");
+                                System.out.println("Current position is greater than pileup position. It should not happen. Program quits");
                                 System.exit(1);
                             }
                         }
