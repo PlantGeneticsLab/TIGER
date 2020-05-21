@@ -291,6 +291,13 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
     }
 
     @Override
+    public int getAlternativeAlleleOccurrenceBySite (int siteIndex) {
+        BitSet bs = (BitSet)this.genoSite[siteIndex][0].clone();
+        bs.or(this.genoSite[siteIndex][1]);
+        return bs.cardinality();
+    }
+
+    @Override
     public float getHeterozygousProportionByTaxon(int taxonIndex) {
         return (float)((double)this.getHeterozygoteNumberByTaxon(taxonIndex)/this.getNonMissingNumberByTaxon(taxonIndex));
     }

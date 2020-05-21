@@ -11,6 +11,7 @@ import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -245,6 +246,13 @@ public class GenotypeRows implements GenotypeTable {
     @Override
     public int getAlternativeAlleleNumberBySite(int siteIndex) {
         return geno[siteIndex].getAlternativeAlleleNumber();
+    }
+
+    @Override
+    public int getAlternativeAlleleOccurrenceBySite(int siteIndex) {
+        BitSet bs = geno[siteIndex].phase1;
+        bs.or(geno[siteIndex].phase2);
+        return bs.cardinality();
     }
 
     @Override

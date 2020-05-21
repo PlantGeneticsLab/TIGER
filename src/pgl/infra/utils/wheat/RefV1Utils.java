@@ -322,4 +322,14 @@ public class RefV1Utils {
         }
         else return position;
     }
+
+    /**
+     * Return the subgenome of chrID
+     * @param chrID
+     * @return
+     */
+    public static String getSubgenomeFromChrID (int chrID) {
+        String chromosome = getChromosome(chrID, 1);
+        return chromosome.substring(chromosome.length()-1, chromosome.length());
+    }
 }

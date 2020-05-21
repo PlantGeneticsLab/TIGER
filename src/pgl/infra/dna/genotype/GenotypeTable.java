@@ -218,6 +218,12 @@ public interface GenotypeTable {
     public int getAlternativeAlleleNumberBySite (int siteIndex);
 
     /**
+     * Return the total number of taxa having the alternative allele
+     * @param siteIndex
+     * @return
+     */
+    public int getAlternativeAlleleOccurrenceBySite (int siteIndex);
+    /**
      * Return the heterozygosity of a specific taxon
      * @param taxonIndex
      * @return
