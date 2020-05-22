@@ -1,10 +1,10 @@
 package pgl.app.illuminaQC;
 
-import pgl.infra.alignment.gen2.ShortreadPEAlignment;
+import pgl.infra.align.g2.ShortreadPEAlignment;
 import pgl.infra.dna.FastaByte;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
-import pgl.graphcis.r.DensityPlot;
+import pgl.graph.r.DensityPlot;
 import pgl.infra.utils.IOUtils;
 
 import java.io.BufferedReader;

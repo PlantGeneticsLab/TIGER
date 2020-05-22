@@ -6,7 +6,7 @@
 package pgl.infra.dna.snp;
 
 import pgl.infra.dna.allele.AlleleEncoder;
-import pgl.infra.position.ChrPos;
+import pgl.infra.pos.ChrPos;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.set.hash.TByteHashSet;
 

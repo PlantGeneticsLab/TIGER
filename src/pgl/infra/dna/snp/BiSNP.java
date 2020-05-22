@@ -3,7 +3,7 @@ package pgl.infra.dna.snp;
 import pgl.infra.dna.allele.Allele;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.dna.allele.AlleleType;
-import pgl.infra.position.ChrPos;
+import pgl.infra.pos.ChrPos;
 
 /**
  * Class holding information of a biallelic SNP

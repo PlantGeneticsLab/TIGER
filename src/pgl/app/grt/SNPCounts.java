@@ -6,7 +6,7 @@
 package pgl.app.grt;
 
 import pgl.infra.dna.snp.SNPOld;
-import pgl.infra.position.ChrPos;
+import pgl.infra.pos.ChrPos;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.set.hash.TShortHashSet;
 import java.io.DataInputStream;

@@ -5,7 +5,7 @@
  */
 package pgl.app.grt;
 
-import pgl.infra.position.ChrPos;
+import pgl.infra.pos.ChrPos;
 import java.io.File;
 import java.util.List;
 import org.apache.commons.cli.CommandLine;

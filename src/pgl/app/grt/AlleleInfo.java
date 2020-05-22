@@ -5,7 +5,7 @@
  */
 package pgl.app.grt;
 
-import pgl.infra.position.ChrPos;
+import pgl.infra.pos.ChrPos;
 
 /**
  *

@@ -7,9 +7,9 @@ package pgl.app.grt;
 
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.allele.AlleleEncoder;
-import pgl.infra.dna.genotype.AlleleDepth;
-import pgl.infra.dna.genotype.VCFUtils;
-import pgl.infra.position.ChrPos;
+import pgl.infra.dna.genot.AlleleDepth;
+import pgl.infra.dna.genot.VCFUtils;
+import pgl.infra.pos.ChrPos;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import java.io.BufferedWriter;

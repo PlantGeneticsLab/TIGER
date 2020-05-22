@@ -5,10 +5,10 @@
  */
 package pgl.app.grt;
 
-import pgl.infra.alignment.gen2.SAMUtils;
+import pgl.infra.align.g2.SAMUtils;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.dna.snp.SNPOld;
-import pgl.infra.position.ChrPos;
+import pgl.infra.pos.ChrPos;
 import gnu.trove.list.array.TByteArrayList;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
