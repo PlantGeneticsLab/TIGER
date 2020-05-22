@@ -280,6 +280,36 @@ public class IOUtils {
         return fList;
     }
 
+    public static List<File> getDirListInDir (String inDirS) {
+        File[] fs = new File(inDirS).listFiles();
+        List<File> fList = new ArrayList<>();
+        for (int i = 0; i < fs.length; i++) {
+            if (fs[i].isDirectory()) {
+                fList.add(fs[i]);
+            }
+        }
+        Collections.sort(fList);
+        return fList;
+    }
+
+    public static List<File> getDirListInDirStartsWith (String inDirS, String startStr) {
+        List<File> fList = getDirListInDir(inDirS);
+        List<File> nfList = new ArrayList<>();
+        for (int i = 0; i < fList.size(); i++) {
+            if (fList.get(i).getName().startsWith(startStr)) nfList.add(fList.get(i));
+        }
+        return nfList;
+    }
+
+    public static List<File> getDirListInDirEndsWith (String inDirS, String endStr) {
+        List<File> fList = getDirListInDir(inDirS);
+        List<File> nfList = new ArrayList<>();
+        for (int i = 0; i < fList.size(); i++) {
+            if (fList.get(i).getName().endsWith(endStr)) nfList.add(fList.get(i));
+        }
+        return nfList;
+    }
+
     public static List<File> getFileListInDir (String inDirS) {
         File[] fs = new File(inDirS).listFiles();
         List<File> fList = Arrays.asList(fs);
