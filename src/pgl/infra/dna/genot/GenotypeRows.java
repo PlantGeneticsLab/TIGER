@@ -388,7 +388,7 @@ public class GenotypeRows implements GenotypeTable {
         int cnt = 0;
         double dxy = 0;
         for (int i = 0; i < size; i++) {
-            float dxySite = this.getDxySite(taxonIndex1,taxonIndex2, startSiteIndex+i);
+            float dxySite = this.getDxySite(taxonIndex1, taxonIndex2, startSiteIndex+i);
             if (Float.isNaN(dxySite)) continue;
             dxy+=dxySite;
             cnt++;
