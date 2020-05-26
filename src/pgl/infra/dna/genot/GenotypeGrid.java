@@ -435,17 +435,26 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
 
     @Override
     public float getIBSDistance(int taxonIndex1, int taxonIndex2, int startSiteIndex, int endSiteIndex) {
+        int length = endSiteIndex - startSiteIndex;
+        BitSet[] t1 = new BitSet[2];
+        BitSet[] t2 = new BitSet[2];
+        BitSet bothMissing = this.genoTaxon[taxonIndex1][2].get(startSiteIndex, endSiteIndex);
+        bothMissing.or(this.genoTaxon[taxonIndex2][2].get(startSiteIndex, endSiteIndex));
+        for (int i = 0; i < t1.length; i++) {
+            t1[i] = this.genoTaxon[taxonIndex1][i].get(startSiteIndex, endSiteIndex);
+            t1[i].or(bothMissing);
+            t2[i] = this.genoTaxon[taxonIndex2][i].get(startSiteIndex, endSiteIndex);
+            t2[i].or(bothMissing);
+        }
         int cnt = 0;
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 2; j++) {
-                BitSet bs = this.genoTaxon[taxonIndex1][i].get(startSiteIndex, endSiteIndex);
-                bs.xor(this.genoTaxon[taxonIndex2][j].get(startSiteIndex, endSiteIndex));
+        for (int i = 0; i < t1.length; i++) {
+            for (int j = 0; j < t2.length; j++) {
+                BitSet bs = (BitSet)t1[i].clone();
+                bs.xor(t2[i]);
                 cnt+=bs.cardinality();
             }
         }
-        BitSet bs = this.genoTaxon[taxonIndex1][2].get(startSiteIndex, endSiteIndex);
-        bs.or(this.genoTaxon[taxonIndex2][2].get(startSiteIndex, endSiteIndex));
-        float dxy = (float) ((double)cnt/4/(endSiteIndex-startSiteIndex-bs.cardinality()));
+        float dxy = (float) ((double)cnt/4/(endSiteIndex-startSiteIndex-bothMissing.cardinality()));
 //        float dxy = (float) ((double)cnt/4/(endSiteIndex-startSiteIndex)); //incorrect calculation which is used in Tassel, didn't count missing data
         return dxy;
     }

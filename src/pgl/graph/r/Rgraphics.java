@@ -17,7 +17,7 @@ public abstract class Rgraphics implements RgraphicsImpl {
     String defaultColor = "red";
     String title = "Graph title";
     String xLab = "Variable x";
-    String yLab = "Variavle y";
+    String yLab = "Variable y";
     //String margin = "par(mar=c(5.1, 5.1, 4.1, 3.1))";
     String margin = "par(mar=c(8, 5.1, 4.1, 3.1))";
     int titleFont = 1;
