@@ -581,18 +581,26 @@ public class HapScanner {
         samtoolsPath = pLineList.get(5);
         this.nThreads = Integer.parseInt(pLineList.get(6));
         outputDirS = pLineList.get(7);
-
         new File(outputDirS).mkdir();
-        RowTable<String> t = new RowTable<>(taxaRefBamFileS);
-        for (int i = 0; i < t.getRowNumber(); i++) {
-            String key = t.getCell(i, 0);
-            List<String> bamList = new ArrayList<>();
-            for (int j = 0; j < t.getColumnNumber()-2; j++) {
-                bamList.add(t.getCell(i, j+2));
+        try {
+            BufferedReader br = IOUtils.getTextReader(taxaRefBamFileS);
+            String temp = br.readLine();
+            List<String> l = new ArrayList<>();
+            while ((temp = br.readLine()) != null) {
+                l = PStringUtils.fastSplit(temp);
+                String key = l.get(0);
+                List<String> bamList = new ArrayList<>();
+                for (int j = 0; j < l.size()-2; j++) {
+                    bamList.add(l.get(j+2));
+                }
+                taxaBamsMap.put(key, bamList);
+                taxaRefMap.put(key, l.get(1));
             }
-            taxaBamsMap.put(key, bamList);
-            taxaRefMap.put(key, t.getCell(i, 1));
         }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
