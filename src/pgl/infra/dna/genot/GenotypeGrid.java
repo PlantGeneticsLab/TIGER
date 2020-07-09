@@ -450,7 +450,7 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
         for (int i = 0; i < t1.length; i++) {
             for (int j = 0; j < t2.length; j++) {
                 BitSet bs = (BitSet)t1[i].clone();
-                bs.xor(t2[i]);
+                bs.xor(t2[j]);
                 cnt+=bs.cardinality();
             }
         }

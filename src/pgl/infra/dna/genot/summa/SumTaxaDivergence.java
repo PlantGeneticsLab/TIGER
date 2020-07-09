@@ -26,7 +26,7 @@ public class SumTaxaDivergence {
         else {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-        StringBuilder sb = new StringBuilder("Dxy matrix calculation takes ");
+        StringBuilder sb = new StringBuilder("IBS distance matrix calculation takes ");
         sb.append(Benchmark.getTimeSpanSeconds(start)).append(" seconds");
         System.out.println(sb.toString());
         taxa = gt.getTaxaNames();
