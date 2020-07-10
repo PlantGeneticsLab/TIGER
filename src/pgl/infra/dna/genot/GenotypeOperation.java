@@ -10,14 +10,14 @@ import java.util.BitSet;
 public class GenotypeOperation {
 
     /**
-     * Merge the second genotype into the first genotype.
+     * Merge the second genotype into the first genotype. Return a new one.
      * <p> Two genotypes should have the same number of taxa in the same order.
      * @param gt1
      * @param gt2
-     * @return true if the merging is successful; false, if it is not
+     * @return Return null if the merging is not successful
      */
-    public static boolean mergeGenotypesBySite(GenotypeGrid gt1, GenotypeGrid gt2) {
-        if (gt1.getTaxaNumber() != gt2.getTaxaNumber()) return false;
+    public static GenotypeGrid mergeGenotypesBySite(GenotypeGrid gt1, GenotypeGrid gt2) {
+        if (gt1.getTaxaNumber() != gt2.getTaxaNumber()) return null;
         int snpCount = gt1.getSiteNumber()+gt2.getSiteNumber();
         BitSet[][] bArray = new BitSet[snpCount][3];
         int cnt = 0;
@@ -43,20 +43,19 @@ public class GenotypeOperation {
             nsnps[cnt] = gt2.snps[i];
             cnt++;
         }
-        gt1 = new GenotypeGrid(bArray, GenotypeGrid.GridDirection.BySite, gt1.taxa, nsnps);
-        System.out.println("Merging genotype table is successful.");
-        return true;
+        GenotypeGrid gt = new GenotypeGrid(bArray, GenotypeGrid.GridDirection.BySite, gt1.taxa, nsnps);
+        return gt;
     }
 
     /**
-     * Merge the second genotype into the first genotype.
+     * Merge the second genotype into the first genotype. Return a new one.
      * <p> Two genotypes should have the same number of taxa in the same order.
      * @param gt1
      * @param gt2
-     * @return true if the merging is successful; false, if it is not
+     * @return Return null if the merging is not successful
      */
-    public static boolean mergeGenotypesBySite(GenotypeRows gt1, GenotypeRows gt2) {
-        if (gt1.getTaxaNumber() != gt2.getTaxaNumber()) return false;
+    public static GenotypeRows mergeGenotypesBySite(GenotypeRows gt1, GenotypeRows gt2) {
+        if (gt1.getTaxaNumber() != gt2.getTaxaNumber()) return null;
         int snpCount = gt1.getSiteNumber()+gt2.getSiteNumber();
         SiteGenotypeBit[] geno = new SiteGenotypeBit[snpCount];
         int cnt = 0;
@@ -68,40 +67,43 @@ public class GenotypeOperation {
             geno[cnt] = gt1.geno[i];
             cnt++;
         }
-        gt1 = new GenotypeRows(geno, gt1.taxa);
-        return true;
+        GenotypeRows gt = new GenotypeRows(geno, gt1.taxa);
+        return gt;
     }
 
     /**
-     * Merge the second genotype into the first genotype.
+     * Merge the second genotype into the first genotype. Return a new one.
      * <p> Two genotypes should have the same number of sites in the same order
      * @param gt1
      * @param gt2
-     * @return true if the merging is successful; false, if it is not
+     * @return Return null if the merging is not successful
      */
-    public static boolean mergeGenotypesByTaxon(GenotypeGrid gt1, GenotypeGrid gt2) {
-        if (gt1.getSiteNumber() != gt2.getSiteNumber()) return false;
+    public static GenotypeGrid mergeGenotypesByTaxon(GenotypeGrid gt1, GenotypeGrid gt2) {
+        if (gt1.getSiteNumber() != gt2.getSiteNumber()) return null;
         int taxaCount = gt1.getTaxaNumber()+gt2.getTaxaNumber();
         BitSet[][] bArray = new BitSet[taxaCount][3];
+        String[] taxa = new String[taxaCount];
         int cnt = 0;
         for (int i = 0; i < gt1.getTaxaNumber(); i++) {
             for (int j = 0; j < gt1.genoTaxon[0].length; j++) {
                 bArray[cnt][j] = gt1.genoTaxon[i][j];
             }
+            taxa[cnt] = gt1.getTaxonName(i);
             cnt++;
         }
         for (int i = 0; i < gt2.getTaxaNumber(); i++) {
             for (int j = 0; j < gt2.genoTaxon[0].length; j++) {
                 bArray[cnt][j] = gt2.genoTaxon[i][j];
             }
+            taxa[cnt] = gt2.getTaxonName(i);
             cnt++;
         }
         BiSNP[] nsnps = new BiSNP[gt1.getSiteNumber()];
         for (int i = 0; i < nsnps.length; i++) {
             nsnps[i] = gt1.snps[i].replicateWithoutFeature();
         }
-        gt1 = new GenotypeGrid(bArray, GenotypeGrid.GridDirection.ByTaxon, gt1.taxa, nsnps);
-        return true;
+        GenotypeGrid gt = new GenotypeGrid(bArray, GenotypeGrid.GridDirection.ByTaxon, taxa, nsnps);
+        return gt;
     }
 
     /**
