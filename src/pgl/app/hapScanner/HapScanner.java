@@ -274,7 +274,6 @@ public class HapScanner {
                                     else if (alts[j].startsWith("D") || alts[j].startsWith("<D")) {
                                         alleleC[j+1] = '-';
                                     }
-                                    alleleC[j+1] = alts[j].charAt(0);
                                 }
                                 int[] cnts = new int[alts.length+1];
                                 sb = new StringBuilder();
@@ -299,7 +298,10 @@ public class HapScanner {
                                 String s = sb.toString().toUpperCase();
                                 for (int j = 0; j < s.length(); j++) {
                                     char cChar = s.charAt(j);
-                                    if (cChar == '.' || cChar == ',') cnts[0]++;
+                                    if (cChar == '.' || cChar == ',') {
+                                        cnts[0]++;
+                                        continue;
+                                    }
                                     for (int k = 1; k < alleleC.length; k++) {
                                         if (cChar == alleleC[k]) cnts[k]++;
                                     }
@@ -343,6 +345,9 @@ public class HapScanner {
         }
     }
 
+    /**
+     * @deprecated
+     */
     public void scanIndiVCF () {
         this.creatFactorialMap();
         RowTable<String> t = new RowTable<> (posAlleleFileS);
@@ -422,7 +427,6 @@ public class HapScanner {
                                     else if (alts[j].startsWith("D") || alts[j].startsWith("<D")) {
                                         alleleC[j+1] = '-';
                                     }
-                                    alleleC[j+1] = alts[j].charAt(0);
                                 }
                                 int[] cnts = new int[alts.length+1];
                                 sb = new StringBuilder();
