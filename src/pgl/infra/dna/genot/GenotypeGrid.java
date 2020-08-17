@@ -77,6 +77,7 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
         else if (format == GenoIOFormat.HDF5) {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
+        this.sortByTaxa();
     }
 
     public GenotypeGrid (BitSet[][] bArray, GridDirection gd, String[] taxa, BiSNP[] snps) {
