@@ -12,20 +12,37 @@ import java.util.Arrays;
 
 public class ChromosomeFd {
 
+    //The input genotype table containing genotypes of P1, P2, and P3
     GenotypeGrid oriGT = null;
 
+    //The genotype table of P1, only SNPs with ancestral allele were picked up from the original genotype table
     GenotypeGrid p1 = null;
 
+    //The genotype table of P2, only SNPs with ancestral allele were picked up from the original genotype table
     GenotypeGrid p2 = null;
 
+    //The genotype table of P3, only SNPs with ancestral allele were picked up from the original genotype table
     GenotypeGrid p3 = null;
 
-    int windowSNPNumber = Integer.MIN_VALUE;
+    double regionD = Double.NaN;
 
-    public ChromosomeFd(GenotypeGrid oriGT, String[] p1Taxa, String[] p2Taxa, String[] p3Taxa, int[] ancestralPos, char[] oriAncestralAlleles, int windowSNPNumber) {
+    double regionFd = Double.NaN;
+
+    int windowSize = Integer.MIN_VALUE;
+
+    int stepSize = Integer.MIN_VALUE;
+
+    int snpWindowSize = Integer.MIN_VALUE;
+
+    int snpStepSize = Integer.MIN_VALUE;
+
+    int minAncestralSNPNumberInWindow = 5;
+
+    public ChromosomeFd(GenotypeGrid oriGT, String[] p1Taxa, String[] p2Taxa, String[] p3Taxa, int[] ancestralPos, char[] oriAncestralAlleles) {
         this.oriGT = oriGT;
         this.initialize(p1Taxa, p2Taxa, p3Taxa, ancestralPos, oriAncestralAlleles);
     }
+
 
     private void initialize (String[] p1Taxa, String[] p2Taxa, String[] p3Taxa, int[] ancestralPos, char[] oriAncestralAlleles) {
         this.oriGT = oriGT;
