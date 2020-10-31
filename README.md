@@ -41,4 +41,4 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 * FastCall  
 [Punna Ramu, Williams Esuma, Robert Kawuki, Ismail Y Rabbi, Chiedozie Egesi, Jessen V Bredeson, Rebecca S Bart, Janu Verma, Edward S Buckler, Fei Lu. (2017). Cassava haplotype map highlights fixation of deleterious mutations during clonal propagation. Nature Genetics. doi: 10.1038/ng.3845!](https://www.nature.com/articles/ng.3845)
 * HapScanner   
-Coming soon.
+[Y. Zhou, X. Zhao, Y. Li, J. Xu, A. Bi, L. Kang, D. Xu, H. Chen, Y. Wang, Y. Wang, S. Liu, C. Jiao, H. Lu, J. Wang, C. Yin, Y. Jiao, F. Lu. (2020). Triticum population sequencing provides insights into wheat adaptation. Nature Genetics. doi:10.1038/s41588-020-00722-w.](https://www.nature.com/articles/s41588-020-00722-w)
