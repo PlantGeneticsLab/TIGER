@@ -5,7 +5,6 @@ import gnu.trove.set.hash.TByteHashSet;
 import gnu.trove.set.hash.TIntHashSet;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import pgl.infra.dna.FastaBit;
-import pgl.infra.dna.genot.GenoSiteBlockVCF;
 import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
@@ -15,12 +14,12 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
 import static cern.jet.math.Arithmetic.factorial;
 
-public class FastCall {
+public class FastCall_old {
 
     int[] chroms = null;
     int[] chromLength = null;
@@ -57,7 +56,7 @@ public class FastCall {
     //Minimum number of taxa where the minor allele shows up
     int minorOccurrenceThresh = 2;
 
-    public FastCall(String parameterFileS) {
+    public FastCall_old(String parameterFileS) {
         this.callSNP(parameterFileS);
     }
 
@@ -678,64 +677,38 @@ public class FastCall {
         return bamPathPileupReaderMap;
     }
 
-    class RunPileup implements Callable <RunPileup> {
-        String command = null;
-        LongAdder counter;
-
-        public RunPileup (String cmd, LongAdder counter) {
-            this.command = cmd;
-            this.counter = counter;
-        }
-
-        @Override
-        public RunPileup call() throws Exception {
-            try {
-                Runtime rt = Runtime.getRuntime();
-                Process p = rt.exec(command);
-                //                BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                //                String temp = null;
-                //                while ((temp = br.readLine()) != null) {
-                //                    System.out.println(temp);
-                //                }
-                p.waitFor();
-                counter.increment();
-                int count = counter.intValue();
-                if (count%50 == 0) {
-                    System.out.println(String.valueOf(count)+ " files pileuped.");
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
-
     private void performPileup (int currentChr, int startPos, int endPos, String referenceFileS) {
         System.out.println("Pileup is being performed on chromosome "+String.valueOf(currentChr)+" from "+String.valueOf(startPos)+" to "+String.valueOf(endPos));
         long timeStart = System.nanoTime();
         List<String> bamList = Arrays.asList(bamPaths);
-        try {
-            LongAdder counter = new LongAdder();
-            ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
-            for (int i = 0; i < bamList.size(); i++) {
-                String bamFileS = bamList.get(i);
+        LongAdder counter = new LongAdder();
+        for (int i = 0; i < bounds.length; i++) {
+            List<String> subBamList = bamList.subList(bounds[i][0], bounds[i][1]);
+            subBamList.parallelStream().forEach(bamFileS -> {
                 String pileupFileS = this.bamPathPileupPathMap.get(bamFileS);
                 StringBuilder sb = new StringBuilder();
                 sb.append("samtools mpileup -A -B -q 30 -Q 20 -f ").append(referenceFileS).append(" ").append(bamFileS).append(" -r ");
                 sb.append(currentChr).append(":").append(startPos).append("-").append(endPos).append(" -o ").append(pileupFileS);
                 String command = sb.toString();
-                RunPileup rp = new RunPileup(command, counter);
-                Future<RunPileup> f = pool.submit(rp);
-            }
-            pool.shutdown();
-            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+                //System.out.println(command);
+                try {
+                    Runtime rt = Runtime.getRuntime();
+                    Process p = rt.exec(command);
+                    //                BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                    //                String temp = null;
+                    //                while ((temp = br.readLine()) != null) {
+                    //                    System.out.println(temp);
+                    //                }
+                    p.waitFor();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                counter.increment();
+                int cnt = counter.intValue();
+                if (cnt%10 == 0) System.out.println("Pileuped " + String.valueOf(cnt) + " bam files. Total: " + String.valueOf(this.bamPaths.length));
+            });
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
         System.out.println("Pileup is finished. Time took " + String.format("%.2f", Benchmark.getTimeSpanMinutes(timeStart)) + " mins");
     }
 
