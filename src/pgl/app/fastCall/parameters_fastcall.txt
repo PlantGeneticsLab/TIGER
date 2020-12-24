@@ -31,3 +31,6 @@
 
 #Parameter8:	Number of threads for pileup
 32
+
+#Parameter 9: The path of samtools
+/usr/local/bin/samtools

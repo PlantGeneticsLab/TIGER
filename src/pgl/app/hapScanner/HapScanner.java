@@ -248,6 +248,14 @@ public class HapScanner {
                     Runtime rt = Runtime.getRuntime();
                     Process p = rt.exec(command);
                     BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                    BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                    String temp = null;
+                    while ((temp = bre.readLine()) != null) {
+                        System.out.println(command);
+                        System.out.println(temp);
+                    }
+
                     BufferedWriter bw = IOUtils.getTextWriter(indiVCFFileS);
                     String current = br.readLine();
                     List<String> currentList = null;

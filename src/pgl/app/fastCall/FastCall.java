@@ -22,6 +22,7 @@ import static cern.jet.math.Arithmetic.factorial;
 
 public class FastCall {
 
+    String samtoolsPath = null;
     int[] chroms = null;
     int[] chromLength = null;
     String[] taxaNames = null;
@@ -106,6 +107,7 @@ public class FastCall {
         }
         String vcfDirS = pLineList.get(6);
         this.threadsNum = Integer.valueOf(pLineList.get(7));
+        this.samtoolsPath = pLineList.get(8);
         long start = System.nanoTime();
         System.out.println("Reading reference genome from "+ referenceFileS);
         genomeFa = new FastaBit(referenceFileS);
@@ -692,11 +694,12 @@ public class FastCall {
             try {
                 Runtime rt = Runtime.getRuntime();
                 Process p = rt.exec(command);
-                //                BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                //                String temp = null;
-                //                while ((temp = br.readLine()) != null) {
-                //                    System.out.println(temp);
-                //                }
+                                BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                                String temp = null;
+                                while ((temp = br.readLine()) != null) {
+                                    System.out.println(command);
+                                    System.out.println(temp);
+                                }
                 p.waitFor();
                 counter.increment();
                 int count = counter.intValue();
@@ -722,8 +725,8 @@ public class FastCall {
             for (int i = 0; i < bamList.size(); i++) {
                 String bamFileS = bamList.get(i);
                 String pileupFileS = this.bamPathPileupPathMap.get(bamFileS);
-                StringBuilder sb = new StringBuilder();
-                sb.append("samtools mpileup -A -B -q 30 -Q 20 -f ").append(referenceFileS).append(" ").append(bamFileS).append(" -r ");
+                StringBuilder sb = new StringBuilder(this.samtoolsPath);
+                sb.append(" mpileup -A -B -q 30 -Q 20 -f ").append(referenceFileS).append(" ").append(bamFileS).append(" -r ");
                 sb.append(currentChr).append(":").append(startPos).append("-").append(endPos).append(" -o ").append(pileupFileS);
                 String command = sb.toString();
                 RunPileup rp = new RunPileup(command, counter);
