@@ -34,6 +34,8 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 ## Releases
 * [v1.0.0](https://github.com/PlantGeneticsLab/TIGER/releases/tag/V1.0.0) 03/31/2020
 * [v1.0.1](https://github.com/PlantGeneticsLab/TIGER/releases/tag/v1.0.1) 05/15/2020
+* [v1.0.2](https://github.com/PlantGeneticsLab/TIGER/releases/tag/v1.0.2) 11/16/2020
+* [v1.0.3](https://github.com/PlantGeneticsLab/TIGER/releases/tag/v1.0.3) 12/24/2020
 
 ***
 ## Citations
