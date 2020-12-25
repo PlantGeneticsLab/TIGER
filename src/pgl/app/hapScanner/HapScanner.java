@@ -252,10 +252,10 @@ public class HapScanner {
                     BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     String temp = null;
                     while ((temp = bre.readLine()) != null) {
+                        if (temp.startsWith("[m")) continue;
                         System.out.println(command);
                         System.out.println(temp);
                     }
-
                     BufferedWriter bw = IOUtils.getTextWriter(indiVCFFileS);
                     String current = br.readLine();
                     List<String> currentList = null;
@@ -282,9 +282,12 @@ public class HapScanner {
                                     else if (alts[j].startsWith("D") || alts[j].startsWith("<D")) {
                                         alleleC[j+1] = '-';
                                     }
+                                    else {
+                                        alleleC[j+1] = alts[j].charAt(0);
+                                    }
                                 }
                                 int[] cnts = new int[alts.length+1];
-                                sb = new StringBuilder();
+                                sb.setLength(0);
                                 for (int j = 0; j < bamPaths.size(); j++) {
                                     sb.append(currentList.get(4+j*3));
                                 }
@@ -321,7 +324,6 @@ public class HapScanner {
                                 String vcf = this.getGenotype(cnts);
                                 bw.write(vcf);
                                 bw.newLine();
-
                                 current = br.readLine();
                                 if (current != null) {
                                     currentList = PStringUtils.fastSplit(current);
@@ -566,10 +568,10 @@ public class HapScanner {
             BufferedReader br = IOUtils.getTextReader(infileS);
             String temp = null;
             boolean ifOut = false;
-            if (!(temp = br.readLine()).equals("@App:\tHapScanner")) ifOut = true;
-            if (!(temp = br.readLine()).equals("@Author:\tFei Lu")) ifOut = true;
-            if (!(temp = br.readLine()).equals("@Email:\tflu@genetics.ac.cn; dr.lufei@gmail.com")) ifOut = true;
-            if (!(temp = br.readLine()).equals("@Homepage:\thttps://plantgeneticslab.weebly.com/")) ifOut = true;
+//            if (!(temp = br.readLine()).equals("@App:\tHapScanner")) ifOut = true;
+//            if (!(temp = br.readLine()).equals("@Author:\tFei Lu")) ifOut = true;
+//            if (!(temp = br.readLine()).equals("@Email:\tflu@genetics.ac.cn; dr.lufei@gmail.com")) ifOut = true;
+//            if (!(temp = br.readLine()).equals("@Homepage:\thttps://plantgeneticslab.weebly.com/")) ifOut = true;
             if (ifOut) {
                 System.out.println("Thanks for using HapScanner.");
                 System.out.println("Please keep the authorship in the parameter file. Program stops.");
@@ -577,6 +579,7 @@ public class HapScanner {
             }
             while ((temp = br.readLine()) != null) {
                 if (temp.startsWith("#")) continue;
+                if (temp.startsWith("@")) continue;
                 if (temp.isEmpty()) continue;
                 pLineList.add(temp);
             }
