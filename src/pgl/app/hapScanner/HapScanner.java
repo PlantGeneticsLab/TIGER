@@ -224,7 +224,7 @@ public class HapScanner {
 
 //        int[][] indices = PArrayUtils.getSubsetsIndicesBySubsetSize(taxaList.size(), this.nThreads);
         LongAdder counter = new LongAdder();
-        ExecutorService pool = Executors.newFixedThreadPool(1);
+        ExecutorService pool = Executors.newFixedThreadPool(this.nThreads);
         List<Future<IndiVCF>> resultList = new ArrayList<>();
         for (int i = 0; i < taxaList.size(); i++) {
             String indiVCFFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
