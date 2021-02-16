@@ -9,7 +9,7 @@ TIGER integrates a collection of toolkits facilitating research analysis on gene
 
 ***
 ## Usage
-TIGER is designed to simpliy its usage for the convinience of end users. It has a list of applications (Apps). Each app has a parameter file, where app parameters can be specified in the parameter file. Users can run apps in TIGER by selecting an app and specifify its parameters. TIGER has only two options,  
+TIGER is designed to simpliy its usage for the convinience of end users. It has a list of applications (Apps). Each app has a parameter file, where app parameters can be specified in the parameter file. In parameter files, lines staring with "#" can be changed, lines starting with "@" cannot be changed, lines starting with neither "#" nor "@" are user defined papameters. Users can run apps in TIGER by selecting an app and specifify its parameters. TIGER has only two options,  
 * -a, the name of the selected app  
 * -p, the path of the parameter file 
 
@@ -24,7 +24,7 @@ TIGER will be developed in a long-term basis. Detailed usage of apps can be seen
 
 * [FastCall](https://github.com/PlantGeneticsLab/TIGER/wiki/FastCall) -Superfast variant calling and genotyping for whole-genome shotgun (WGS) sequencing data.
 * [HapScanner](https://github.com/PlantGeneticsLab/TIGER/wiki/HapScanner) -Superfast genotyper for whole-genome shotgun (WGS) sequencing data, based on an existing genetic variation library.
-* [PopDep](https://github.com/PlantGeneticsLab/TIGER/wiki/PopDep) -Read depth profiler for a population, based on whole-genome shotgun (WGS) sequencing data..
+* [PopDep](https://github.com/PlantGeneticsLab/TIGER/wiki/PopDep) -Read depth profiler for a population, based on whole-genome shotgun (WGS) sequencing data.
 
 ***
 ## Developer Manual
