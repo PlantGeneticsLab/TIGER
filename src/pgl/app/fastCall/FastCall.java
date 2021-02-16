@@ -67,16 +67,6 @@ public class FastCall {
         try {
             BufferedReader br = IOUtils.getTextReader(parameterFileS);
             String temp = null;
-//            boolean ifOut = false;
-//            if (!(temp = br.readLine()).equals("@App:\tFastCall")) ifOut = true;
-//            if (!(temp = br.readLine()).equals("@Author:\tFei Lu")) ifOut = true;
-//            if (!(temp = br.readLine()).equals("@Email:\tflu@genetics.ac.cn; dr.lufei@gmail.com")) ifOut = true;
-//            if (!(temp = br.readLine()).equals("@Homepage:\thttps://plantgeneticslab.weebly.com/")) ifOut = true;
-//            if (ifOut) {
-//                System.out.println("Thanks for using FastCall.");
-//                System.out.println("Please keep the authorship in the parameter file. Program stops.");
-//                System.exit(0);
-//            }
             while ((temp = br.readLine()) != null) {
                 if (temp.startsWith("@")) continue;
                 if (temp.startsWith("#")) continue;

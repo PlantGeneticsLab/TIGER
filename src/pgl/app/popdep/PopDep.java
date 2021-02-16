@@ -292,20 +292,12 @@ public class PopDep {
         try {
             BufferedReader br = IOUtils.getTextReader(parameterFileS);
             String temp = null;
-            boolean ifOut = false;
-            if (!(temp = br.readLine()).equals("@App:\tPopDep")) ifOut = true;
-            if (!(temp = br.readLine()).equals("@Author:\tFei Lu")) ifOut = true;
-            if (!(temp = br.readLine()).equals("@Email:\tflu@genetics.ac.cn; dr.lufei@gmail.com")) ifOut = true;
-            if (!(temp = br.readLine()).equals("@Homepage:\thttps://plantgeneticslab.weebly.com/")) ifOut = true;
-            temp = br.readLine();
-            this.step = Integer.parseInt(temp.split("\t")[1]);
-            if (ifOut) {
-                System.out.println("Thanks for using HapScanner.");
-                System.out.println("Please keep the authorship in the parameter file. Program stops.");
-                System.exit(0);
-            }
             while ((temp = br.readLine()) != null) {
                 if (temp.startsWith("#")) continue;
+                if (temp.startsWith("@")) {
+                    this.step = Integer.parseInt(temp.split("\t")[1]);
+                    continue;
+                }
                 if (temp.isEmpty()) continue;
                 pLineList.add(temp);
             }

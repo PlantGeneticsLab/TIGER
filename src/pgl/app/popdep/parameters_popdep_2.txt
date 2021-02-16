@@ -1,7 +1,7 @@
-@App:	PopDep
-@Author:	Fei Lu
-@Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
-@Homepage:	https://plantgeneticslab.weebly.com/
+#App:	PopDep
+#Author:	Fei Lu
+#Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+#Homepage:	https://plantgeneticslab.github.io/home/
 @Step:	2
 
 #PopDep is used to perform perform depth profiling in a population, based on media/high depth (e.g. >5X) whole genome sequencing data. They are useful to identify conserved regions of a genome.

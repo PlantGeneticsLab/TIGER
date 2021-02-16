@@ -1,7 +1,7 @@
-@App:	FastCall
-@Author:	Fei Lu
-@Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
-@Homepage:	https://plantgeneticslab.weebly.com/
+#App:	FastCall
+#Author:	Fei Lu
+#Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+#Homepage:	https://plantgeneticslab.github.io/home/
 
 #FastCall is designed to perform SNP calling and genotyping of diploid ourcrossing/incrossing species, based on whole-genome sequencing data.
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.

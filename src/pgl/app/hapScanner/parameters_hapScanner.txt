@@ -1,7 +1,7 @@
-@App:	HapScanner
-@Author:	Fei Lu
-@Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
-@Homepage:	https://plantgeneticslab.weebly.com/
+#App:	HapScanner
+#Author:	Fei Lu
+#Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+#Homepage:	https://plantgeneticslab.github.io/home/
 
 #HapScanner is used to perform genotyping of diploid species from whole genome sequenceing data, based on an existing genetic variation library.
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.

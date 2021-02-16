@@ -741,16 +741,6 @@ public class HapScanner {
         try {
             BufferedReader br = IOUtils.getTextReader(infileS);
             String temp = null;
-            boolean ifOut = false;
-//            if (!(temp = br.readLine()).equals("@App:\tHapScanner")) ifOut = true;
-//            if (!(temp = br.readLine()).equals("@Author:\tFei Lu")) ifOut = true;
-//            if (!(temp = br.readLine()).equals("@Email:\tflu@genetics.ac.cn; dr.lufei@gmail.com")) ifOut = true;
-//            if (!(temp = br.readLine()).equals("@Homepage:\thttps://plantgeneticslab.weebly.com/")) ifOut = true;
-            if (ifOut) {
-                System.out.println("Thanks for using HapScanner.");
-                System.out.println("Please keep the authorship in the parameter file. Program stops.");
-                System.exit(0);
-            }
             while ((temp = br.readLine()) != null) {
                 if (temp.startsWith("#")) continue;
                 if (temp.startsWith("@")) continue;
