@@ -19,7 +19,7 @@ import pgl.app.speedCall.SpeedCall;
 import pgl.infra.utils.CLIInterface;
 
 /**
- *
+ * This provides the interface between users and TIGER apps
  * @author feilu
  */
 public class PGLAPPEntrance implements CLIInterface {
