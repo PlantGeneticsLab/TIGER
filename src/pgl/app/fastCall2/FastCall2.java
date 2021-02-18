@@ -5,7 +5,6 @@ import pgl.AppUtils;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.utils.*;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -103,7 +102,7 @@ public class FastCall2 {
                 }
                 sb.append(" -r ").append(this.chrom).append(":").append(this.regionStart).append("-").append(regionEnd-1);
                 String command = sb.toString();
-                System.out.println(command);
+//                System.out.println(command);
                 TaxonCall tc = new TaxonCall(command, binBound, binStarts, taxaNames[i], taxaOutDirs[i], counter);
                 Future<TaxonCall> f = pool.submit(tc);
             }
@@ -116,7 +115,6 @@ public class FastCall2 {
     }
 
     class TaxonCall implements Callable <TaxonCall> {
-
         String command = null;
         int[][] binBound = null;
         int[] binStarts = null;
@@ -132,7 +130,11 @@ public class FastCall2 {
         int[] alleleCount = new int[pileupAlleleAscIIs.length];
         IntOpenHashSet insertionLengthSet = new IntOpenHashSet();
         IntOpenHashSet deletionLengthSet = new IntOpenHashSet();
-
+        boolean ifWrite = false;
+        byte minorAllele = Byte.MIN_VALUE;
+        int minorAlleleDepth = Integer.MIN_VALUE;
+        DataOutputStream dos = null;
+        int currentBinIndex = Integer.MIN_VALUE;
 
         public TaxonCall (String command, int[][] binBound, int[] binStarts, String taxon, File outDir, LongAdder counter) {
             this.command = command;
@@ -144,26 +146,10 @@ public class FastCall2 {
             this.counter = counter;
         }
 
-        public DataOutputStream getSNPDos (int binIndex) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".snp.ing.gz");
-            String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
-            System.out.println(outfileS);
-            DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
-            return dos;
-        }
-
-        public DataOutputStream getINDDos (int binIndex) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ind.ing.gz");
-            String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
-            DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
-            return dos;
-        }
-
         private void initialize1 () {
             this.baseSb.setLength(0);
             this.currentDepth = 0;
+            ifWrite = false;
         }
 
         private void initialize2 () {
@@ -172,7 +158,7 @@ public class FastCall2 {
             deletionLengthSet.clear();
         }
 
-        public void processPileupLine (String line) {
+        public boolean processPileupLine (String line) {
             lList = PStringUtils.fastSplit(line);
             this.initialize1();
             currentPos = Integer.parseInt(lList.get(1));
@@ -180,10 +166,10 @@ public class FastCall2 {
                 currentDepth+=Integer.parseInt(lList.get(i));
                 baseSb.append(lList.get(i+1));
             }
-            if (currentDepth < mdcThresh) return;
+            if (currentDepth < mdcThresh) return false;
             double siteDepthRatio = (double)currentDepth/this.taxonCoverage;
-            if (siteDepthRatio < mindrThresh) return;
-            if (siteDepthRatio > maxdrTrresh) return;
+            if (siteDepthRatio < mindrThresh) return false;
+            if (siteDepthRatio > maxdrTrresh) return false;
             String baseS = baseSb.toString().toUpperCase();
             byte[] baseB = baseS.getBytes();
             this.initialize2();
@@ -214,17 +200,66 @@ public class FastCall2 {
                 alleleCount[index]++;
                 vCnt++;
             }
-            if (vCnt == 0) return;
-            if (insertionLengthSet.size()+deletionLengthSet.size() > indelTypeThresh) return;
+            if (vCnt == 0) return false;
+            if (insertionLengthSet.size()+deletionLengthSet.size() > indelTypeThresh) return false;
             int[] alleleCountDesendingIndex = PArrayUtils.getIndicesByDescendingValue(alleleCount);
             double alleleDepthRatio = (double)alleleCount[alleleCountDesendingIndex[0]]/currentDepth;
-            if (alleleDepthRatio < herThresh) return;
-            else if (alleleDepthRatio > 1 - herThresh && alleleDepthRatio < horThresh) return;
+            if (alleleDepthRatio < herThresh) return false;
+            else if (alleleDepthRatio > 1 - herThresh && alleleDepthRatio < horThresh) return false;
             if (alleleCount[alleleCountDesendingIndex[1]] != 0) {
                 alleleDepthRatio = (double)alleleCount[alleleCountDesendingIndex[1]]/currentDepth;
-                if (alleleDepthRatio > tdrTresh) return;
+                if (alleleDepthRatio > tdrTresh) return false;
             }
+            ifWrite = true;
+            this.minorAllele = pileupAlleleAscIIs[alleleCountDesendingIndex[0]];
+            this.minorAlleleDepth = alleleCount[alleleCountDesendingIndex[0]];
+            return ifWrite;
+        }
 
+        public void closeDos () {
+            try {
+                dos.flush();
+                dos.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void setDos () {
+            int binIndex = Arrays.binarySearch(binStarts, this.currentPos);
+            if (binIndex < 0) binIndex = -binIndex-2;
+            if (binIndex != currentBinIndex) {
+                if (currentBinIndex > -1) this.closeDos();
+                StringBuilder sb = new StringBuilder();
+                sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ing.gz");
+                String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
+//                System.out.println(outfileS);
+                dos = IOUtils.getBinaryGzipWriter(outfileS);
+                currentBinIndex = binIndex;
+            }
+        }
+
+        private byte getCodedDepth (int depth) {
+            int dep = -128+depth;
+            return (byte)dep;
+        }
+
+        private int getDecodeDepth (byte dep) {
+            return dep+128;
+        }
+
+        public void writeVariants () {
+            this.setDos();
+            try {
+                dos.writeInt(this.currentPos);
+                dos.writeByte(this.minorAllele);
+                dos.writeByte(this.getCodedDepth(this.currentDepth));
+                dos.writeByte(this.getCodedDepth(this.minorAlleleDepth));
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -233,23 +268,19 @@ public class FastCall2 {
                 Runtime rt = Runtime.getRuntime();
                 Process p = rt.exec(command);
                 String temp = null;
-
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                DataOutputStream snpDos = null;
-                DataOutputStream indDos = null;
-
                 while ((temp = br.readLine()) != null) {
-                    this.processPileupLine(temp);
-
+                    if(!this.processPileupLine(temp)) continue;
+                    this.writeVariants();
                 }
                 br.close();
-
                 BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 while ((temp = bre.readLine()) != null) {
                     if (temp.startsWith("[m")) continue;
                     System.out.println(command);
                     System.out.println(temp);
                 }
+                this.closeDos();
                 bre.close();
                 p.waitFor();
             }
