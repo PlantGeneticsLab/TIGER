@@ -285,6 +285,8 @@ public class HapScanner {
                     System.out.println(command);
                     System.out.println(temp);
                 }
+                bre.close();
+
                 BufferedWriter bw = IOUtils.getTextWriter(indiVCFFileS);
                 String current = br.readLine();
                 List<String> currentList = null;
