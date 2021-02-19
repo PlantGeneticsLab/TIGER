@@ -3,6 +3,7 @@ package pgl.app.fastCall2;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
+import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
@@ -124,6 +125,7 @@ class DiscoverVariation {
         IntOpenHashSet deletionLengthSet = new IntOpenHashSet();
         boolean ifWrite = false;
         byte minorAllele = Byte.MIN_VALUE;
+        int indelLength = Integer.MIN_VALUE;
         int minorAlleleDepth = Integer.MIN_VALUE;
         DataOutputStream dos = null;
         int currentBinIndex = Integer.MIN_VALUE;
@@ -148,6 +150,7 @@ class DiscoverVariation {
             Arrays.fill(alleleCount, 0);
             insertionLengthSet.clear();
             deletionLengthSet.clear();
+            indelLength = Integer.MIN_VALUE;
         }
 
         public boolean processPileupLine (String line) {
@@ -168,9 +171,10 @@ class DiscoverVariation {
             int index = 0;
             int vCnt = 0;
             for (int i = 0; i < baseB.length; i++) {
-                index = Arrays.binarySearch(FastCall2.pileupAlleleAscIIs, baseB[i]);
+                byte alleleByte = FastCall2.pileupAscIIToAlleleByteMap.get(baseB[i]);
+                index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
                 if (index < 0) continue;
-                else if (index < 2) {
+                else if (index > 3) {
                     int startIndex = i+1;
                     int endIndex = i+2;
                     for (int j = i+2; j < baseB.length; j++) {
@@ -184,7 +188,7 @@ class DiscoverVariation {
                         baseSb.append((char)baseB[j]);
                     }
                     int length = Integer.parseInt(baseSb.toString());
-                    if (index == 0) insertionLengthSet.add(length);
+                    if (index == 5) insertionLengthSet.add(length);
                     else deletionLengthSet.add(length);
                     i+=baseSb.length();
                     i+=length;
@@ -203,8 +207,14 @@ class DiscoverVariation {
                 if (alleleDepthRatio > tdrTresh) return false;
             }
             ifWrite = true;
-            this.minorAllele = FastCall2.pileupAlleleAscIIs[alleleCountDesendingIndex[0]];
+            this.minorAllele = AlleleEncoder.alleleBytes[alleleCountDesendingIndex[0]];
             this.minorAlleleDepth = alleleCount[alleleCountDesendingIndex[0]];
+            if (insertionLengthSet.size() > 0) {
+                indelLength = insertionLengthSet.toArray(new int[insertionLengthSet.size()])[0];
+            }
+            else if (deletionLengthSet.size() > 0) {
+                indelLength = deletionLengthSet.toArray(new int[deletionLengthSet.size()])[0];
+            }
             return ifWrite;
         }
 
@@ -236,7 +246,7 @@ class DiscoverVariation {
             this.setDos();
             try {
                 dos.writeInt(this.currentPos);
-                dos.writeByte(this.minorAllele);
+                dos.writeByte(FastCall2.getCodedAllele(this.minorAllele, this.indelLength));
                 dos.writeByte(FastCall2.getCodedDepth(this.currentDepth));
                 dos.writeByte(FastCall2.getCodedDepth(this.minorAlleleDepth));
             }
