@@ -4,10 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.allele.AlleleEncoder;
-import pgl.infra.utils.Benchmark;
-import pgl.infra.utils.IOUtils;
-import pgl.infra.utils.PArrayUtils;
-import pgl.infra.utils.PStringUtils;
+import pgl.infra.utils.*;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -73,18 +70,12 @@ class DiscoverVariation {
             f.mkdir();
             taxaOutDirs[i] = f;
         }
-        int actualChrLength = this.regionEnd - this.regionStart;
-        //starting from actual genome position
-        int[][] binBound = PArrayUtils.getSubsetsIndicesBySubsetSize (actualChrLength, FastCall2.binSize);
-        int[] binStarts = new int[binBound.length];
-        for (int i = 0; i < binBound.length; i++) {
-            binBound[i][0] = binBound[i][0]+regionStart;
-            binBound[i][1] = binBound[i][1]+regionStart;
-            binStarts[i] = binBound[i][0];
-        }
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd);
+        int[][] binBound = d.getFirstElement();
+        int[] binStarts = d.getSecondElement();
         try {
             LongAdder counter = new LongAdder();
-            ExecutorService pool = Executors.newFixedThreadPool(1);
+            ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < taxaNames.length; i++) {
                 String[] bamFiles = this.taxaBamPathMap.get(taxaNames[i]);
@@ -238,8 +229,21 @@ class DiscoverVariation {
                 String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
 //                System.out.println(outfileS);
                 dos = IOUtils.getBinaryGzipWriter(outfileS);
+                try {
+                    dos.writeUTF(this.taxon);
+                    dos.writeShort((short)chrom);
+                    dos.writeInt(binBound[binIndex][0]);
+                    dos.writeInt(binBound[binIndex][1]);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
                 currentBinIndex = binIndex;
             }
+        }
+
+        public void writeHeader () {
+
         }
 
         public void writeVariants () {

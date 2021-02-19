@@ -42,8 +42,21 @@ public class FastCall2 {
             new DiscoverVariation(pLineList);
         }
         else if (step == 2) {
-
+            new VariationLibrary(pLineList);
         }
+    }
+
+    static Dyad<int[][], int[]> getBins (int regionStart, int regionEnd) {
+        int actualChrLength = regionEnd - regionStart;
+        //starting from actual genome position
+        int[][] binBound = PArrayUtils.getSubsetsIndicesBySubsetSize (actualChrLength, binSize);
+        int[] binStarts = new int[binBound.length];
+        for (int i = 0; i < binBound.length; i++) {
+            binBound[i][0] = binBound[i][0]+regionStart;
+            binBound[i][1] = binBound[i][1]+regionStart;
+            binStarts[i] = binBound[i][0];
+        }
+        return new Dyad<>(binBound, binStarts);
     }
 
     static byte getCodedDepth (int depth) {
