@@ -49,26 +49,24 @@ public class FastCall2 {
         return new Dyad<>(binBound, binStarts);
     }
 
-    static byte getCodedDepth (int depth) {
-        int dep = -128+depth;
-        return (byte)dep;
-    }
-
-    static int getDecodeDepth (byte dep) {
-        return dep+128;
-    }
-
-    static byte getCodedAllele (byte alleleByte, int indelLength) {
+    static int getCodedPosAlleleIndelLength(int binStart, int position, byte alleleByte, int indelLength) {
+        int v = (position-binStart) << 8;
+        v = v + (alleleByte << 5);
         if (indelLength > 32) indelLength = 32;
-        byte v = (byte)((alleleByte << 5) + indelLength);
+        return (v + indelLength);
+    }
+
+    static int getCodedPosition (int codedPosAlleleIndelLength, int binStart) {
+        int v = (codedPosAlleleIndelLength >> 8) + binStart;
         return v;
     }
 
-    static byte getAlleleByte (byte codedAllele) {
-        return (byte)(codedAllele>>5);
+    static byte getAlleleByte (int codedPosAlleleIndelLength) {
+        int v = ((byte)codedPosAlleleIndelLength) >> 5;
+        return (byte)v;
     }
 
-    static byte getIndelLength (byte codedAllele) {
-        return (byte)(31 & codedAllele);
+    static byte getIndelLength (int codedPosAlleleIndelLength) {
+        return (byte)(31 & ((byte)codedPosAlleleIndelLength));
     }
 }

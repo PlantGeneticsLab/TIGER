@@ -13,6 +13,8 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
     short chrom = Short.MIN_VALUE;
     int binStart = Integer.MIN_VALUE;
     int binEnd = Integer.MIN_VALUE;
+    IntArrayList codedAlleleInfo = null;
+
     int[] positions = null;
     byte[] codedAlleles = null;
 
@@ -27,18 +29,11 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
             this.chrom = dis.readShort();
             this.binStart = dis.readInt();
             this.binEnd = dis.readInt();
-            int currentPosition = 0;
-            byte codedAllele = 0;
-            int siteDepth = 0;
-            int alleleDepth = 0;
-            IntArrayList positionList = new IntArrayList();
-            ByteArrayList alleleList = new ByteArrayList();
-            while ((currentPosition = dis.readInt()) != Integer.MIN_VALUE) {
-                positionList.add(currentPosition);
-                alleleList.add(dis.readByte());
+            codedAlleleInfo = new IntArrayList();
+            int currentRecord = 0;
+            while ((currentRecord = dis.readInt()) != Integer.MIN_VALUE) {
+                codedAlleleInfo.add(currentRecord);
             }
-            this.positions = positionList.toIntArray();
-            this.codedAlleles = alleleList.toByteArray();
             dis.close();
         }
         catch (Exception e) {

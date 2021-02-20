@@ -243,17 +243,10 @@ class DiscoverVariation {
             }
         }
 
-        public void writeHeader () {
-
-        }
-
         public void writeVariants () {
             this.setDos();
             try {
-                dos.writeInt(this.currentPos);
-                dos.writeByte(FastCall2.getCodedAllele(this.minorAllele, this.indelLength));
-//                dos.writeByte(FastCall2.getCodedDepth(this.currentDepth));
-//                dos.writeByte(FastCall2.getCodedDepth(this.minorAlleleDepth));
+                dos.writeInt(FastCall2.getCodedPosAlleleIndelLength(binStarts[currentBinIndex], currentPos, minorAllele, indelLength));
             }
             catch (Exception e) {
                 e.printStackTrace();
