@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
-public class VariationLibrary {
+public class BuildVariationLibrary {
 
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
@@ -36,7 +36,7 @@ public class VariationLibrary {
 
     String[] taxaNames = null;
 
-    public VariationLibrary (List<String> pLineList) {
+    public BuildVariationLibrary(List<String> pLineList) {
         this.parseParameters(pLineList);
         this.mkLibrary();
     }

@@ -211,6 +211,7 @@ class DiscoverVariation {
 
         public void closeDos () {
             try {
+                dos.writeInt(Integer.MIN_VALUE);
                 dos.flush();
                 dos.close();
             }
@@ -251,8 +252,8 @@ class DiscoverVariation {
             try {
                 dos.writeInt(this.currentPos);
                 dos.writeByte(FastCall2.getCodedAllele(this.minorAllele, this.indelLength));
-                dos.writeByte(FastCall2.getCodedDepth(this.currentDepth));
-                dos.writeByte(FastCall2.getCodedDepth(this.minorAlleleDepth));
+//                dos.writeByte(FastCall2.getCodedDepth(this.currentDepth));
+//                dos.writeByte(FastCall2.getCodedDepth(this.minorAlleleDepth));
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -270,14 +271,13 @@ class DiscoverVariation {
                     if(!this.processPileupLine(temp)) continue;
                     this.writeVariants();
                 }
-                br.close();
+                this.closeDos();
                 BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 while ((temp = bre.readLine()) != null) {
                     if (temp.startsWith("[m")) continue;
                     System.out.println(command);
                     System.out.println(temp);
                 }
-                this.closeDos();
                 bre.close();
                 p.waitFor();
             }

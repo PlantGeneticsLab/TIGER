@@ -2,21 +2,11 @@ package pgl.app.fastCall2;
 
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
-import com.koloboke.collect.map.hash.HashByteCharMap;
-import com.koloboke.collect.map.hash.HashByteCharMaps;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import pgl.AppUtils;
-import pgl.PGLConstraints;
-import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.InputStreamReader;
+
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.LongAdder;
 
 public class FastCall2 {
     //Current step ID of the pipeline
@@ -42,7 +32,7 @@ public class FastCall2 {
             new DiscoverVariation(pLineList);
         }
         else if (step == 2) {
-            new VariationLibrary(pLineList);
+            new BuildVariationLibrary(pLineList);
         }
     }
 
