@@ -141,7 +141,7 @@ class DiscoverVariation {
             Arrays.fill(alleleCount, 0);
             insertionLengthSet.clear();
             deletionLengthSet.clear();
-            indelLength = Integer.MIN_VALUE;
+            indelLength = 0;
         }
 
         public boolean processPileupLine (String line) {

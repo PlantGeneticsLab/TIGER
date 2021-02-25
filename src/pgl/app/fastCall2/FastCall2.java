@@ -56,17 +56,35 @@ public class FastCall2 {
         return (v + indelLength);
     }
 
-    static int getCodedPosition (int codedPosAlleleIndelLength, int binStart) {
+    static int getAllelePosition(int codedPosAlleleIndelLength, int binStart) {
         int v = (codedPosAlleleIndelLength >> 8) + binStart;
         return v;
     }
 
+    static byte getCodedAllele (int codedPosAlleleIndelLength) {
+        return (byte)codedPosAlleleIndelLength;
+    }
+
     static byte getAlleleByte (int codedPosAlleleIndelLength) {
-        int v = ((byte)codedPosAlleleIndelLength) >> 5;
+        int v = (255 & codedPosAlleleIndelLength) >> 5;
         return (byte)v;
     }
 
-    static byte getIndelLength (int codedPosAlleleIndelLength) {
-        return (byte)(31 & ((byte)codedPosAlleleIndelLength));
+    static char getAlleleBase (int codedPosAlleleIndelLength) {
+        return AlleleEncoder.alleleByteToBaseMap.get(getAlleleByte(codedPosAlleleIndelLength));
     }
+
+    static byte getIndelLength (int codedPosAlleleIndelLength) {
+        return (byte)(31 & codedPosAlleleIndelLength);
+    }
+
+    static byte getAlleleByteFromCodedAllele (byte codedAllele) {
+        int v = (codedAllele>>>5)&7;
+        return (byte)v;
+    }
+
+    static byte getIndelLengthFromCodedAllele (byte codedAllele) {
+        return (byte)(31 & codedAllele);
+    }
+
 }

@@ -20,7 +20,7 @@ public class BuildVariationLibrary {
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
     //Current chromosome for variation calling
-    int chrom = Integer.MIN_VALUE;
+    short chrom = Short.MIN_VALUE;
     //Starting position of the specified region for variation calling, inclusive
     int regionStart = Integer.MIN_VALUE;
     //Ending position the specified regionfor variation calling, exclusive
@@ -33,6 +33,8 @@ public class BuildVariationLibrary {
     String ingDirS = null;
     //Variation library directory
     String vLibDirS = null;
+
+    int maxAltNum = 2;
 
     String[] taxaNames = null;
 
@@ -81,8 +83,10 @@ public class BuildVariationLibrary {
             catch (Exception e) {
                 e.printStackTrace();
             }
-
+            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, maxAltNum, chrom, binStarts[i]);
+            vl.writeTextFileS("/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/a.txt");
         }
+
     }
 
     class TaxonRead implements Callable<IndividualGenotype> {
@@ -103,7 +107,7 @@ public class BuildVariationLibrary {
     private void parseParameters (List<String> pLineList) {
         this.referenceFileS = pLineList.get(0);
         String[] tem = pLineList.get(1).split(":");
-        this.chrom = Integer.parseInt(tem[0]);
+        this.chrom = Short.parseShort(tem[0]);
         long start = System.nanoTime();
         System.out.println("Reading reference genome from "+ referenceFileS);
         FastaBit genomeFa = new FastaBit(referenceFileS);

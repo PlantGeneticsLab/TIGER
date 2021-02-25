@@ -3,6 +3,7 @@ package pgl.app.fastCall2;
 import htsjdk.samtools.util.IOUtil;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.IOUtils;
 
 import java.io.DataInputStream;
@@ -14,9 +15,6 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
     int binStart = Integer.MIN_VALUE;
     int binEnd = Integer.MIN_VALUE;
     IntArrayList codedAlleleInfo = null;
-
-    int[] positions = null;
-    byte[] codedAlleles = null;
 
     public IndividualGenotype (String fileS) {
         this.readFile(fileS);
@@ -41,7 +39,34 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
             e.printStackTrace();
         }
 
+    }
 
+    public String getTaxonName () {
+        return this.taxonName;
+    }
+
+    public int getPositionNumber () {
+        return codedAlleleInfo.size();
+    }
+
+    public int getAllelePosition (int alleleIndex) {
+        return FastCall2.getAllelePosition(codedAlleleInfo.getInt(alleleIndex), binStart);
+    }
+
+    public int getAlleleByte (int alleleIndex) {
+        return FastCall2.getAlleleByte(codedAlleleInfo.getInt(alleleIndex));
+    }
+
+    public char getAlleleBase (int alleleIndex) {
+        return FastCall2.getAlleleBase(codedAlleleInfo.getInt(alleleIndex));
+    }
+
+    public byte getIndelLength (int alleleIndex) {
+        return FastCall2.getIndelLength(codedAlleleInfo.getInt(alleleIndex));
+    }
+
+    public int getCodedAlleleInfo (int alleleIndex) {
+        return this.codedAlleleInfo.getInt(alleleIndex);
     }
 
     @Override
