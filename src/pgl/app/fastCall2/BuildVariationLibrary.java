@@ -56,6 +56,7 @@ public class BuildVariationLibrary {
         StringBuilder sb = new StringBuilder();
         List<Future<IndividualGenotype>> futureList = new ArrayList<>();
         List<IndividualGenotype> ingList = new ArrayList<>();
+        List<VariationLibrary> vlList = new ArrayList<>();
         for (int i = 0; i < binBound.length; i++) {
             futureList.clear();
             ingList.clear();
@@ -84,9 +85,14 @@ public class BuildVariationLibrary {
                 e.printStackTrace();
             }
             VariationLibrary vl = new VariationLibrary (ingList, maoThresh, maxAltNum, chrom, binStarts[i]);
-            vl.writeTextFileS("/Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/a.txt");
+            vlList.add(vl);
         }
-
+        VariationLibrary chromVl = VariationLibrary.getInstance(vlList);
+        File f = new File (vLibDirS);
+        f.mkdir();
+        sb.setLength(0);
+        sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");
+        chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());
     }
 
     class TaxonRead implements Callable<IndividualGenotype> {

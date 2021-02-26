@@ -83,6 +83,10 @@ public class FastCall2 {
         return (byte)v;
     }
 
+    static char getAlleleBaseFromCodedAllele (byte codedAllele) {
+        return AlleleEncoder.alleleByteToBaseMap.get(getAlleleByteFromCodedAllele(codedAllele));
+    }
+
     static byte getIndelLengthFromCodedAllele (byte codedAllele) {
         return (byte)(31 & codedAllele);
     }
