@@ -12,7 +12,7 @@ public class FastCall2 {
     //Current step ID of the pipeline
     int step = Integer.MIN_VALUE;
     //genome block for individual ing
-    static int binSize = 50000;
+    static int binSize = 500000;
     //A, C, G, T, -, +
     static final byte[] pileupAlleleAscIIs = {65, 67, 71, 84, 45, 43};
 
