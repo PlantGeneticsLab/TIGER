@@ -200,10 +200,10 @@ class DiscoverVariation {
             ifWrite = true;
             this.minorAllele = AlleleEncoder.alleleBytes[alleleCountDesendingIndex[0]];
             this.minorAlleleDepth = alleleCount[alleleCountDesendingIndex[0]];
-            if (insertionLengthSet.size() > 0) {
+            if (this.minorAllele == AlleleEncoder.alleleBytes[5] && insertionLengthSet.size() > 0) {
                 indelLength = insertionLengthSet.toArray(new int[insertionLengthSet.size()])[0];
             }
-            else if (deletionLengthSet.size() > 0) {
+            else if (this.minorAllele == AlleleEncoder.alleleBytes[4] && deletionLengthSet.size() > 0) {
                 indelLength = deletionLengthSet.toArray(new int[deletionLengthSet.size()])[0];
             }
             return ifWrite;

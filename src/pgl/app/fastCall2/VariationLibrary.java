@@ -87,14 +87,14 @@ public class VariationLibrary {
         ByteArrayList codedAlleleList = new ByteArrayList();
         for (int i = 0; i < alts.length; i++) {
             int varifiedNum = this.maxAltNum;
-            for (int j = varifiedNum; j > 0; j--) {
-                if (altCounts[i][varifiedNum-1] < this.maoThresh) varifiedNum--;
+            for (int j = this.maxAltNum; j > 0; j--) {
+                if (altCounts[i][j-1] < this.maoThresh) varifiedNum--;
             }
             if (varifiedNum == 0) continue;
             codedAlleleList.clear();
             positionList.add(FastCall2.getAllelePosition(alts[i][0], binStart));
             for (int j = 0; j < varifiedNum; j++) {
-                codedAlleleList.add(FastCall2.getCodedAllele(alts[i][0]));
+                codedAlleleList.add(FastCall2.getCodedAllele(alts[i][j]));
             }
             codedAlleleLists.add(codedAlleleList.toByteArray());
         }
