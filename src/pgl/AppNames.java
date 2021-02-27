@@ -26,7 +26,12 @@ public enum AppNames implements Comparable <AppNames> {
     /**
      * Depth profiling in a population using whole-genome sequence data
      */
-    PopDep ("PopDep");
+    PopDep ("PopDep"),
+
+    /**
+     * Genotyping pipeline of FastCall2
+     */
+    FastCall2 ("FastCall2");
     
     public final String name;
     
