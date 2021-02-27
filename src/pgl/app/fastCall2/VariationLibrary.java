@@ -130,6 +130,57 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
     }
 
+    public String[] getAlts (int positionIndex, List<String> l) {
+        l.clear();
+        for (int i = 0; i < this.codedAlleles[positionIndex].length; i++) {
+            l.add(String.valueOf(FastCall2.getAlleleBaseFromCodedAllele(this.codedAlleles[positionIndex][i])));
+        }
+        String[] result = l.toArray(new String[l.size()]);
+        return result;
+    }
+
+    public int getPositionIndex (int pos) {
+        return Arrays.binarySearch(positions, pos);
+    }
+
+    /**
+     * Return the index of the next position in the library, inclusive
+     * @param pos
+     * @return
+     */
+    public int getStartIndex (int pos) {
+        int index = this.getPositionIndex(pos);
+        if (index < 0) {
+            index = -index -1;
+            if (index == positions.length) {
+                return Integer.MIN_VALUE;
+            }
+        }
+        return index;
+    }
+
+    /**
+     * Return the index of the previous position in the library, exclusive
+     * @param pos
+     * @return
+     */
+    public int getEndIndex (int pos) {
+        int index = this.getPositionIndex(pos);
+        if (index < 0) {
+            index = -index -2;
+            if (index < 0) return Integer.MIN_VALUE;
+        }
+        return index+1;
+    }
+
+    public short getChrom () {
+        return this.chrom;
+    }
+
+    public int getPosition (int positionIndex) {
+        return this.positions[positionIndex];
+    }
+
     public void writeBinaryFileS (String outfileS) {
         try {
             DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
@@ -150,7 +201,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             e.printStackTrace();
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(positions.length).append(" sites have variations in ").append(outfileS);
+        sb.append(positions.length).append(" polymorphic sites are written to ").append(outfileS);
         System.out.println(sb.toString());
     }
 

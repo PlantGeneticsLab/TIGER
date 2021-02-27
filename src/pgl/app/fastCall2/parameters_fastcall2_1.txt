@@ -5,12 +5,12 @@
 @Step:	1
 
 #FastCall2 is designed to perform SNP calling and genotyping of diploid ourcrossing/incrossing species, based on whole-genome sequencing data.
-#Different form FastCall, FastCall2 performs individual genetic variation discovery first (step 1), then do genotyping by combining all the individual genotype file into a final VCF (step 2).
+#Different form FastCall, FastCall2 performs individual genetic variation discovery first (step 1), then build a genetic variation library of all individuals (step 2), then do genotyping by combining all the individual genotype file into a final VCF (step 3).
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a FastCall2 -p parameter_fastcall2_1.txt > log.txt &
 #To specify options, please edit the the parameters below. Also, please keep the order of parameters. 
 
-#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
+#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...). It is recommanded to use reference chromosome while perform variation discovery for each chromosome because loading reference genome would be much faster.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa
 
 #Parameter 2:	Taxa bam information file, including the info about what bams are included for each taxon

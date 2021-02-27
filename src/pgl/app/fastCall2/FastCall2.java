@@ -34,6 +34,9 @@ public class FastCall2 {
         else if (step == 2) {
             new BuildVariationLibrary(pLineList);
         }
+        else if (step == 3) {
+            new ScanGenotype(pLineList);
+        }
     }
 
     static Dyad<int[][], int[]> getBins (int regionStart, int regionEnd) {

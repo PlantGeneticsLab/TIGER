@@ -5,7 +5,7 @@
 @Step:	2
 
 #FastCall2 is designed to perform SNP calling and genotyping of diploid ourcrossing/incrossing species, based on whole-genome sequencing data.
-#Different form FastCall, FastCall2 performs individual genetic variation discovery first (step 1), then do genotyping by combining all the individual genotype file into a final VCF (step 2).
+#Different form FastCall, FastCall2 performs individual genetic variation discovery first (step 1), then build a genetic variation library of all individuals (step 2), then do genotyping by combining all the individual genotype file into a final VCF (step 3).
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a FastCall2 -p parameter_fastcall2_1.txt > log.txt &
 #To specify options, please edit the the parameters below. Also, please keep the order of parameters. 
