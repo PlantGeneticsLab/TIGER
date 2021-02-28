@@ -3,13 +3,11 @@ package pgl.app.fastCall2;
 import com.koloboke.collect.map.IntDoubleMap;
 import com.koloboke.collect.map.hash.HashIntDoubleMaps;
 import pgl.PGLConstraints;
-import pgl.app.hapScanner.HapScanner;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.FastaRecordBit;
 import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PStringUtils;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -201,13 +199,13 @@ class ScanGenotype {
             sb.append(FastCall2.getIndelLengthFromCodedAllele(codedAlts[i])).append(",");
         }
         sb.deleteCharAt(sb.length()-1);
-//        sb.append(";GN=");
-//        for (int i = 0; i < gnCnt.length; i++) {
-//            for (int j = i + 1; j < gnCnt.length; j++) {
-//                sb.append(gnCnt[i][j]).append(",");
-//            }
-//        }
-//        sb.deleteCharAt(sb.length()-1);
+        sb.append(";GN=");
+        for (int i = 0; i < gnCnt.length; i++) {
+            for (int j = i; j < gnCnt.length; j++) {
+                sb.append(gnCnt[i][j]).append(",");
+            }
+        }
+        sb.deleteCharAt(sb.length()-1);
         sb.append(";HT=").append(ht).append(";MAF=").append(maf);
         return sb.toString();
     }
@@ -395,6 +393,7 @@ class ScanGenotype {
             return this;
         }
     }
+
     private String getGenotype (int[] cnt) {
         int n = cnt.length*(cnt.length+1)/2;
         int[] likelihood = new int[n];
