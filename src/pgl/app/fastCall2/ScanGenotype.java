@@ -2,11 +2,13 @@ package pgl.app.fastCall2;
 
 import com.koloboke.collect.map.IntDoubleMap;
 import com.koloboke.collect.map.hash.HashIntDoubleMaps;
+import org.apache.commons.io.FileUtils;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.FastaRecordBit;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.Benchmark;
+import pgl.infra.utils.Dyad;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PStringUtils;
 import java.io.*;
@@ -38,7 +40,7 @@ class ScanGenotype {
     //Number of threads (taxa number to be processed at the same time)
     int threadsNum = PGLConstraints.parallelLevel;
 
-    String[] subDirS = {"mpileup", "indiVCF", "VCF"};
+    String[] subDirS = {"indiVCF", "indiCounts", "VCF"};
 
     HashMap<String, List<String>> taxaBamsMap = null;
     HashMap<String, Double> taxaCoverageMap = null;
@@ -58,18 +60,375 @@ class ScanGenotype {
 //    HashMap<Integer, String[]> posAltMap = new HashMap<>();
     HashMap<Integer, byte[]> posCodedAlleleMap = new HashMap<>();
     int[] positions = null;
+    int vlBinStartIndex = 0;
+    int vlBinEndIndex = 0;
 
     public ScanGenotype (List<String> pLineList) {
         this.parseParameters(pLineList);
         this.mkDir();
         this.processVariationLibrary();
         this.creatFactorialMap();
-        this.scanIndiVCFByThreadPool();
-        this.mkFinalVCF();
+
+        /*
+        Output by individual allele count, fast
+         */
+        this.scanIndiCountsByThreadPool();
+        this.mkFinalVCFFromIndiCounts();
+        /*
+        Output by individual VCF, slow
+         */
+//        this.scanIndiVCFByThreadPool();
+//        this.mkFinalVCF();
+    }
+
+    public void mkFinalVCFFromIndiCounts () {
+        String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
+        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
+            Date dt = new Date();
+            String S = sdf.format(dt);
+            BufferedWriter bw = IOUtils.getTextWriter(outfileS);
+            bw.write("##fileformat=VCFv4.1\n");
+            bw.write("##fileDate="+S.split(" ")[0]+"\n");
+            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">\n");
+            bw.write("##FORMAT=<ID=GL,Number=G,Type=Integer,Description=\"Genotype likelihoods for 0/0, 0/1, 1/1, or  0/0, 0/1, 0/2, 1/1, 1/2, 2/2 if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
+            bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
+            bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
+            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=IL,Number=.,Type=Integer,Description=\"Indel length of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
+            bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
+            bw.write("##ALT=<ID=DEL,Description=\"Deletion\">\n");
+            bw.write("##ALT=<ID=INS,Description=\"Insertion\">\n");
+            Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd);
+            int[][] binBound = d.getFirstElement();
+            int[] binStarts = d.getSecondElement();
+            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
+            for (int i = 0; i < taxaNames.length; i++) {
+                sb.append("\t").append(taxaNames[i]);
+            }
+            bw.write(sb.toString());
+            bw.newLine();
+            List<Future<IndividualCount>> futureList = new ArrayList<>();
+            List<IndividualCount> incList = new ArrayList<>();
+
+            for (int i = 0; i < binStarts.length; i++) {
+                futureList.clear();
+                incList.clear();
+                String indiCountFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+                try {
+                    LongAdder counter = new LongAdder();
+                    ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
+                    sb.setLength(0);
+                    sb.append(chrom).append("_").append(binBound[i][0]).append("_").append(binBound[i][1]).append(".iac.gz");
+                    for (int j = 0; j < taxaNames.length; j++) {
+                        String indiTaxonDirS = new File (indiCountFolderS, taxaNames[j]).getAbsolutePath();
+                        String fileS = new File (indiTaxonDirS, sb.toString()).getAbsolutePath();
+                        TaxonCountRead tr = new TaxonCountRead(fileS);
+                        Future<IndividualCount> result = pool.submit(tr);
+                        futureList.add(result);
+                    }
+                    pool.shutdown();
+                    pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+
+                    for (int j = 0; j < futureList.size(); j++) {
+                        IndividualCount inc = futureList.get(j).get();
+                        if (inc == null) continue;
+                        incList.add(inc);
+                    }
+                    Collections.sort(incList);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                vlBinEndIndex = vlBinStartIndex + incList.get(0).alleleNum.length;
+                List<Integer> indexList = new ArrayList<>();
+                for (int j = 0; j < incList.get(0).alleleNum.length; j++) {
+                    indexList.add(j);
+                }
+                String[] vcfRecords = new String[indexList.size()];
+                indexList.parallelStream().forEach(index -> {
+                    StringBuilder vsb = new StringBuilder();
+                    int currentPosition = positions[index+vlBinStartIndex];
+                    vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
+                            .append("\t").append(posRefMap.get(currentPosition)).append("\t");
+                    byte[] codedAlts = posCodedAlleleMap.get(currentPosition);
+                    for (int j = 0; j < codedAlts.length; j++) {
+                        vsb.append(FastCall2.getAlleleBaseFromCodedAllele(codedAlts[j])).append(",");
+                    }
+                    vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t.");
+                    String[] genoArray = new String[incList.size()];
+                    for (int j = 0; j < incList.size(); j++) {
+                        if (incList.get(j).alleleNum[index] == -1) {
+                            genoArray[j] = "./.";
+                        }
+                        else {
+                            int[] alleleCounts = new int[incList.get(j).alleleNum[index]];
+                            for (int k = 0; k < alleleCounts.length; k++) {
+                                alleleCounts[k] = incList.get(j).alleleCounts[index][k];
+                            }
+                            genoArray[j] = getGenotype(alleleCounts);
+                        }
+                    }
+                    vsb.append(this.getInfo(genoArray, codedAlts)).append("\tGT:AD:GL");
+                    for (int j = 0; j < genoArray.length; j++) {
+                        vsb.append("\t").append(genoArray[j]);
+                    }
+                    vcfRecords[index] = vsb.toString();
+                });
+                for (int j = 0; j < vcfRecords.length; j++) {
+                    bw.write(vcfRecords[j]);
+                    bw.newLine();
+                }
+                vlBinStartIndex = vlBinEndIndex;
+            }
+            bw.flush();
+            bw.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        this.deleteTemperateFile();
+        System.out.println("Final VCF is completed at " + outfileS);
+    }
+
+    class TaxonCountRead implements Callable<IndividualCount> {
+        String fileS;
+        public TaxonCountRead (String fileS) {
+            this.fileS = fileS;
+        }
+
+        @Override
+        public IndividualCount call() throws Exception {
+            File f = new File (fileS);
+            if (!f.exists()) {
+                System.out.println("Warning: "+ f.getAbsolutePath()+" does not exist");
+                return null;
+            }
+            IndividualCount inc = new IndividualCount(this.fileS);
+            return inc;
+        }
+    }
+    ///Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/gen/indiCounts/TW0060/1_1_500001.iac.gz
+    public void scanIndiCountsByThreadPool () {
+        FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
+        posRefMap = new HashMap<>();
+        posCodedAlleleMap = new HashMap<>();
+        List<String> altList = new ArrayList<>();
+        positions = new int[vlEndIndex-vlStartIndex];
+        for (int i = vlStartIndex; i < vlEndIndex; i++) {
+            posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));
+            posCodedAlleleMap.put(vl.positions[i], vl.codedAlleles[i]);
+            positions[i-vlStartIndex] = vl.positions[i];
+        }
+        Set<String> taxaSet = taxaBamsMap.keySet();
+        ArrayList<String> taxaList = new ArrayList(taxaSet);
+        Collections.sort(taxaList);
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd);
+        int[][] binBound = d.getFirstElement();
+        int[] binStarts = d.getSecondElement();
+        LongAdder counter = new LongAdder();
+        ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
+        List<Future<IndiCount>> resultList = new ArrayList<>();
+        for (int i = 0; i < taxaList.size(); i++) {
+            List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
+            StringBuilder sb = new StringBuilder(samtoolsPath);
+            sb.append(" mpileup -A -B -q 20 -Q 20 -f ").append(this.referenceFileS);
+            for (int j = 0; j < bamPaths.size(); j++) {
+                sb.append(" ").append(bamPaths.get(j));
+            }
+            sb.append(" -l ").append(vLibPosFileS).append(" -r ");
+            sb.append(chrom);
+            String command = sb.toString();
+            IndiCount idv = new IndiCount(command, taxaList.get(i), posRefMap, posCodedAlleleMap, positions, binBound, binStarts, bamPaths, counter);
+            Future<IndiCount> result = pool.submit(idv);
+            resultList.add(result);
+        }
+        try {
+            pool.shutdown();
+            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MICROSECONDS);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    class IndiCount implements Callable<IndiCount> {
+        String command = null;
+        String taxonName = null;
+        String indiTaxonDirS = null;
+        HashMap<Integer, String> posRefMap = null;
+        HashMap<Integer, byte[]> posCodedAlleleMap = null;
+        int[] positions = null;
+        int[][] binBound = null;
+        int[] binStarts = null;
+        List<String> bamPaths = null;
+        LongAdder counter = null;
+
+        DataOutputStream dos = null;
+        int currentBinIndex = Integer.MIN_VALUE;
+
+        public IndiCount (String command, String taxonName, HashMap<Integer, String> posRefMap, HashMap<Integer, byte[]> posCodedAlleleMap, int[] positions, int[][] binBound, int[] binStarts, List<String> bamPaths, LongAdder counter) {
+            this.command = command;
+            this.taxonName = taxonName;
+            this.posRefMap = posRefMap;
+            this.posCodedAlleleMap = posCodedAlleleMap;
+            this.positions = positions;
+            this.binBound = binBound;
+            this.binStarts = binStarts;
+            this.bamPaths = bamPaths;
+            this.counter = counter;
+            String indiCountFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+            indiTaxonDirS = new File(indiCountFolderS, taxonName).getAbsolutePath();
+            new File (indiTaxonDirS).mkdir();
+        }
+
+        public void closeDos () {
+            try {
+                dos.flush();
+                dos.close();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void setDos (int queryPos) {
+            int binIndex = Arrays.binarySearch(binStarts, queryPos);
+            if (binIndex < 0) binIndex = -binIndex-2;
+            if (binIndex != currentBinIndex) {
+                if (currentBinIndex > -1) this.closeDos();
+                StringBuilder sb = new StringBuilder();
+                sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".iac.gz");
+                String outfileS = new File (indiTaxonDirS, sb.toString()).getAbsolutePath();
+                dos = IOUtils.getBinaryGzipWriter(outfileS);
+                try {
+                    dos.writeUTF(this.taxonName);
+                    dos.writeShort((short)chrom);
+                    dos.writeInt(binBound[binIndex][0]);
+                    dos.writeInt(binBound[binIndex][1]);
+                    dos.writeInt(positions.length);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                currentBinIndex = binIndex;
+            }
+        }
+
+        public void writeAlleleCounts (int[] alleleCounts) {
+            try {
+                dos.writeByte((byte)alleleCounts.length);
+                for (int i = 0; i < alleleCounts.length; i++) {
+                    dos.writeShort((short)alleleCounts[i]);
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void writeMissing () {
+            try {
+                dos.writeByte(-1);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public IndiCount call() throws Exception {
+            try {
+                Runtime rt = Runtime.getRuntime();
+                Process p = rt.exec(command);
+                String temp = null;
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                DataOutputStream dis = null;
+                String current = br.readLine();
+                List<String> currentList = null;
+                int currentPosition = -1;
+                if (current != null) {
+                    currentList = PStringUtils.fastSplit(current);
+                    currentPosition = Integer.parseInt(currentList.get(1));
+                }
+                StringBuilder baseS = new StringBuilder();
+                StringBuilder baseSb = new StringBuilder();
+                for (int i = 0; i < positions.length; i++) {
+                    this.setDos(positions[i]);
+                    if (current == null) {
+                        this.writeMissing();
+                    }
+                    else {
+                        if (positions[i] == currentPosition) {
+                            String ref = posRefMap.get(currentPosition);
+                            byte[] codedAltAlleles = this.posCodedAlleleMap.get(currentPosition);
+                            baseS.setLength(0);
+                            int siteDepth = 0;
+                            for (int j = 0; j < bamPaths.size(); j++) {
+                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));
+                                baseS.append(currentList.get(4+j*3));
+                            }
+                            int[] alleleCounts = getAlleleCounts (codedAltAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
+                            this.writeAlleleCounts(alleleCounts);
+                            String vcf = getGenotype(alleleCounts);
+                            current = br.readLine();
+                            if (current != null) {
+                                currentList = PStringUtils.fastSplit(current);
+                                currentPosition = Integer.parseInt(currentList.get(1));
+                            }
+                        }
+                        else if (positions[i] < currentPosition) {
+                            this.writeMissing();
+                        }
+                        else {
+                            System.out.println("Current position is greater than pileup position. It should not happen. Program quits");
+                            System.exit(1);
+                        }
+                    }
+                }
+//                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+//                while ((temp = bre.readLine()) != null) {
+//                    if (temp.startsWith("[m")) continue;
+//                    System.out.println(command);
+//                    System.out.println(temp);
+//                }
+//                bre.close();
+                p.waitFor();
+                this.closeDos();
+                br.close();
+            }
+            catch (Exception ee) {
+                ee.printStackTrace();
+            }
+            counter.increment();
+            int cnt = counter.intValue();
+            if (cnt%10 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
+            return this;
+        }
+    }
+
+    private void deleteTemperateFile () {
+        File f1 = new File(outputDirS, subDirS[0]);
+        File f2 = new File(outputDirS, subDirS[1]);
+        try {
+            FileUtils.cleanDirectory(new File(outputDirS, subDirS[0]));
+            FileUtils.cleanDirectory(new File(outputDirS, subDirS[1]));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        f1.delete();
+        f2.delete();
+        new File (vLibPosFileS).delete();
     }
 
     public void mkFinalVCF () {
-
         String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
         outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();
         try {
@@ -99,7 +458,7 @@ class ScanGenotype {
             bw.write(sb.toString());
             bw.newLine();
             BufferedReader[] brs = new BufferedReader[taxaNames.length];
-            String indiVCFFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+            String indiVCFFolderS = new File(outputDirS, subDirS[0]).getAbsolutePath();
             for (int i = 0; i < brs.length; i++) {
                 String indiVCFFileS = new File (indiVCFFolderS, taxaNames[i]+".chr"+PStringUtils.getNDigitNumber(3, chrom)+".indi.vcf").getAbsolutePath();
                 brs[i] = new BufferedReader (new FileReader(indiVCFFileS), 4096);
@@ -140,8 +499,7 @@ class ScanGenotype {
         catch (Exception e) {
             e.printStackTrace();
         }
-        new File(outputDirS, subDirS[0]).delete();
-        new File(outputDirS, subDirS[1]).delete();
+        this.deleteTemperateFile();
         System.out.println("Final VCF is completed at " + outfileS);
     }
 
@@ -231,7 +589,7 @@ class ScanGenotype {
         ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
         List<Future<IndiVCF>> resultList = new ArrayList<>();
         for (int i = 0; i < taxaList.size(); i++) {
-            String indiVCFFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+            String indiVCFFolderS = new File(outputDirS, subDirS[0]).getAbsolutePath();
             String indiVCFFileS = new File(indiVCFFolderS, taxaList.get(i) + ".chr" + PStringUtils.getNDigitNumber(3, chrom) + ".indi.vcf").getAbsolutePath();
             List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
             StringBuilder sb = new StringBuilder(samtoolsPath);
