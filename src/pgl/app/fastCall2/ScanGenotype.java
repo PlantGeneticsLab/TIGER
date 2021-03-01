@@ -326,15 +326,13 @@ class ScanGenotype {
                         }
                     }
                 }
-
-                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                while ((temp = bre.readLine()) != null) {
-                    if (temp.startsWith("[m")) continue;
-                    System.out.println(command);
-                    System.out.println(temp);
-                }
-                bre.close();
-
+//                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+//                while ((temp = bre.readLine()) != null) {
+//                    if (temp.startsWith("[m")) continue;
+//                    System.out.println(command);
+//                    System.out.println(temp);
+//                }
+//                bre.close();
                 p.waitFor();
                 bw.flush();
                 bw.close();
