@@ -64,6 +64,12 @@ public class FastCall2 {
         return v;
     }
 
+    static byte getCodedAllele (byte alleleByte, int indelLength) {
+        int v = (alleleByte << 5);
+        if (indelLength > 32) indelLength = 32;
+        return (byte)(v + indelLength);
+    }
+
     static byte getCodedAllele (int codedPosAlleleIndelLength) {
         return (byte)codedPosAlleleIndelLength;
     }

@@ -2,6 +2,7 @@ package pgl.app.fastCall2;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import pgl.PGLConstraints;
+import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
@@ -146,6 +147,7 @@ class DiscoverVariation {
 
         public boolean processPileupLine (String line) {
             lList = PStringUtils.fastSplit(line);
+            if (Arrays.binarySearch(BaseEncoder.bases, lList.get(2).charAt(0)) < 0) return false;
             this.initialize1();
             currentPos = Integer.parseInt(lList.get(1));
             for (int i = 3; i < lList.size(); i+=3) {

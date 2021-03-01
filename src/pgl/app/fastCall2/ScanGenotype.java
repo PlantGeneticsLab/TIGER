@@ -5,6 +5,7 @@ import com.koloboke.collect.map.hash.HashIntDoubleMaps;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.FastaRecordBit;
+import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PStringUtils;
@@ -280,7 +281,6 @@ class ScanGenotype {
                 Process p = rt.exec(command);
                 String temp = null;
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
                 BufferedWriter bw = IOUtils.getTextWriter(indiVCFFileS);
                 String current = br.readLine();
                 List<String> currentList = null;
@@ -289,7 +289,8 @@ class ScanGenotype {
                     currentList = PStringUtils.fastSplit(current);
                     currentPosition = Integer.parseInt(currentList.get(1));
                 }
-                StringBuilder sb = new StringBuilder();
+                StringBuilder baseS = new StringBuilder();
+                StringBuilder baseSb = new StringBuilder();
                 for (int i = 0; i < positions.length; i++) {
                     if (current == null) {
                         bw.write("./.");
@@ -298,60 +299,15 @@ class ScanGenotype {
                     else {
                         if (positions[i] == currentPosition) {
                             String ref = posRefMap.get(currentPosition);
-                            byte[] codedAlleles = this.posCodedAlleleMap.get(currentPosition);
-                            String[] alts = new String[codedAlleles.length];
-                            for (int j = 0; j < alts.length; j++) {
-                                alts[j] = String.valueOf(FastCall2.getAlleleBaseFromCodedAllele(codedAlleles[j]));
-                            }
-                            char[] alleleC = new char[alts.length+1];
-                            alleleC[0] = ref.charAt(0);
-                            for (int j = 0; j < alts.length; j++) {
-                                if (alts[j].startsWith("I") || alts[j].startsWith("<I")) {
-                                    alleleC[j+1] = '+';
-                                }
-                                else if (alts[j].startsWith("D") || alts[j].startsWith("<D")) {
-                                    alleleC[j+1] = '-';
-                                }
-                                else {
-                                    alleleC[j+1] = alts[j].charAt(0);
-                                }
-                            }
-                            int[] cnts = new int[alts.length+1];
-                            sb.setLength(0);
+                            byte[] codedAltAlleles = this.posCodedAlleleMap.get(currentPosition);
+                            baseS.setLength(0);
+                            int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {
-                                sb.append(currentList.get(4+j*3));
+                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));
+                                baseS.append(currentList.get(4+j*3));
                             }
-                            StringBuilder ssb = new StringBuilder();
-                            int curIndex = 0;
-                            for (int j = 0; j < sb.length(); j++) {
-                                char cChar = sb.charAt(j);
-                                if (cChar == '+') {
-                                    ssb.append(sb.subSequence(curIndex, j+1));
-                                    curIndex = j+2+Character.getNumericValue(sb.charAt(j+1));
-                                }
-                                else if (cChar == '-') {
-                                    ssb.append(sb.subSequence(curIndex, j+1));
-                                    curIndex = j+2+Character.getNumericValue(sb.charAt(j+1));
-                                }
-                            }
-                            ssb.append(sb.subSequence(curIndex, sb.length()));
-                            sb = ssb;
-                            String s = sb.toString().toUpperCase();
-                            for (int j = 0; j < s.length(); j++) {
-                                char cChar = s.charAt(j);
-                                if (cChar == '.' || cChar == ',') {
-                                    cnts[0]++;
-                                    continue;
-                                }
-                                for (int k = 1; k < alleleC.length; k++) {
-                                    if (cChar == alleleC[k]) cnts[k]++;
-                                }
-                            }
-                            for (int j = 1; j < alleleC.length; j++) {
-                                if (alleleC[j] == '+') cnts[0] = cnts[0]-cnts[j];
-                                else if (alleleC[j] == '-') cnts[0] = cnts[0]-cnts[j];
-                            }
-                            String vcf = getGenotype(cnts);
+                            int[] alleleCounts = getAlleleCounts (codedAltAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
+                            String vcf = getGenotype(alleleCounts);
                             bw.write(vcf);
                             bw.newLine();
                             current = br.readLine();
@@ -392,6 +348,53 @@ class ScanGenotype {
             if (cnt%10 == 0) System.out.println("Finished individual genotyping in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
             return this;
         }
+    }
+
+    private int[] getAlleleCounts (byte[] codedAltAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
+        byte[] baseB = baseS.getBytes();
+        int[] altAlleleCounts = new int[codedAltAlleles.length];
+        int index = Integer.MIN_VALUE;
+        int vCnt = 0;
+        for (int i = 0; i < baseB.length; i++) {
+            byte alleleByte = FastCall2.pileupAscIIToAlleleByteMap.get(baseB[i]);
+            index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
+            byte queryAlleleByte = -1;
+            if (index < 0) continue;
+            else if (index < 4) {
+                queryAlleleByte = alleleByte;
+            }
+            else {
+                int startIndex = i+1;
+                int endIndex = i+2;
+                for (int j = i+2; j < baseB.length; j++) {
+                    if (baseB[j] > 57) {
+                        endIndex = j;
+                        break;
+                    }
+                }
+                baseSb.setLength(0);
+                for (int j = startIndex; j < endIndex; j++) {
+                    baseSb.append((char)baseB[j]);
+                }
+                int length = Integer.parseInt(baseSb.toString());
+                queryAlleleByte = FastCall2.getCodedAllele(alleleByte, length);
+                i+=baseSb.length();
+                i+=length;
+            }
+
+            for (int j = 0; j < codedAltAlleles.length; j++) {
+                if (codedAltAlleles[j] == queryAlleleByte) {
+                    altAlleleCounts[j]++;
+                    vCnt++;
+                }
+            }
+        }
+        int[] alleleCounts = new int[codedAltAlleles.length+1];
+        alleleCounts[0] = siteDepth - vCnt;
+        for (int i = 0; i < codedAltAlleles.length; i++) {
+            alleleCounts[i+1] = altAlleleCounts[i];
+        }
+        return alleleCounts;
     }
 
     private String getGenotype (int[] cnt) {
