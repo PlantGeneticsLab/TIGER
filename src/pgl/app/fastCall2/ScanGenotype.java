@@ -115,7 +115,8 @@ class ScanGenotype {
             bw.newLine();
             List<Future<IndividualCount>> futureList = new ArrayList<>();
             List<IndividualCount> incList = new ArrayList<>();
-
+            vlBinStartIndex = 0;
+            vlBinEndIndex = 0;
             for (int i = 0; i < binStarts.length; i++) {
                 futureList.clear();
                 incList.clear();
@@ -213,7 +214,7 @@ class ScanGenotype {
             return inc;
         }
     }
-    ///Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/gen/indiCounts/TW0060/1_1_500001.iac.gz
+
     public void scanIndiCountsByThreadPool () {
         FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
         posRefMap = new HashMap<>();
@@ -244,7 +245,7 @@ class ScanGenotype {
             sb.append(" -l ").append(vLibPosFileS).append(" -r ");
             sb.append(chrom);
             String command = sb.toString();
-            IndiCount idv = new IndiCount(command, taxaList.get(i), posRefMap, posCodedAlleleMap, positions, binBound, binStarts, bamPaths, counter);
+            IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);
             Future<IndiCount> result = pool.submit(idv);
             resultList.add(result);
         }
@@ -262,23 +263,16 @@ class ScanGenotype {
         String command = null;
         String taxonName = null;
         String indiTaxonDirS = null;
-        HashMap<Integer, String> posRefMap = null;
-        HashMap<Integer, byte[]> posCodedAlleleMap = null;
-        int[] positions = null;
         int[][] binBound = null;
         int[] binStarts = null;
         List<String> bamPaths = null;
         LongAdder counter = null;
-
         DataOutputStream dos = null;
         int currentBinIndex = Integer.MIN_VALUE;
 
-        public IndiCount (String command, String taxonName, HashMap<Integer, String> posRefMap, HashMap<Integer, byte[]> posCodedAlleleMap, int[] positions, int[][] binBound, int[] binStarts, List<String> bamPaths, LongAdder counter) {
+        public IndiCount (String command, String taxonName, int[][] binBound, int[] binStarts, List<String> bamPaths, LongAdder counter) {
             this.command = command;
             this.taxonName = taxonName;
-            this.posRefMap = posRefMap;
-            this.posCodedAlleleMap = posCodedAlleleMap;
-            this.positions = positions;
             this.binBound = binBound;
             this.binStarts = binStarts;
             this.bamPaths = bamPaths;
@@ -312,7 +306,9 @@ class ScanGenotype {
                     dos.writeShort((short)chrom);
                     dos.writeInt(binBound[binIndex][0]);
                     dos.writeInt(binBound[binIndex][1]);
-                    dos.writeInt(positions.length);
+                    vlBinStartIndex = vl.getStartIndex(binBound[binIndex][0]);
+                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]);
+                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -367,7 +363,7 @@ class ScanGenotype {
                     else {
                         if (positions[i] == currentPosition) {
                             String ref = posRefMap.get(currentPosition);
-                            byte[] codedAltAlleles = this.posCodedAlleleMap.get(currentPosition);
+                            byte[] codedAltAlleles = posCodedAlleleMap.get(currentPosition);
                             baseS.setLength(0);
                             int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {

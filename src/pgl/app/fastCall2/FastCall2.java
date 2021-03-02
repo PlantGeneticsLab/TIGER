@@ -6,6 +6,7 @@ import pgl.AppUtils;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
 
+import java.io.File;
 import java.util.*;
 
 public class FastCall2 {
