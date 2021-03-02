@@ -1,6 +1,5 @@
 package pgl.app.fastCall2;
 
-import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.utils.Benchmark;
@@ -93,6 +92,7 @@ class BuildVariationLibrary {
         sb.setLength(0);
         sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");
         chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());
+        System.out.println("Step 2 is finished.");
     }
 
     class TaxonRead implements Callable<IndividualGenotype> {

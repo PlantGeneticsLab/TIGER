@@ -97,6 +97,8 @@ class DiscoverVariation {
         catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("Individual genotype of "+ String.valueOf(this.taxaNames.length)+" taxa is completed.");
+        System.out.println("Step 1 is finished.");
     }
 
     class TaxonCall implements Callable<TaxonCall> {
@@ -267,6 +269,7 @@ class DiscoverVariation {
                     this.writeVariants();
                 }
                 this.closeDos();
+                br.close();
 //                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 //                while ((temp = bre.readLine()) != null) {
 //                    if (temp.startsWith("[m")) continue;
@@ -276,8 +279,10 @@ class DiscoverVariation {
 //                bre.close();
 
                 p.waitFor();
+                System.out.println("Individual genotype is completed for taxon "+ this.taxon);
             }
             catch (Exception e) {
+                System.out.println("Problems with taxon " + this.taxon);
                 e.printStackTrace();
             }
             counter.increment();

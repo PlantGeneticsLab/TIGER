@@ -195,6 +195,7 @@ class ScanGenotype {
         }
         this.deleteTemperateFile();
         System.out.println("Final VCF is completed at " + outfileS);
+        System.out.println("Step 3 is finished.");
     }
 
     class TaxonCountRead implements Callable<IndividualCount> {
@@ -395,16 +396,17 @@ class ScanGenotype {
 //                    System.out.println(temp);
 //                }
 //                bre.close();
-                p.waitFor();
                 this.closeDos();
                 br.close();
+                p.waitFor();
+                System.out.println("Individual allele counting is completed for taxon "+ this.taxonName);
             }
             catch (Exception ee) {
                 ee.printStackTrace();
             }
             counter.increment();
             int cnt = counter.intValue();
-            if (cnt%10 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
+            if (cnt%50 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
             return this;
         }
     }

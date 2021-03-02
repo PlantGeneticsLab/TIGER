@@ -2,6 +2,7 @@ package pgl.app.fastCall2;
 
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
+import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import pgl.AppUtils;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
@@ -25,19 +26,26 @@ public class FastCall2 {
     }
 
     private void runSteps(String parameterFileS) {
+        long timeStart = System.nanoTime();
         Dyad<List<String>, List<String>> d = AppUtils.getParameterList(parameterFileS);
         List<String> pLineList = d.getFirstElement();
         List<String> sLineList = d.getSecondElement();
         this.step = Integer.parseInt(sLineList.get(0).split("\\s+")[1]);
         if (step == 1) {
+            System.out.println("Running step 1...");
             new DiscoverVariation(pLineList);
         }
         else if (step == 2) {
+            System.out.println("Running step 2...");
             new BuildVariationLibrary(pLineList);
         }
         else if (step == 3) {
+            System.out.println("Running step 3...");
             new ScanGenotype(pLineList);
         }
+        StringBuilder sb = new StringBuilder("FastCall2 is finished in ");
+        sb.append((float)Benchmark.getTimeSpanHours(timeStart)).append(" hours.");
+        System.out.println(sb.toString());
     }
 
     static Dyad<int[][], int[]> getBins (int regionStart, int regionEnd) {
