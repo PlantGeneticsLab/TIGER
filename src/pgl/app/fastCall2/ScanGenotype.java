@@ -161,7 +161,7 @@ class ScanGenotype {
                     for (int j = 0; j < codedAlts.length; j++) {
                         vsb.append(FastCall2.getAlleleBaseFromCodedAllele(codedAlts[j])).append(",");
                     }
-                    vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t.");
+                    vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
                     String[] genoArray = new String[incList.size()];
                     for (int j = 0; j < incList.size(); j++) {
                         if (incList.get(j).alleleNum[index] == -1) {
