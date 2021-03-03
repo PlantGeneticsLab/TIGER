@@ -714,7 +714,9 @@ class ScanGenotype {
             index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
             byte queryAlleleByte = -1;
             if (index < 0) continue;
-            else if (index < 4) {
+            //weird sign of "^" before a char
+            if (i > 0 && baseB[i-1] == 94) continue;
+            if (index < 4) {
                 queryAlleleByte = FastCall2.getCodedAllele(alleleByte, 0);
             }
             else {

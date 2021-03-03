@@ -169,7 +169,9 @@ class DiscoverVariation {
                 byte alleleByte = FastCall2.pileupAscIIToAlleleByteMap.get(baseB[i]);
                 index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
                 if (index < 0) continue;
-                else if (index > 3) {
+                //weird sign of "^" before a char
+                if (i > 0 && baseB[i-1] == 94) continue;
+                if (index > 3) {
                     int startIndex = i+1;
                     int endIndex = i+2;
                     for (int j = i+2; j < baseB.length; j++) {
@@ -214,6 +216,7 @@ class DiscoverVariation {
         }
 
         public void closeDos () {
+            if (currentBinIndex < 0) return;
             try {
                 dos.writeInt(Integer.MIN_VALUE);
                 dos.flush();
