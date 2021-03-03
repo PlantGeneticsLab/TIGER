@@ -246,7 +246,6 @@ class ScanGenotype {
             sb.append(" -l ").append(vLibPosFileS).append(" -r ");
             sb.append(chrom).append(":").append(this.regionStart).append("-").append(this.regionEnd);
             String command = sb.toString();
-            System.out.println(command);
             IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);
             Future<IndiCount> result = pool.submit(idv);
             resultList.add(result);
@@ -716,7 +715,7 @@ class ScanGenotype {
             byte queryAlleleByte = -1;
             if (index < 0) continue;
             else if (index < 4) {
-                queryAlleleByte = alleleByte;
+                queryAlleleByte = FastCall2.getCodedAllele(alleleByte, 0);
             }
             else {
                 int startIndex = i+1;
