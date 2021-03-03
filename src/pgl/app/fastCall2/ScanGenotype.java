@@ -244,8 +244,9 @@ class ScanGenotype {
                 sb.append(" ").append(bamPaths.get(j));
             }
             sb.append(" -l ").append(vLibPosFileS).append(" -r ");
-            sb.append(chrom);
+            sb.append(chrom).append(":").append(this.regionStart).append("-").append(this.regionEnd);
             String command = sb.toString();
+            System.out.println(command);
             IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);
             Future<IndiCount> result = pool.submit(idv);
             resultList.add(result);
