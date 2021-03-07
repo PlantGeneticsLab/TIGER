@@ -163,22 +163,11 @@ class ScanGenotype {
                     }
                     vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
                     String[] genoArray = new String[incList.size()];
+                    List<short[]> siteCountsList = new ArrayList<>();
                     for (int j = 0; j < incList.size(); j++) {
-                        if (incList.get(j).alleleNum[index] == -1) {
-                            genoArray[j] = "./.";
-                        }
-                        else {
-                            int[] alleleCounts = new int[incList.get(j).alleleNum[index]];
-                            for (int k = 0; k < alleleCounts.length; k++) {
-                                alleleCounts[k] = incList.get(j).alleleCounts[index][k];
-                            }
-                            genoArray[j] = getGenotype(alleleCounts);
-                        }
+                        siteCountsList.add(incList.get(j).alleleCounts[index]);
                     }
-                    vsb.append(this.getInfo(genoArray, codedAlts)).append("\tGT:AD:GL");
-                    for (int j = 0; j < genoArray.length; j++) {
-                        vsb.append("\t").append(genoArray[j]);
-                    }
+                    vsb.append(this.getInfoAndGenotypes(siteCountsList, codedAlts));
                     vcfRecords[index] = vsb.toString();
                 });
                 for (int j = 0; j < vcfRecords.length; j++) {
@@ -332,7 +321,7 @@ class ScanGenotype {
 
         public void writeMissing () {
             try {
-                dos.writeByte(-1);
+                dos.writeByte((byte)-1);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -371,9 +360,13 @@ class ScanGenotype {
                                 siteDepth+=Integer.parseInt(currentList.get(3+j*3));
                                 baseS.append(currentList.get(4+j*3));
                             }
-                            int[] alleleCounts = getAlleleCounts (codedAltAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
-                            this.writeAlleleCounts(alleleCounts);
-                            String vcf = getGenotype(alleleCounts);
+                            if (siteDepth == 0) {
+                                this.writeMissing();
+                            }
+                            else {
+                                int[] alleleCounts = getAlleleCounts (codedAltAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
+                                this.writeAlleleCounts(alleleCounts);
+                            }
                             current = br.readLine();
                             if (current != null) {
                                 currentList = PStringUtils.fastSplit(current);
@@ -426,79 +419,68 @@ class ScanGenotype {
         new File (vLibPosFileS).delete();
     }
 
-    public void mkFinalVCF () {
-        String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
-        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
-            Date dt = new Date();
-            String S = sdf.format(dt);
-            BufferedWriter bw = IOUtils.getTextWriter(outfileS);
-            bw.write("##fileformat=VCFv4.1\n");
-            bw.write("##fileDate="+S.split(" ")[0]+"\n");
-            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
-            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">\n");
-            bw.write("##FORMAT=<ID=GL,Number=G,Type=Integer,Description=\"Genotype likelihoods for 0/0, 0/1, 1/1, or  0/0, 0/1, 0/2, 1/1, 1/2, 2/2 if 2 alt alleles\">\n");
-            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
-            bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
-            bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
-            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of ALT alleles in order listed\">\n");
-            bw.write("##INFO=<ID=IL,Number=.,Type=Integer,Description=\"Indel length of ALT alleles in order listed\">\n");
-            bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
-            bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
-            bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
-            bw.write("##ALT=<ID=DEL,Description=\"Deletion\">\n");
-            bw.write("##ALT=<ID=INS,Description=\"Insertion\">\n");
-            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
-            for (int i = 0; i < taxaNames.length; i++) {
-                sb.append("\t").append(taxaNames[i]);
+    private String getInfoAndGenotypes (List<short[]> siteCountList, byte[] codedAlts) {
+        StringBuilder genoSB = new StringBuilder("GT:AD:GL");
+        StringBuilder infoSB = new StringBuilder();
+        int dp = 0;
+        int nz = 0;
+        int alleleNumber = codedAlts.length+1;
+        int[] adCnt = new int[alleleNumber];
+        int[] acCnt = new int[alleleNumber];
+        int[][] gnCnt = new int[alleleNumber][alleleNumber];
+        int ht = 0;
+        for (int i = 0; i < siteCountList.size(); i++) {
+            if (siteCountList.get(i) == null) {
+                nz++;
+                genoSB.append("\t./.");
+                continue;
             }
-            bw.write(sb.toString());
-            bw.newLine();
-            BufferedReader[] brs = new BufferedReader[taxaNames.length];
-            String indiVCFFolderS = new File(outputDirS, subDirS[0]).getAbsolutePath();
-            for (int i = 0; i < brs.length; i++) {
-                String indiVCFFileS = new File (indiVCFFolderS, taxaNames[i]+".chr"+PStringUtils.getNDigitNumber(3, chrom)+".indi.vcf").getAbsolutePath();
-                brs[i] = new BufferedReader (new FileReader(indiVCFFileS), 4096);
+            for (int j = 0; j < alleleNumber; j++) {
+                int currentCount = siteCountList.get(i)[j];
+                dp+=currentCount;
+                adCnt[j] += currentCount;
             }
-            byte[] codedAlts = null;
-            String[] genoArray = new String[brs.length];
-            int cnt = 0;
-            for (int i = 0; i < positions.length; i++) {
-                sb.setLength(0);
-                sb.append(chrom).append("\t").append(positions[i]).append("\t").append(chrom).append("-").append(positions[i]).append("\t").append(posRefMap.get(positions[i])).append("\t");
-                codedAlts = posCodedAlleleMap.get(positions[i]);
-                for (int j = 0; j < codedAlts.length; j++) {
-                    sb.append(FastCall2.getAlleleBaseFromCodedAllele(codedAlts[j])).append(",");
-                }
-                sb.deleteCharAt(sb.length()-1).append("\t.\t.\t.");
-                for (int j = 0; j < brs.length; j++) {
-                    genoArray[j]= brs[j].readLine();
-                }
-                sb.append(this.getInfo(genoArray, codedAlts)).append("\tGT:AD:GL");
-                for (int j = 0; j < genoArray.length; j++) {
-                    sb.append("\t").append(genoArray[j]);
-                }
-                bw.write(sb.toString());
-                bw.newLine();
-                cnt++;
-                if (cnt%1000000 == 0) System.out.println(String.valueOf(cnt)+" SNPs output to " + outfileS);
-            }
-            bw.flush();
-            bw.close();
-            for (int i = 0; i < brs.length; i++) {
-                brs[i].close();
-            }
-            for (int i = 0; i < taxaNames.length; i++) {
-                String indiVCFFileS = new File (indiVCFFolderS, taxaNames[i]+".chr"+PStringUtils.getNDigitNumber(3, chrom)+".indi.vcf").getAbsolutePath();
-                new File(indiVCFFileS).delete();
+            String genoS = this.getGenotypeByShort(siteCountList.get(i));
+            genoSB.append("\t").append(genoS);
+            int g1 = genoS.charAt(0)-'0';
+            int g2 = genoS.charAt(2)-'0';
+            acCnt[g1]++;
+            acCnt[g2]++;
+            gnCnt[g1][g2]++;
+            if (g1 != g2) ht++;
+        }
+        nz = siteCountList.size() - nz;
+        int sum = 0;
+        for (int i = 0; i < acCnt.length; i++) {
+            sum+=acCnt[i];
+        }
+        float maf = (float)((double)acCnt[0]/sum);
+        if (maf>0.5) maf = (float)(1-maf);
+        infoSB.append("DP=").append(dp).append(";NZ=").append(nz).append(";AD=");
+        for (int i = 0; i < adCnt.length; i++) {
+            infoSB.append(adCnt[i]).append(",");
+        }
+        infoSB.deleteCharAt(infoSB.length()-1);
+        infoSB.append(";AC=");
+        for (int i = 0; i < acCnt.length; i++) {
+            infoSB.append(acCnt[i]).append(",");
+        }
+        infoSB.deleteCharAt(infoSB.length()-1);
+        infoSB.append(";IL=");
+        for (int i = 0; i < codedAlts.length; i++) {
+            infoSB.append(FastCall2.getIndelLengthFromCodedAllele(codedAlts[i])).append(",");
+        }
+        infoSB.deleteCharAt(infoSB.length()-1);
+        infoSB.append(";GN=");
+        for (int i = 0; i < gnCnt.length; i++) {
+            for (int j = i; j < gnCnt.length; j++) {
+                infoSB.append(gnCnt[i][j]).append(",");
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        this.deleteTemperateFile();
-        System.out.println("Final VCF is completed at " + outfileS);
+        infoSB.deleteCharAt(infoSB.length()-1);
+        infoSB.append(";HT=").append(ht).append(";MAF=").append(maf);
+        infoSB.append("\t").append(genoSB);
+        return infoSB.toString();
     }
 
     private String getInfo (String[] genoArray, byte[] codedAlts) {
@@ -567,143 +549,6 @@ class ScanGenotype {
         return sb.toString();
     }
 
-    public void scanIndiVCFByThreadPool () {
-        FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
-        posRefMap = new HashMap<>();
-        posCodedAlleleMap = new HashMap<>();
-        List<String> altList = new ArrayList<>();
-        positions = new int[vlEndIndex-vlStartIndex];
-        for (int i = vlStartIndex; i < vlEndIndex; i++) {
-            posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));
-            posCodedAlleleMap.put(vl.positions[i], vl.codedAlleles[i]);
-            positions[i-vlStartIndex] = vl.positions[i];
-        }
-        Set<String> taxaSet = taxaBamsMap.keySet();
-        ArrayList<String> taxaList = new ArrayList(taxaSet);
-        Collections.sort(taxaList);
-
-//        int[][] indices = PArrayUtils.getSubsetsIndicesBySubsetSize(taxaList.size(), this.nThreads);
-        LongAdder counter = new LongAdder();
-        ExecutorService pool = Executors.newFixedThreadPool(this.threadsNum);
-        List<Future<IndiVCF>> resultList = new ArrayList<>();
-        for (int i = 0; i < taxaList.size(); i++) {
-            String indiVCFFolderS = new File(outputDirS, subDirS[0]).getAbsolutePath();
-            String indiVCFFileS = new File(indiVCFFolderS, taxaList.get(i) + ".chr" + PStringUtils.getNDigitNumber(3, chrom) + ".indi.vcf").getAbsolutePath();
-            List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
-            StringBuilder sb = new StringBuilder(samtoolsPath);
-            sb.append(" mpileup -A -B -q 20 -Q 20 -f ").append(this.referenceFileS);
-            for (int j = 0; j < bamPaths.size(); j++) {
-                sb.append(" ").append(bamPaths.get(j));
-            }
-            sb.append(" -l ").append(vLibPosFileS).append(" -r ");
-            sb.append(chrom);
-            String command = sb.toString();
-            IndiVCF idv = new IndiVCF(command, indiVCFFileS, posRefMap, posCodedAlleleMap, positions, bamPaths, counter);
-            Future<IndiVCF> result = pool.submit(idv);
-            resultList.add(result);
-        }
-        try {
-            pool.shutdown();
-            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MICROSECONDS);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    class IndiVCF implements Callable<IndiVCF> {
-        String command = null;
-        String indiVCFFileS = null;
-        HashMap<Integer, String> posRefMap = null;
-        HashMap<Integer, byte[]> posCodedAlleleMap = null;
-        int[] positions = null;
-        List<String> bamPaths = null;
-        LongAdder counter = null;
-        public IndiVCF (String command, String indiVCFFileS, HashMap<Integer, String> posRefMap, HashMap<Integer, byte[]> posCodedAlleleMap, int[] positions, List<String> bamPaths, LongAdder counter) {
-            this.command = command;
-            this.indiVCFFileS = indiVCFFileS;
-            this.posRefMap = posRefMap;
-            this.posCodedAlleleMap = posCodedAlleleMap;
-            this.positions = positions;
-            this.bamPaths = bamPaths;
-            this.counter = counter;
-        }
-
-        @Override
-        public IndiVCF call() throws Exception {
-            try {
-                Runtime rt = Runtime.getRuntime();
-                Process p = rt.exec(command);
-                String temp = null;
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                BufferedWriter bw = IOUtils.getTextWriter(indiVCFFileS);
-                String current = br.readLine();
-                List<String> currentList = null;
-                int currentPosition = -1;
-                if (current != null) {
-                    currentList = PStringUtils.fastSplit(current);
-                    currentPosition = Integer.parseInt(currentList.get(1));
-                }
-                StringBuilder baseS = new StringBuilder();
-                StringBuilder baseSb = new StringBuilder();
-                for (int i = 0; i < positions.length; i++) {
-                    if (current == null) {
-                        bw.write("./.");
-                        bw.newLine();
-                    }
-                    else {
-                        if (positions[i] == currentPosition) {
-                            String ref = posRefMap.get(currentPosition);
-                            byte[] codedAltAlleles = this.posCodedAlleleMap.get(currentPosition);
-                            baseS.setLength(0);
-                            int siteDepth = 0;
-                            for (int j = 0; j < bamPaths.size(); j++) {
-                                siteDepth+=Integer.parseInt(currentList.get(3+j*3));
-                                baseS.append(currentList.get(4+j*3));
-                            }
-                            int[] alleleCounts = getAlleleCounts (codedAltAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
-                            String vcf = getGenotype(alleleCounts);
-                            bw.write(vcf);
-                            bw.newLine();
-                            current = br.readLine();
-                            if (current != null) {
-                                currentList = PStringUtils.fastSplit(current);
-                                currentPosition = Integer.parseInt(currentList.get(1));
-                            }
-                        }
-                        else if (positions[i] < currentPosition) {
-                            bw.write("./.");
-                            bw.newLine();
-                        }
-                        else {
-                            System.out.println("Current position is greater than pileup position. It should not happen. Program quits");
-                            System.exit(1);
-                        }
-                    }
-                }
-//                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-//                while ((temp = bre.readLine()) != null) {
-//                    if (temp.startsWith("[m")) continue;
-//                    System.out.println(command);
-//                    System.out.println(temp);
-//                }
-//                bre.close();
-                p.waitFor();
-                bw.flush();
-                bw.close();
-                br.close();
-            }
-            catch (Exception ee) {
-                ee.printStackTrace();
-            }
-            counter.increment();
-            int cnt = counter.intValue();
-            if (cnt%10 == 0) System.out.println("Finished individual genotyping in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
-            return this;
-        }
-    }
-
     private int[] getAlleleCounts (byte[] codedAltAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
         byte[] baseB = baseS.getBytes();
         int[] altAlleleCounts = new int[codedAltAlleles.length];
@@ -753,7 +598,7 @@ class ScanGenotype {
         return alleleCounts;
     }
 
-    private String getGenotype (int[] cnt) {
+    private String getGenotypeByShort (short[] cnt) {
         int n = cnt.length*(cnt.length+1)/2;
         int[] likelihood = new int[n];
         int sum = 0;
@@ -762,7 +607,7 @@ class ScanGenotype {
         else if (sum > this.maxFactorial) {
             double portion = (double)this.maxFactorial/sum;
             for (int i = 0; i < cnt.length; i++) {
-                cnt[i] = (int)(cnt[i]*portion);
+                cnt[i] = (short)(cnt[i]*portion);
             }
             sum = this.maxFactorial;
         }
