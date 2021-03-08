@@ -182,7 +182,7 @@ class ScanGenotype {
         catch (Exception e) {
             e.printStackTrace();
         }
-        this.deleteTemperateFile();
+//        this.deleteTemperateFile();
         System.out.println("Final VCF is completed at " + outfileS);
         System.out.println("Step 3 is finished.");
     }
@@ -328,6 +328,35 @@ class ScanGenotype {
             }
         }
 
+        public void writeEmptyFiles() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < binStarts.length; i++) {
+                sb.setLength(0);
+                sb.append(chrom).append("_").append(binBound[i][0]).append("_").append(binBound[i][1]).append(".iac.gz");
+                String outfileS = new File (indiTaxonDirS, sb.toString()).getAbsolutePath();
+                File outf = new File (outfileS);
+                if (outf.exists()) continue;
+                try {
+                    dos = IOUtils.getBinaryGzipWriter(outfileS);
+                    dos.writeUTF(this.taxonName);
+                    dos.writeShort((short)chrom);
+                    dos.writeInt(binBound[i][0]);
+                    dos.writeInt(binBound[i][1]);
+                    vlBinStartIndex = vl.getStartIndex(binBound[i][0]);
+                    vlBinEndIndex = vl.getEndIndex(binBound[i][1]);
+                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);
+                    int len = vlBinEndIndex-vlBinStartIndex;
+                    for (int j = 0; j < len; j++) {
+                        this.writeMissing();
+                    }
+                    this.closeDos();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         @Override
         public IndiCount call() throws Exception {
             try {
@@ -392,6 +421,7 @@ class ScanGenotype {
                 this.closeDos();
                 br.close();
                 p.waitFor();
+                this.writeEmptyFiles();
                 System.out.println("Individual allele counting is completed for taxon "+ this.taxonName);
             }
             catch (Exception ee) {

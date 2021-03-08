@@ -157,6 +157,7 @@ class DiscoverVariation {
                 baseSb.append(lList.get(i+1));
             }
             if (currentDepth < mdcThresh) return false;
+            if (currentDepth < 1) return false;
             double siteDepthRatio = (double)currentDepth/this.taxonCoverage;
             if (siteDepthRatio < mindrThresh) return false;
             if (siteDepthRatio > maxdrTrresh) return false;
