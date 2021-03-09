@@ -274,14 +274,6 @@ class DiscoverVariation {
                 }
                 this.closeDos();
                 br.close();
-//                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-//                while ((temp = bre.readLine()) != null) {
-//                    if (temp.startsWith("[m")) continue;
-//                    System.out.println(command);
-//                    System.out.println(temp);
-//                }
-//                bre.close();
-
                 p.waitFor();
                 System.out.println("Individual genotype is completed for taxon "+ this.taxon);
             }

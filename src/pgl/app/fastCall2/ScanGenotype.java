@@ -57,7 +57,6 @@ class ScanGenotype {
     int vlStartIndex = Integer.MIN_VALUE;
     int vlEndIndex = Integer.MIN_VALUE;
     HashMap<Integer, String> posRefMap = new HashMap<>();
-//    HashMap<Integer, String[]> posAltMap = new HashMap<>();
     HashMap<Integer, byte[]> posCodedAlleleMap = new HashMap<>();
     int[] positions = null;
     int vlBinStartIndex = 0;
@@ -74,11 +73,6 @@ class ScanGenotype {
          */
         this.scanIndiCountsByThreadPool();
         this.mkFinalVCFFromIndiCounts();
-        /*
-        Output by individual VCF, slow
-         */
-//        this.scanIndiVCFByThreadPool();
-//        this.mkFinalVCF();
     }
 
     public void mkFinalVCFFromIndiCounts () {
@@ -135,7 +129,6 @@ class ScanGenotype {
                     }
                     pool.shutdown();
                     pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-
                     for (int j = 0; j < futureList.size(); j++) {
                         IndividualCount inc = futureList.get(j).get();
                         if (inc == null) continue;
@@ -162,7 +155,6 @@ class ScanGenotype {
                         vsb.append(FastCall2.getAlleleBaseFromCodedAllele(codedAlts[j])).append(",");
                     }
                     vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
-                    String[] genoArray = new String[incList.size()];
                     List<short[]> siteCountsList = new ArrayList<>();
                     for (int j = 0; j < incList.size(); j++) {
                         siteCountsList.add(incList.get(j).alleleCounts[index]);
@@ -182,7 +174,7 @@ class ScanGenotype {
         catch (Exception e) {
             e.printStackTrace();
         }
-//        this.deleteTemperateFile();
+        this.deleteTemperateFile();
         System.out.println("Final VCF is completed at " + outfileS);
         System.out.println("Step 3 is finished.");
     }
@@ -241,7 +233,7 @@ class ScanGenotype {
         }
         try {
             pool.shutdown();
-            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MICROSECONDS);
+            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -297,7 +289,7 @@ class ScanGenotype {
                     dos.writeInt(binBound[binIndex][0]);
                     dos.writeInt(binBound[binIndex][1]);
                     vlBinStartIndex = vl.getStartIndex(binBound[binIndex][0]);
-                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]);
+                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]-1);
                     dos.writeInt(vlBinEndIndex-vlBinStartIndex);
                 }
                 catch (Exception e) {
@@ -343,9 +335,12 @@ class ScanGenotype {
                     dos.writeInt(binBound[i][0]);
                     dos.writeInt(binBound[i][1]);
                     vlBinStartIndex = vl.getStartIndex(binBound[i][0]);
-                    vlBinEndIndex = vl.getEndIndex(binBound[i][1]);
-                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);
+                    vlBinEndIndex = vl.getEndIndex(binBound[i][1]-1);
                     int len = vlBinEndIndex-vlBinStartIndex;
+                    if (vlBinStartIndex == Integer.MIN_VALUE || vlBinEndIndex == Integer.MIN_VALUE) {
+                        len = 0;
+                    }
+                    dos.writeInt(len);
                     for (int j = 0; j < len; j++) {
                         this.writeMissing();
                     }
@@ -411,13 +406,6 @@ class ScanGenotype {
                         }
                     }
                 }
-//                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-//                while ((temp = bre.readLine()) != null) {
-//                    if (temp.startsWith("[m")) continue;
-//                    System.out.println(command);
-//                    System.out.println(temp);
-//                }
-//                bre.close();
                 this.closeDos();
                 br.close();
                 p.waitFor();
@@ -629,12 +617,16 @@ class ScanGenotype {
     }
 
     private String getGenotypeByShort (short[] cnt) {
+        //in case some allele depth is greater than maxFactorial, to keep the original allele counts
+        short[] oriCnt = null;
         int n = cnt.length*(cnt.length+1)/2;
         int[] likelihood = new int[n];
         int sum = 0;
         for (int i = 0; i < cnt.length; i++) sum+=cnt[i];
         if (sum == 0) return "./.";
         else if (sum > this.maxFactorial) {
+            oriCnt = new short[cnt.length];
+            System.arraycopy(cnt, 0, oriCnt, 0, cnt.length);
             double portion = (double)this.maxFactorial/sum;
             for (int i = 0; i < cnt.length; i++) {
                 cnt[i] = (short)(cnt[i]*portion);
@@ -666,7 +658,12 @@ class ScanGenotype {
         }
         StringBuilder sb = new StringBuilder();
         sb.append(a1).append("/").append(a2).append(":");
-        for (int i = 0; i < cnt.length; i++) sb.append(cnt[i]).append(",");
+        if (sum > this.maxFactorial) {
+            for (int i = 0; i < oriCnt.length; i++) sb.append(oriCnt[i]).append(",");
+        }
+        else {
+            for (int i = 0; i < cnt.length; i++) sb.append(cnt[i]).append(",");
+        }
         sb.deleteCharAt(sb.length()-1); sb.append(":");
         for (int i = 0; i < likelihood.length; i++) sb.append(likelihood[i]).append(",");
         sb.deleteCharAt(sb.length()-1);

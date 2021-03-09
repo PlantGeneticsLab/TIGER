@@ -12,6 +12,7 @@ class IndividualCount implements Comparable<IndividualCount> {
     int binStart = Integer.MIN_VALUE;
     int binEnd = Integer.MIN_VALUE;
     byte[] alleleNum = null;
+    //set null if the site is missing
     short[][] alleleCounts = null;
 
     public IndividualCount (String infileS) {
@@ -39,6 +40,7 @@ class IndividualCount implements Comparable<IndividualCount> {
             dis.close();
         }
         catch (Exception e) {
+            System.out.println(infileS);
             e.printStackTrace();
         }
     }

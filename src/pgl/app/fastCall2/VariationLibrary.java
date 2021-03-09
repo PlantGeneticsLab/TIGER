@@ -146,7 +146,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     /**
      * Return the index of the next position in the library, inclusive
      * @param pos
-     * @return
+     * @return Integer.MIN_VALUE if the query pos is greater than the end of the position list
      */
     public int getStartIndex (int pos) {
         int index = this.getPositionIndex(pos);
@@ -162,7 +162,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     /**
      * Return the index of the previous position in the library, exclusive
      * @param pos
-     * @return
+     * @return Integer.MIN_VALUE if the query pos is less than the start of the position list
      */
     public int getEndIndex (int pos) {
         int index = this.getPositionIndex(pos);
