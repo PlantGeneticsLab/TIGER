@@ -415,9 +415,9 @@ class ScanGenotype {
             catch (Exception ee) {
                 ee.printStackTrace();
             }
-//            counter.increment();
-//            int cnt = counter.intValue();
-//            if (cnt%50 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
+            counter.increment();
+            int cnt = counter.intValue();
+            if (cnt%50 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
             return this;
         }
     }
