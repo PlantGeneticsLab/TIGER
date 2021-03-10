@@ -101,7 +101,7 @@ class ScanGenotype {
             Dyad<int[][], int[]> d = FastCall2.getBinsScanning(this.regionStart, this.regionEnd);
             int[][] binBound = d.getFirstElement();
             int[] binStarts = d.getSecondElement();
-            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
+                StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
             for (int i = 0; i < taxaNames.length; i++) {
                 sb.append("\t").append(taxaNames[i]);
             }
@@ -138,6 +138,7 @@ class ScanGenotype {
                 }
                 catch (Exception e) {
                     e.printStackTrace();
+                    System.exit(1);
                 }
                 vlBinEndIndex = vlBinStartIndex + incList.get(0).alleleNum.length;
                 List<Integer> indexList = new ArrayList<>();
@@ -167,12 +168,14 @@ class ScanGenotype {
                     bw.newLine();
                 }
                 vlBinStartIndex = vlBinEndIndex;
+                System.out.println(sb.toString().split("\\.")[0]+ " genotyping is finished.");
             }
             bw.flush();
             bw.close();
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
         this.deleteTemperateFile();
         System.out.println("Final VCF is completed at " + outfileS);
