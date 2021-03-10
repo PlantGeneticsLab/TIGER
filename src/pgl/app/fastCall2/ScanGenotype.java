@@ -98,7 +98,7 @@ class ScanGenotype {
             bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
             bw.write("##ALT=<ID=DEL,Description=\"Deletion\">\n");
             bw.write("##ALT=<ID=INS,Description=\"Insertion\">\n");
-            Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd);
+            Dyad<int[][], int[]> d = FastCall2.getBinsScanning(this.regionStart, this.regionEnd);
             int[][] binBound = d.getFirstElement();
             int[] binStarts = d.getSecondElement();
             StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
@@ -211,7 +211,7 @@ class ScanGenotype {
         Set<String> taxaSet = taxaBamsMap.keySet();
         ArrayList<String> taxaList = new ArrayList(taxaSet);
         Collections.sort(taxaList);
-        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd);
+        Dyad<int[][], int[]> d = FastCall2.getBinsScanning(this.regionStart, this.regionEnd);
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         LongAdder counter = new LongAdder();

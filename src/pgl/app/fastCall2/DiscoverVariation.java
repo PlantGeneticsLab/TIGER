@@ -71,7 +71,7 @@ class DiscoverVariation {
             f.mkdir();
             taxaOutDirs[i] = f;
         }
-        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd);
+        Dyad<int[][], int[]> d = FastCall2.getBinsDiscovery(this.regionStart, this.regionEnd);
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         try {

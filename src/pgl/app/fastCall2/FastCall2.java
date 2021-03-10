@@ -13,8 +13,10 @@ import java.util.*;
 public class FastCall2 {
     //Current step ID of the pipeline
     int step = Integer.MIN_VALUE;
-    //genome block for individual ing
-    static int binSize = 50000000;
+    //genome block size for variation discovery
+    static int disBinSize = 5000000;
+    //genome block size for genotype scanning
+    static int scanBinSize = 20000000;
     //A, C, G, T, -, +
     static final byte[] pileupAlleleAscIIs = {65, 67, 71, 84, 45, 43};
 
@@ -48,10 +50,23 @@ public class FastCall2 {
         System.out.println(sb.toString());
     }
 
-    static Dyad<int[][], int[]> getBins (int regionStart, int regionEnd) {
+    static Dyad<int[][], int[]> getBinsDiscovery (int regionStart, int regionEnd) {
         int actualChrLength = regionEnd - regionStart;
         //starting from actual genome position
-        int[][] binBound = PArrayUtils.getSubsetsIndicesBySubsetSize (actualChrLength, binSize);
+        int[][] binBound = PArrayUtils.getSubsetsIndicesBySubsetSize (actualChrLength, disBinSize);
+        int[] binStarts = new int[binBound.length];
+        for (int i = 0; i < binBound.length; i++) {
+            binBound[i][0] = binBound[i][0]+regionStart;
+            binBound[i][1] = binBound[i][1]+regionStart;
+            binStarts[i] = binBound[i][0];
+        }
+        return new Dyad<>(binBound, binStarts);
+    }
+
+    static Dyad<int[][], int[]> getBinsScanning (int regionStart, int regionEnd) {
+        int actualChrLength = regionEnd - regionStart;
+        //starting from actual genome position
+        int[][] binBound = PArrayUtils.getSubsetsIndicesBySubsetSize (actualChrLength, scanBinSize);
         int[] binStarts = new int[binBound.length];
         for (int i = 0; i < binBound.length; i++) {
             binBound[i][0] = binBound[i][0]+regionStart;
