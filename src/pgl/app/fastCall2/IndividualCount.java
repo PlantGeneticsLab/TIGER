@@ -42,6 +42,7 @@ class IndividualCount implements Comparable<IndividualCount> {
         catch (Exception e) {
             System.out.println(infileS);
             e.printStackTrace();
+            System.exit(1);
         }
     }
 

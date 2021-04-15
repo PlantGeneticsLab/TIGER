@@ -82,6 +82,7 @@ class BuildVariationLibrary {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
             }
             VariationLibrary vl = new VariationLibrary (ingList, maoThresh, maxAltNum, chrom, binStarts[i]);
             vlList.add(vl);

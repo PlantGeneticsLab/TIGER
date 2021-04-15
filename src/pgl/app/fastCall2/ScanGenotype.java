@@ -240,6 +240,7 @@ class ScanGenotype {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
     }
@@ -274,6 +275,7 @@ class ScanGenotype {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -297,6 +299,7 @@ class ScanGenotype {
                 }
                 catch (Exception e) {
                     e.printStackTrace();
+                    System.exit(1);
                 }
                 currentBinIndex = binIndex;
             }
@@ -311,6 +314,7 @@ class ScanGenotype {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -320,6 +324,7 @@ class ScanGenotype {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 

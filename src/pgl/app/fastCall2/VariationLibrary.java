@@ -199,6 +199,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
         StringBuilder sb = new StringBuilder();
         sb.append(positions.length).append(" polymorphic sites are written to ").append(outfileS);
@@ -224,6 +225,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -252,6 +254,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 

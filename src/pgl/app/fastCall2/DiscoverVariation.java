@@ -96,6 +96,7 @@ class DiscoverVariation {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
         System.out.println("Individual genotype of "+ String.valueOf(this.taxaNames.length)+" taxa is completed.");
         System.out.println("Step 1 is finished.");
@@ -225,6 +226,7 @@ class DiscoverVariation {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -246,6 +248,7 @@ class DiscoverVariation {
                 }
                 catch (Exception e) {
                     e.printStackTrace();
+                    System.exit(1);
                 }
                 currentBinIndex = binIndex;
             }
@@ -258,6 +261,7 @@ class DiscoverVariation {
             }
             catch (Exception e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -280,6 +284,7 @@ class DiscoverVariation {
             catch (Exception e) {
                 System.out.println("Problems with taxon " + this.taxon);
                 e.printStackTrace();
+                System.exit(1);
             }
             counter.increment();
             int count = counter.intValue();
@@ -361,6 +366,7 @@ class DiscoverVariation {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }
