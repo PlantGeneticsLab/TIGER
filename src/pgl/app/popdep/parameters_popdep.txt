@@ -1,0 +1,32 @@
+#App:	PopDep
+#Author:	Fei Lu
+#Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+#Homepage:	https://plantgeneticslab.github.io/home/
+
+#PopDep is used to perform perform depth profiling in a population, based on media/high depth (e.g. >5X) whole genome sequencing data. They are useful to identify conserved regions of a genome.
+#It outputs 2 statistics, 
+#Mean depth of all taxa at a specific site
+#SD of depth of all taxa
+#To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
+#Command line example is as follows,
+#java -Xmx100g -jar TIGER.jar -a PopDep -p parameter_popdep.txt > log.txt &
+#To specify options, please edit the the parameters below. Also, please keep the order of parameters.
+
+#Parameter 1: The taxaRefBamMap file containing information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder
+#If one taxon has n bam files, please list them in n rows.
+/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/inputfile/taxaBam.txt
+
+#Parameter 2: The chromosome which will be scanned.
+1
+
+#Parameter 3: The length of the chromosome
+1000000
+
+#Parameter 4: The path of samtools
+/usr/local/bin/samtools
+
+#Parameter 5: Number of threads
+16
+
+#Parameter 6: The output file in gz format
+/Users/feilu/Documents/analysisL/softwareTest/pgl/popdep/out/chr001_popdep.txt.gz
