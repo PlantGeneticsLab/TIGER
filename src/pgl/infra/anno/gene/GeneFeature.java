@@ -28,12 +28,12 @@ import pgl.infra.utils.PStringUtils;
  */
 public class GeneFeature {
     Gene[] genes;
-    //0 sort by position, 1 by sort by name
+    //0 sort by starting position, 1 by sort by name
     int sortType = 0;
     public GeneFeature () {}
     
     /**
-     * Constructs a object from reading pgf (key gene feature) format 
+     * Constructs a object from reading pgf (protein-coding gene feature) format
      * @param infileS 
      */
     public GeneFeature (String infileS) {
@@ -107,8 +107,8 @@ public class GeneFeature {
         try {
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
             for (int i = 0; i < this.getGeneNumber(); i++) {
-                String title = String.valueOf(this.getGeneChromosome(i))+"_"+String.valueOf(this.getGeneStart(i)+"_"+String.valueOf(this.getGeneEnd(i))+"_"+String.valueOf(this.getGeneName(i)));
-                int chrIndex = genomef.getIndexByName(String.valueOf(this.getGeneChromosome(i)));
+                String title = String.valueOf(this.getChromosomeOfGene(i))+"_"+String.valueOf(this.getGeneStart(i)+"_"+String.valueOf(this.getGeneEnd(i))+"_"+String.valueOf(this.getGeneName(i)));
+                int chrIndex = genomef.getIndexByName(String.valueOf(this.getChromosomeOfGene(i)));
                 String chrseq = genomef.getSeq(chrIndex);
                 StringBuilder sb = new StringBuilder();
                 int longestTranscriptIndex = this.getLongestTranscriptIndex(i);
@@ -144,8 +144,8 @@ public class GeneFeature {
         try {
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
             for (int i = 0; i < this.getGeneNumber(); i++) {
-                String title = String.valueOf(this.getGeneChromosome(i))+"_"+String.valueOf(this.getGeneStart(i)+"_"+String.valueOf(this.getGeneEnd(i))+"_"+String.valueOf(this.getGeneName(i)));
-                int chrIndex = genomef.getIndexByName(String.valueOf(this.getGeneChromosome(i)));
+                String title = String.valueOf(this.getChromosomeOfGene(i))+"_"+String.valueOf(this.getGeneStart(i)+"_"+String.valueOf(this.getGeneEnd(i))+"_"+String.valueOf(this.getGeneName(i)));
+                int chrIndex = genomef.getIndexByName(String.valueOf(this.getChromosomeOfGene(i)));
                 String chrseq = genomef.getSeq(chrIndex);
                 String geneSeq = chrseq.substring(this.getGeneStart(i)-1, this.getGeneEnd(i)-1);
                 String[] geneSeqs = PStringUtils.getMultilineString(60, geneSeq);
@@ -175,7 +175,7 @@ public class GeneFeature {
             bw.newLine();
             for (int i = 0; i < this.getGeneNumber(); i++) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Gene\t").append(this.getGeneName(i)).append("\t").append(this.getGeneChromosome(i)).append("\t").append(this.getGeneStart(i)).append("\t").append(this.getGeneEnd(i)).append("\t").append(this.getGeneStrand(i));
+                sb.append("Gene\t").append(this.getGeneName(i)).append("\t").append(this.getChromosomeOfGene(i)).append("\t").append(this.getGeneStart(i)).append("\t").append(this.getGeneEnd(i)).append("\t").append(this.getGeneStrand(i));
                 sb.append("\t").append(this.getGeneBiotype(i)).append("\t").append(this.getGeneDescription(i));
                 bw.write(sb.toString());
                 bw.newLine();
@@ -237,13 +237,21 @@ public class GeneFeature {
         List<Range> utr5 = this.get5UTRList(geneIndex, index);
         if (utr5.isEmpty()) return null;
         if (this.getTranscriptStrand(geneIndex, index) == 1) {
-            return new ChrPos((short)this.getGeneChromosome(geneIndex),utr5.get(0).getRangeStart());
+            return new ChrPos((short)this.getChromosomeOfGene(geneIndex),utr5.get(0).getRangeStart());
         }
         else {
-            return new ChrPos((short)this.getGeneChromosome(geneIndex),utr5.get(utr5.size()-1).getRangeEnd()-1);
+            return new ChrPos((short)this.getChromosomeOfGene(geneIndex),utr5.get(utr5.size()-1).getRangeEnd()-1);
         }
     }
-    
+
+    /**
+     * Return the index of CDS exon from a particular transcript of a gene
+     * @param geneIndex
+     * @param transcriptIndex
+     * @param chr
+     * @param pos
+     * @return
+     */
     public int getCDSIndex (int geneIndex, int transcriptIndex, int chr, int pos) {
         return this.genes[geneIndex].ts.get(transcriptIndex).getCDSIndex(chr, pos);
     }
@@ -256,8 +264,7 @@ public class GeneFeature {
      */
     public int getGeneIndex (int chr, int pos) {
         if (this.sortType != 0) {
-            System.out.println("Genes needs to be sorted by position, program quits");
-            System.exit(0);
+            this.sortGeneByStartPosition();
         }
         Gene query = new Gene(chr, pos, pos+1);
         int hit = Arrays.binarySearch(this.genes, query);
@@ -277,7 +284,7 @@ public class GeneFeature {
      * @return 
      */
     public boolean isWithinThisGene (int geneIndex, int chr, int pos) {
-        if (chr != this.getGeneChromosome(geneIndex)) return false;
+        if (chr != this.getChromosomeOfGene(geneIndex)) return false;
         if (pos < this.getGeneStart(geneIndex)) return false;
         if (pos >= this.getGeneEnd(geneIndex)) return false;
         return true;
@@ -290,8 +297,7 @@ public class GeneFeature {
      */
     public int getGeneIndex (String geneName) {
         if (this.sortType != 1) {
-            System.out.println("Genes needs to be sorted by name, program quits");
-            System.exit(0);
+            this.sortGeneByName();
         }
         return Arrays.binarySearch(genes, new Gene(geneName));
     }
@@ -301,15 +307,14 @@ public class GeneFeature {
      * @param chromosome
      * @return 
      */
-    public int getStartIndexOfChromosome (int chromosome) {
+    public int getGeneStartIndexOfChromosome(int chromosome) {
         if (this.sortType != 0) {
-            System.out.println("Genes needs to be sorted by position, program quits");
-            System.exit(0);
+            this.sortGeneByStartPosition();
         }
         Gene query  = new Gene ("Query", chromosome, Integer.MIN_VALUE, Integer.MIN_VALUE, Byte.MIN_VALUE, "", "");
         int hit  = Arrays.binarySearch(genes, query);
         int index = -hit-1;
-        if (this.getGeneChromosome(index) == chromosome) return index;
+        if (this.getChromosomeOfGene(index) == chromosome) return index;
         return hit;
     }
     
@@ -318,15 +323,14 @@ public class GeneFeature {
      * @param chromosome
      * @return 
      */
-    public int getEndIndexOfChromosome (int chromosome) {
+    public int getGeneEndIndexOfChromosome(int chromosome) {
         if (this.sortType != 0) {
-            System.out.println("Genes needs to be sorted by position, program quits");
-            System.exit(0);
+            this.sortGeneByStartPosition();
         }
         Gene query  = new Gene ("Query", chromosome+1, Integer.MIN_VALUE, Integer.MIN_VALUE, Byte.MIN_VALUE, "", "");
         int hit  = Arrays.binarySearch(genes, query);
         int index = -hit-1;
-        if (this.getGeneChromosome(index-1) == chromosome) return index;
+        if (this.getChromosomeOfGene(index-1) == chromosome) return index;
         return hit;
     }
     
@@ -344,7 +348,7 @@ public class GeneFeature {
      * @param index
      * @return 
      */
-    public int getGeneChromosome (int index) {
+    public int getChromosomeOfGene(int index) {
         return genes[index].geneRange.chr;
     }
     
@@ -677,6 +681,7 @@ public class GeneFeature {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
         this.sortGeneByStartPosition();
     }
@@ -783,6 +788,7 @@ public class GeneFeature {
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
         this.sortGeneByStartPosition();
     }
@@ -826,6 +832,7 @@ public class GeneFeature {
     public void sortGeneByName () {
         this.sortType = 1;
         Arrays.sort(genes);
+        System.out.println("Genes are sorted by their names");
     }
     
     /**
@@ -834,6 +841,7 @@ public class GeneFeature {
     public void sortGeneByStartPosition () {
         this.sortType = 0;
         Arrays.sort(genes);
+        System.out.println("Genes are sorted by their position on chromosomes");
     }
     
     class Gene implements Comparable<Gene> {
@@ -908,7 +916,10 @@ public class GeneFeature {
             return 0;
         }
     }
-    
+
+    /**
+     * Note: intron here means only intron with the range of CDS, intron within 5'UTR and 5'UTR are excluded because annotations in these regions are not trustworthy enough
+     */
     class Transcript implements Comparable<Transcript> {
         String transcriptName = null;
         Range transcriptRange = null;
