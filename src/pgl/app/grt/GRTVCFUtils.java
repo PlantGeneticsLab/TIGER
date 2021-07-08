@@ -3,31 +3,23 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package pgl.infra.dna.genot;
+package pgl.app.grt;
 
+import static cern.jet.math.Arithmetic.factorial;
 import com.koloboke.collect.map.hash.HashIntDoubleMap;
 import com.koloboke.collect.map.hash.HashIntDoubleMaps;
 import pgl.app.grt.AlleleDepth;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import static cern.jet.math.Arithmetic.factorial;
 
 /**
  * incomplete
  * @author feilu
  */
-public class VCFUtils {
+public class GRTVCFUtils {
     private static final int maxFactorial = 150;
     private static final HashIntDoubleMap factorialMap = createFactorialMap(maxFactorial);
-    
-    private static HashIntDoubleMap createFactorialMap (int maxFactorial) {
-        HashIntDoubleMap theMap = HashIntDoubleMaps.getDefaultFactory().withDefaultValue(-1).newMutableMap();
-        for (int i = 0; i < maxFactorial+1; i++) {
-            theMap.put(i, factorial(i));
-        }
-        return theMap;
-    }
-    
     public static String getVCFHeader (String[] taxaNames) {
         StringBuilder sb = new StringBuilder();
         sb.append("#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
@@ -53,45 +45,83 @@ public class VCFUtils {
         sb.append("##FORMAT=<ID=PL,Number=1,Type=String,Description=\"").append("Genotype likelihoods").append("\">\n");
         return sb.toString();
     }
-
+    
+    private static HashIntDoubleMap createFactorialMap (int maxFactorial) {
+        HashIntDoubleMap theMap = HashIntDoubleMaps.getDefaultFactory().withDefaultValue(-1).newMutableMap();
+        for (int i = 0; i < maxFactorial+1; i++) {
+            theMap.put(i, factorial(i));
+        }
+        return theMap;
+    }
+    
+    
+    public static int getNumberOfTaxaWithAllele (AlleleDepth[] ad, byte allele) {
+        int cnt = 0;
+        for (int i = 0; i < ad.length; i++) {
+            if (ad[i].binarySearch(allele) < 0) continue;
+            cnt++;
+        }
+        return cnt;
+    }
+    
+    public static int getAlleleTotalDepth (AlleleDepth[] ad, byte allele) {
+        int cnt = 0;
+        for (int i = 0; i < ad.length; i++) {
+            cnt+=ad[i].getDepth(allele);
+        }
+        return cnt;
+    }
+    
+    public static int getNumberOfTaxaWithAlleles (AlleleDepth[] ad) {
+        int cnt = 0;
+        for (int i = 0; i < ad.length; i++) {
+            if (ad[i].getAlleleNumber() == 0) continue;
+            cnt++;
+        }
+        return cnt;
+    }
+    
+    public static int getTotalDepth (AlleleDepth[] ad) {
+        int cnt = 0;
+        for (int i = 0; i < ad.length; i++) {
+            cnt+=ad[i].getTotalDepth();
+        }
+        return cnt;
+    }
+    
     /**
-     * Return genotype of VCF via max likelihood of multinomial sampling distribution
-     * See https://doi.org/10.1371/journal.pgen.1000862
-     * @param cnt allele depth of Ref and Alt alleles
-     * @param combinedErrorRate sequencing error rate and alignment error rate. set to 0.05 in general
-     * @return
+     * 
+     * @param alleleReadCount read count of alleles, alleles should be in Ref-Alt order
+     * @param sequencingErrorRate
+     * @return 
      */
-    private String getGenotypeByInt (short[] cnt, double combinedErrorRate) {
-        //in case some allele depth is greater than maxFactorial, to keep the original allele counts
-        short[] oriCnt = null;
-        int n = cnt.length*(cnt.length+1)/2;
+    public static String getGenotype (int[] alleleReadCount, double sequencingErrorRate) {
+        int n = alleleReadCount.length*(alleleReadCount.length+1)/2;
         int[] likelihood = new int[n];
         int sum = 0;
-        for (int i = 0; i < cnt.length; i++) sum+=cnt[i];
+        for (int i = 0; i < alleleReadCount.length; i++) sum+=alleleReadCount[i];
         if (sum == 0) return "./.";
-        else if (sum > this.maxFactorial) {
-            oriCnt = new short[cnt.length];
-            System.arraycopy(cnt, 0, oriCnt, 0, cnt.length);
-            double portion = (double)this.maxFactorial/sum;
-            for (int i = 0; i < cnt.length; i++) {
-                cnt[i] = (short)(cnt[i]*portion);
+        else if (sum > maxFactorial) {
+            double portion = (double)maxFactorial/sum;
+            for (int i = 0; i < alleleReadCount.length; i++) {
+                alleleReadCount[i] = (int)(alleleReadCount[i]*portion);
             }
-            sum = this.maxFactorial;
+            sum = maxFactorial;
         }
-        double coe = this.factorialMap.get(sum);
-        for (int i = 0; i < cnt.length; i++) coe = coe/this.factorialMap.get(cnt[i]);
+        double coe = factorialMap.get(sum);
+        for (int i = 0; i < alleleReadCount.length; i++) coe = coe/factorialMap.get(alleleReadCount[i]);
         double max = Double.MAX_VALUE;
         int a1 = 0;
         int a2 = 0;
-        for (int i = 0; i < cnt.length; i++) {
-            for (int j = i; j < cnt.length; j++) {
+        for (int i = 0; i < alleleReadCount.length; i++) {
+            for (int j = i; j < alleleReadCount.length; j++) {
                 int index = (j*(j+1)/2)+i;
                 double value = Double.MAX_VALUE;
                 if (i == j) {
-                    value = -Math.log10(coe*Math.pow((1-0.75*combinedErrorRate), cnt[i])*Math.pow(combinedErrorRate /4, (sum-cnt[i])));
+                    value = -Math.log10(coe*Math.pow((1-0.75*sequencingErrorRate), alleleReadCount[i])*Math.pow(sequencingErrorRate/4, (sum-alleleReadCount[i])));
                 }
                 else {
-                    value = -Math.log10(coe*Math.pow((0.5-combinedErrorRate /4), cnt[i]+cnt[j])*Math.pow(combinedErrorRate /4, (sum-cnt[i]-cnt[j])));
+                    value = -Math.log10(coe*Math.pow((0.5-sequencingErrorRate/4), alleleReadCount[i]+alleleReadCount[j])*Math.pow(sequencingErrorRate/4, (sum-alleleReadCount[i]-alleleReadCount[j])));
                 }
                 if (value < max) {
                     max = value;
@@ -103,12 +133,7 @@ public class VCFUtils {
         }
         StringBuilder sb = new StringBuilder();
         sb.append(a1).append("/").append(a2).append(":");
-        if (sum > this.maxFactorial) {
-            for (int i = 0; i < oriCnt.length; i++) sb.append(oriCnt[i]).append(",");
-        }
-        else {
-            for (int i = 0; i < cnt.length; i++) sb.append(cnt[i]).append(",");
-        }
+        for (int i = 0; i < alleleReadCount.length; i++) sb.append(alleleReadCount[i]).append(",");
         sb.deleteCharAt(sb.length()-1); sb.append(":");
         for (int i = 0; i < likelihood.length; i++) sb.append(likelihood[i]).append(",");
         sb.deleteCharAt(sb.length()-1);

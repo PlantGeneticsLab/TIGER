@@ -7,8 +7,6 @@ package pgl.app.grt;
 
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.allele.AlleleEncoder;
-import pgl.infra.dna.genot.AlleleDepth;
-import pgl.infra.dna.genot.VCFUtils;
 import pgl.infra.pos.ChrPos;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
@@ -403,8 +401,8 @@ public class GBSVCFBuilder {
                 fc.read(bbs[i], pointers[i]);
                 bbs[i].flip();
             }
-            String annotation = VCFUtils.getVCFAnnotation();
-            String header = VCFUtils.getVCFHeader(sampleNames);
+            String annotation = GRTVCFUtils.getVCFAnnotation();
+            String header = GRTVCFUtils.getVCFHeader(sampleNames);
             int totalCnt = 0;
             int dbSNPCnt = 0;
             for (int i = 0; i < sc.getChromosomeNumber(); i++) {
@@ -468,13 +466,13 @@ public class GBSVCFBuilder {
                         sb.append(AlleleEncoder.alleleByteToBaseMap.get(altAD.getAllele(k))).append(",");
                     }
                     sb.deleteCharAt(sb.length()-1).append("\t.\t.\t");
-                    sb.append("DP=").append(VCFUtils.getTotalDepth(sampleAD)).append(";AD=").append(VCFUtils.getAlleleTotalDepth(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
+                    sb.append("DP=").append(GRTVCFUtils.getTotalDepth(sampleAD)).append(";AD=").append(GRTVCFUtils.getAlleleTotalDepth(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
                     for (int k = 0; k < altNum; k++) {
-                        sb.append(VCFUtils.getAlleleTotalDepth(sampleAD, altAD.getAllele(k))).append(",");
+                        sb.append(GRTVCFUtils.getAlleleTotalDepth(sampleAD, altAD.getAllele(k))).append(",");
                     }
-                    sb.deleteCharAt(sb.length()-1).append(";NS=").append(VCFUtils.getNumberOfTaxaWithAlleles(sampleAD)).append(";AP=").append(VCFUtils.getNumberOfTaxaWithAllele(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
+                    sb.deleteCharAt(sb.length()-1).append(";NS=").append(GRTVCFUtils.getNumberOfTaxaWithAlleles(sampleAD)).append(";AP=").append(GRTVCFUtils.getNumberOfTaxaWithAllele(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
                     for (int k = 0; k < altNum; k++) {
-                        sb.append(VCFUtils.getNumberOfTaxaWithAllele(sampleAD, altAD.getAllele(k))).append(",");
+                        sb.append(GRTVCFUtils.getNumberOfTaxaWithAllele(sampleAD, altAD.getAllele(k))).append(",");
                     }
                     sb.deleteCharAt(sb.length()-1);
                     sb.append("\tGT:AD:PL");
@@ -485,7 +483,7 @@ public class GBSVCFBuilder {
                         for (int u = 0; u < altNum; u++) {
                             readCount[u+1] = sampleAD[k].getDepth(altAD.getAllele(u));
                         }
-                        sb.append("\t").append(VCFUtils.getGenotype(readCount, sequencingAlignErrorRate));
+                        sb.append("\t").append(GRTVCFUtils.getGenotype(readCount, sequencingAlignErrorRate));
                     }
                     bw.write(sb.toString());
                     bw.newLine();
@@ -541,8 +539,8 @@ public class GBSVCFBuilder {
                 fcs[i].read(bbs[i]);
                 bbs[i].flip();
             }
-            String annotation = VCFUtils.getVCFAnnotation();
-            String header = VCFUtils.getVCFHeader(sampleNames);
+            String annotation = GRTVCFUtils.getVCFAnnotation();
+            String header = GRTVCFUtils.getVCFHeader(sampleNames);
             int totalCnt = 0;
             int dbSNPCnt = 0;
             for (int i = 0; i < sc.getChromosomeNumber(); i++) {
@@ -606,13 +604,13 @@ public class GBSVCFBuilder {
                         sb.append(AlleleEncoder.alleleByteToBaseMap.get(altAD.getAllele(k))).append(",");
                     }
                     sb.deleteCharAt(sb.length()-1).append("\t.\t.\t");
-                    sb.append("DP=").append(VCFUtils.getTotalDepth(sampleAD)).append(";AD=").append(VCFUtils.getAlleleTotalDepth(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
+                    sb.append("DP=").append(GRTVCFUtils.getTotalDepth(sampleAD)).append(";AD=").append(GRTVCFUtils.getAlleleTotalDepth(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
                     for (int k = 0; k < altNum; k++) {
-                        sb.append(VCFUtils.getAlleleTotalDepth(sampleAD, altAD.getAllele(k))).append(",");
+                        sb.append(GRTVCFUtils.getAlleleTotalDepth(sampleAD, altAD.getAllele(k))).append(",");
                     }
-                    sb.deleteCharAt(sb.length()-1).append(";NS=").append(VCFUtils.getNumberOfTaxaWithAlleles(sampleAD)).append(";AP=").append(VCFUtils.getNumberOfTaxaWithAllele(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
+                    sb.deleteCharAt(sb.length()-1).append(";NS=").append(GRTVCFUtils.getNumberOfTaxaWithAlleles(sampleAD)).append(";AP=").append(GRTVCFUtils.getNumberOfTaxaWithAllele(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
                     for (int k = 0; k < altNum; k++) {
-                        sb.append(VCFUtils.getNumberOfTaxaWithAllele(sampleAD, altAD.getAllele(k))).append(",");
+                        sb.append(GRTVCFUtils.getNumberOfTaxaWithAllele(sampleAD, altAD.getAllele(k))).append(",");
                     }
                     sb.deleteCharAt(sb.length()-1);
                     sb.append("\tGT:AD:PL");
@@ -623,7 +621,7 @@ public class GBSVCFBuilder {
                         for (int u = 0; u < altNum; u++) {
                             readCount[u+1] = sampleAD[k].getDepth(altAD.getAllele(u));
                         }
-                        sb.append("\t").append(VCFUtils.getGenotype(readCount, sequencingAlignErrorRate));
+                        sb.append("\t").append(GRTVCFUtils.getGenotype(readCount, sequencingAlignErrorRate));
                     }
                     bw.write(sb.toString());
                     bw.newLine();

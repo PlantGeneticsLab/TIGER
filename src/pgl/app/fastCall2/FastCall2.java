@@ -2,12 +2,9 @@ package pgl.app.fastCall2;
 
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
-import com.mysql.cj.x.protobuf.MysqlxDatatypes;
 import pgl.AppUtils;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
-
-import java.io.File;
 import java.util.*;
 
 public class FastCall2 {

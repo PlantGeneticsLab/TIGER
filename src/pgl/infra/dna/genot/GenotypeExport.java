@@ -1,5 +1,6 @@
 package pgl.infra.dna.genot;
 
+import pgl.app.grt.GRTVCFUtils;
 import pgl.infra.utils.IOUtils;
 
 import java.io.BufferedWriter;
