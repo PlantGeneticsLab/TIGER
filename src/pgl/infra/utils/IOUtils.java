@@ -312,7 +312,7 @@ public class IOUtils {
 
     public static List<File> getFileListInDir (String inDirS) {
         File[] fs = new File(inDirS).listFiles();
-        List<File> fList = Arrays.asList(fs);
+        List<File> fList = new ArrayList<>(Arrays.asList(fs));
         Collections.sort(fList);
         return fList;
     }
@@ -320,7 +320,7 @@ public class IOUtils {
     public static List<File> getFileListInDirContains (String inDirS, String containStr) {
         File[] fs = new File(inDirS).listFiles();
         fs = listFilesContains(fs, containStr);
-        List<File> fList = Arrays.asList(fs);
+        List<File> fList = new ArrayList<>(Arrays.asList(fs));
         Collections.sort(fList);
         return fList;
     }
@@ -328,7 +328,7 @@ public class IOUtils {
     public static List<File> getFileListInDirStartsWith (String inDirS, String startStr) {
         File[] fs = new File(inDirS).listFiles();
         fs = listFilesStartsWith(fs, startStr);
-        List<File> fList = Arrays.asList(fs);
+        List<File> fList = new ArrayList<>(Arrays.asList(fs));
         Collections.sort(fList);
         return fList;
     }
@@ -336,13 +336,13 @@ public class IOUtils {
     public static List<File> getFileListInDirEndsWith (String inDirS, String endStr) {
         File[] fs = new File(inDirS).listFiles();
         fs = listFilesEndsWith(fs, endStr);
-        List<File> fList = Arrays.asList(fs);
+        List<File> fList = new ArrayList<>(Arrays.asList(fs));
         Collections.sort(fList);
         return fList;
     }
     
     public static File[] listFilesContains (File[] fAll, String containStr) {
-        ArrayList<File> al = new ArrayList();
+        List<File> al = new ArrayList();
         for (int i = 0; i < fAll.length; i++) {
             if (fAll[i].getName().contains(containStr)) al.add(fAll[i]);
         }
@@ -350,7 +350,7 @@ public class IOUtils {
     }
     
     public static File[] listFilesStartsWith (File[] fAll, String startStr) {
-        ArrayList<File> al = new ArrayList();
+        List<File> al = new ArrayList();
         for (int i = 0; i < fAll.length; i++) {
             if (fAll[i].getName().startsWith(startStr)) al.add(fAll[i]);
         }
@@ -358,7 +358,7 @@ public class IOUtils {
     }
     
     public static File[] listFilesEndsWith (File[] fAll, String endStr) {
-        ArrayList<File> al = new ArrayList();
+        List<File> al = new ArrayList();
         for (int i = 0; i < fAll.length; i++) {
             if (fAll[i].getName().endsWith(endStr)) al.add(fAll[i]);
         }
