@@ -38,7 +38,7 @@ public class GenotypeRows implements GenotypeTable {
     /**
      * SNP, alleles and their presentation in individuals
      */
-    SiteGenotypeBit[] geno = null;
+    SiteGenotype[] geno = null;
 
     /**
      * Construct an object
@@ -75,7 +75,7 @@ public class GenotypeRows implements GenotypeTable {
      * @param geno
      * @param taxa
      */
-    public GenotypeRows (SiteGenotypeBit[] geno, String[] taxa) {
+    public GenotypeRows (SiteGenotype[] geno, String[] taxa) {
         this.taxa = taxa;
         this.geno = geno;
     }
@@ -127,11 +127,11 @@ public class GenotypeRows implements GenotypeTable {
     public void sortByTaxa() {
         int[] indices = PArrayUtils.getIndicesByAscendingValue(this.taxa);
         Arrays.sort(this.taxa);
-        List<SiteGenotypeBit> genoList = Arrays.asList(this.geno);
+        List<SiteGenotype> genoList = Arrays.asList(this.geno);
         genoList.parallelStream().forEach(g -> {
             g.sortByTaxa(indices);
         });
-        geno = genoList.toArray(new SiteGenotypeBit[genoList.size()]);
+        geno = genoList.toArray(new SiteGenotype[genoList.size()]);
     }
 
     @Override
@@ -483,7 +483,7 @@ public class GenotypeRows implements GenotypeTable {
 
     @Override
     public GenotypeTable getSubGenotypeTableBySite(int[] siteIndices) {
-        SiteGenotypeBit[] ge = new SiteGenotypeBit[siteIndices.length];
+        SiteGenotype[] ge = new SiteGenotype[siteIndices.length];
         for (int i = 0; i < siteIndices.length; i++) {
             ge[i] = geno[siteIndices[i]];
         }
@@ -497,7 +497,7 @@ public class GenotypeRows implements GenotypeTable {
         for (int i = 0; i < nTaxa.length; i++) {
             nTaxa[i] = taxa[taxaIndices[i]];
         }
-        SiteGenotypeBit[] nGeno = new SiteGenotypeBit[this.getSiteNumber()];
+        SiteGenotype[] nGeno = new SiteGenotype[this.getSiteNumber()];
         List<Integer> indexList = new ArrayList<>(this.getSiteNumber());
         for (int i = 0; i < this.getSiteNumber(); i++) {
             indexList.add(i);
@@ -560,7 +560,7 @@ public class GenotypeRows implements GenotypeTable {
             }
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MICROSECONDS);
-            this.geno = new SiteGenotypeBit[siteCount];
+            this.geno = new SiteGenotype[siteCount];
             for (int i = 0; i < resultList.size(); i++) {
                 SGBBlockBinary block = resultList.get(i).get();
                 for (int j = 0; j < block.actBlockSize; j++) {
@@ -586,7 +586,7 @@ public class GenotypeRows implements GenotypeTable {
         int startIndex = Integer.MIN_VALUE;
         int actBlockSize = Integer.MIN_VALUE;
         short taxaNumber = Short.MIN_VALUE;
-        SiteGenotypeBit[] sgbArray = null;
+        SiteGenotype[] sgbArray = null;
 
         public SGBBlockBinary (byte[][] lines, int startIndex, int actBlockSize, short taxaNumber) {
             this.lines = lines;
@@ -599,17 +599,17 @@ public class GenotypeRows implements GenotypeTable {
             return this.startIndex;
         }
 
-        public SiteGenotypeBit[] getSiteGenotypes () {
+        public SiteGenotype[] getSiteGenotypes () {
             return this.sgbArray;
         }
 
         @Override
         public SGBBlockBinary call() throws Exception {
-            this.sgbArray = new SiteGenotypeBit[this.actBlockSize];
+            this.sgbArray = new SiteGenotype[this.actBlockSize];
             ByteBuffer bb = ByteBuffer.allocate(lines[0].length);
             for (int i = 0; i < this.actBlockSize; i++) {
                 bb.put(lines[i]);
-                sgbArray[i] = SiteGenotypeBit.buildFromBinaryLine(bb, taxaNumber);
+                sgbArray[i] = SiteGenotype.buildFromBinaryLine(bb, taxaNumber);
             }
             lines = null;
             return this;
@@ -670,7 +670,7 @@ public class GenotypeRows implements GenotypeTable {
             }
             pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.MICROSECONDS);
-            this.geno = new SiteGenotypeBit[siteCount];
+            this.geno = new SiteGenotype[siteCount];
             for (int i = 0; i < resultList.size(); i++) {
                 SGBBlockVCF block = resultList.get(i).get();
                 for (int j = 0; j < block.actBlockSize; j++) {
@@ -695,7 +695,7 @@ public class GenotypeRows implements GenotypeTable {
         List<String> lines = null;
         int startIndex = Integer.MIN_VALUE;
         int actBlockSize = Integer.MIN_VALUE;
-        SiteGenotypeBit[] sgbArray = null;
+        SiteGenotype[] sgbArray = null;
 
         public SGBBlockVCF (List<String> lines, int startIndex) {
             this.lines = lines;
@@ -707,15 +707,15 @@ public class GenotypeRows implements GenotypeTable {
             return this.startIndex;
         }
 
-        public SiteGenotypeBit[] getSiteGenotypes () {
+        public SiteGenotype[] getSiteGenotypes () {
             return this.sgbArray;
         }
 
         @Override
         public SGBBlockVCF call() throws Exception {
-            this.sgbArray = new SiteGenotypeBit[this.actBlockSize];
+            this.sgbArray = new SiteGenotype[this.actBlockSize];
             for (int i = 0; i < this.actBlockSize; i++) {
-                sgbArray[i] = SiteGenotypeBit.buildFromVCFLine(lines.get(i));
+                sgbArray[i] = SiteGenotype.buildFromVCFLine(lines.get(i));
             }
             lines = null;
             return this;

@@ -57,7 +57,7 @@ public class GenotypeOperation {
     public static GenotypeRows mergeGenotypesBySite(GenotypeRows gt1, GenotypeRows gt2) {
         if (gt1.getTaxaNumber() != gt2.getTaxaNumber()) return null;
         int snpCount = gt1.getSiteNumber()+gt2.getSiteNumber();
-        SiteGenotypeBit[] geno = new SiteGenotypeBit[snpCount];
+        SiteGenotype[] geno = new SiteGenotype[snpCount];
         int cnt = 0;
         for (int i = 0; i < gt1.getSiteNumber(); i++) {
             geno[cnt] = gt1.geno[i];
@@ -112,7 +112,7 @@ public class GenotypeOperation {
      * @return
      */
     public static GenotypeRows getConvertedGenotype(GenotypeGrid gt) {
-        SiteGenotypeBit[] geno = new SiteGenotypeBit[gt.getSiteNumber()];
+        SiteGenotype[] geno = new SiteGenotype[gt.getSiteNumber()];
         for (int i = 0; i < gt.getSiteNumber(); i++) {
             short chr = gt.getChromosome(i);
             int pos = gt.getPosition(i);
@@ -121,7 +121,7 @@ public class GenotypeOperation {
             BitSet phase1 = gt.genoSite[i][0];
             BitSet phase2 = gt.genoSite[i][1];
             BitSet missingP = gt.genoSite[i][2];
-            SiteGenotypeBit sgb = new SiteGenotypeBit(chr, pos, refBase, altBase, null, phase1, phase2, missingP, gt.getTaxaNumber());
+            SiteGenotype sgb = new SiteGenotype(chr, pos, refBase, altBase, null, phase1, phase2, missingP, gt.getTaxaNumber());
         }
         return new GenotypeRows(geno, gt.taxa);
     }
@@ -153,7 +153,7 @@ public class GenotypeOperation {
      * @return
      */
     public static GenotypeRows getSubsetGenotypeBySite(GenotypeRows gt, int[] siteIndices) {
-        SiteGenotypeBit[] ge = new SiteGenotypeBit[siteIndices.length];
+        SiteGenotype[] ge = new SiteGenotype[siteIndices.length];
         for (int i = 0; i < siteIndices.length; i++) {
             ge[i] = gt.geno[siteIndices[i]];
         }

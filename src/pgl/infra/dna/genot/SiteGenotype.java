@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author feilu
  */
-public class SiteGenotypeBit extends BiSNP {
+public class SiteGenotype extends BiSNP {
     //Bit set of the 1st homologous chromosome, 1 is alt, 0 is ref
     BitSet phase1 = null;
     //Bit set of the 2nd homologous chromosome, 1 is alt, 0 is ref
@@ -36,7 +36,7 @@ public class SiteGenotypeBit extends BiSNP {
     /**
      * Construct an object
      */
-    public SiteGenotypeBit () {
+    public SiteGenotype() {
         
     }
 
@@ -52,7 +52,7 @@ public class SiteGenotypeBit extends BiSNP {
      * @param missing
      * @param taxaNumber
      */
-    public SiteGenotypeBit (short chr, int pos, char refBase, char altBase, String info, BitSet phase1, BitSet phase2, BitSet missing, int taxaNumber) {
+    public SiteGenotype(short chr, int pos, char refBase, char altBase, String info, BitSet phase1, BitSet phase2, BitSet missing, int taxaNumber) {
         super(chr, pos, refBase, altBase, info);
         this.phase1 = phase1;
         this.phase2 = phase2;
@@ -79,11 +79,11 @@ public class SiteGenotypeBit extends BiSNP {
     }
 
     /**
-     * Return a site genotype {@link SiteGenotypeBit} by selecting taxa
+     * Return a site genotype {@link SiteGenotype} by selecting taxa
      * @param taxaIndices
      * @return
      */
-    public SiteGenotypeBit getSubGenotypeByTaxa (int[] taxaIndices) {
+    public SiteGenotype getSubGenotypeByTaxa (int[] taxaIndices) {
         BitSet p1 = new BitSet(taxaIndices.length);
         BitSet p2 = new BitSet(taxaIndices.length);
         BitSet m = new BitSet(taxaIndices.length);
@@ -92,7 +92,7 @@ public class SiteGenotypeBit extends BiSNP {
             if (isPhase2Alternative(taxaIndices[i])) p2.set(i);
             if (isMissing(taxaIndices[i])) m.set(i);
         }
-        SiteGenotypeBit sgb = new SiteGenotypeBit(this.getChromosome(),this.getPosition(),AlleleEncoder.getAlleleBaseFromByte(this.getReferenceAlleleByte()),
+        SiteGenotype sgb = new SiteGenotype(this.getChromosome(),this.getPosition(),AlleleEncoder.getAlleleBaseFromByte(this.getReferenceAlleleByte()),
                                 AlleleEncoder.getAlleleBaseFromByte(this.getAlternativeAlleleByte()), null, p1, p2, m, taxaIndices.length);
         return sgb;
     }
@@ -402,7 +402,7 @@ public class SiteGenotypeBit extends BiSNP {
      * @param taxaNumber
      * @return
      */
-    public static SiteGenotypeBit buildFromBinaryLine (ByteBuffer bb, int taxaNumber) {
+    public static SiteGenotype buildFromBinaryLine (ByteBuffer bb, int taxaNumber) {
         //short chr, int pos, char refBase, char altBase, String info, BitSet phase1, BitSet phase2, BitSet missing, int taxaNumber
         bb.flip();
         short chr = bb.getShort();
@@ -422,7 +422,7 @@ public class SiteGenotypeBit extends BiSNP {
         ba = new byte[size];
         bb.get(ba);
         BitSet m = BitSet.valueOf(ba);
-        SiteGenotypeBit sgb = new SiteGenotypeBit(chr, pos, refBase, altBase, null, p1, p2, m, taxaNumber);
+        SiteGenotype sgb = new SiteGenotype(chr, pos, refBase, altBase, null, p1, p2, m, taxaNumber);
         sgb.setReferenceAlleleFeature(refFeature);
         sgb.setAlternativeAlleleFeature(altFeature);
         bb.clear();
@@ -430,11 +430,11 @@ public class SiteGenotypeBit extends BiSNP {
     }
 
     /**
-     * Build and return an object of {@link SiteGenotypeBit} from line of VCF format
+     * Build and return an object of {@link SiteGenotype} from line of VCF format
      * @param line
      * @return
      */
-    public static SiteGenotypeBit buildFromVCFLine (String line) {
+    public static SiteGenotype buildFromVCFLine (String line) {
         List<String> l = PStringUtils.fastSplit(line);
         List<String> ll = null;
         String current = null;
@@ -464,7 +464,7 @@ public class SiteGenotypeBit extends BiSNP {
             }
         }
         //SiteGenotypeBit sgb = new SiteGenotypeBit(chr, pos, refBase, altBase, info, majorP, minorP, missingP, taxaNumber);
-        SiteGenotypeBit sgb = new SiteGenotypeBit(chr, pos, refBase, altBase, null, phase1, phase2, missingP, taxaNumber);
+        SiteGenotype sgb = new SiteGenotype(chr, pos, refBase, altBase, null, phase1, phase2, missingP, taxaNumber);
         return sgb;
     }
 }

@@ -91,13 +91,13 @@ class ScanGenotype {
             bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
             bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
             bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
-            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of allele occurence across taxa in order listed\">\n");
             bw.write("##INFO=<ID=IL,Number=.,Type=Integer,Description=\"Indel length of ALT alleles in order listed\">\n");
             bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
             bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
             bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
-            bw.write("##ALT=<ID=DEL,Description=\"Deletion\">\n");
-            bw.write("##ALT=<ID=INS,Description=\"Insertion\">\n");
+            bw.write("##ALT=<ID=D,Description=\"Deletion\">\n");
+            bw.write("##ALT=<ID=I,Description=\"Insertion\">\n");
             Dyad<int[][], int[]> d = FastCall2.getBinsScanning(this.regionStart, this.regionEnd);
             int[][] binBound = d.getFirstElement();
             int[] binStarts = d.getSecondElement();
