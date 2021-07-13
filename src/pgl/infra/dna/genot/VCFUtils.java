@@ -13,7 +13,7 @@ import java.util.Date;
 import static cern.jet.math.Arithmetic.factorial;
 
 /**
- * incomplete
+ *
  * @author feilu
  */
 public class VCFUtils {
@@ -55,7 +55,7 @@ public class VCFUtils {
         sb.append("##FORMAT=<ID=AD,Number=1,Type=String,Description=\"").append("Allele depth of a sample").append("\">\n");
         sb.append("##FORMAT=<ID=PL,Number=1,Type=String,Description=\"").append("Genotype likelihoods").append("\">\n");
         sb.append("##ALT=<ID=D,Description=\"Deletion\">\n");
-        sb.append("##ALT=<ID=I,Description=\"Insertion\">\n");
+        sb.append("##ALT=<ID=I,Description=\"Insertion\">");
         return sb.toString();
     }
 

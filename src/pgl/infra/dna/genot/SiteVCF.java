@@ -166,9 +166,13 @@ public class SiteVCF {
     public int[] getTotalAllelePresence () {
         int[] totalCounts = new int[this.getAlleleNumber()];
         for (int i = 0; i < this.getTaxaNumber(); i++) {
-            for (int j = 0; j < this.genoList.get(i).length; j++) {
-                if (this.genoList.get(i)[j] < 0) continue;
-                totalCounts[j]+=+1;
+            for (int j = 0; j < totalCounts.length; j++) {
+                for (int k = 0; k < 2; k++) {
+                    if (this.getGenotype(i)[k] == j) {
+                        totalCounts[j]++;
+                        break;
+                    }
+                }
             }
         }
         return totalCounts;
