@@ -30,7 +30,7 @@ public class VCFUtils {
     
     public static String getVCFHeader (String[] taxaNames) {
         StringBuilder sb = new StringBuilder();
-        sb.append("#CHR\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
+        sb.append("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT");
         for (int i = 0; i < taxaNames.length; i++) {
             sb.append("\t").append(taxaNames[i]);
         }
