@@ -229,6 +229,35 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
     }
 
+    public void writeTextFileS (String outfileS, int[] positionIndices) {
+        try {
+            BufferedWriter bw = IOUtils.getTextWriter(outfileS);
+            bw.write("Position\tAlts\tIndelLength");
+            bw.newLine();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < positionIndices.length; i++) {
+                sb.setLength(0);
+                sb.append(positions[positionIndices[i]]).append("\t");
+                for (int j = 0; j < this.codedAlleles[positionIndices[i]].length; j++) {
+                    sb.append((FastCall2.getAlleleBaseFromCodedAllele(this.codedAlleles[positionIndices[i]][j]))).append(",");
+                }
+                sb.deleteCharAt(sb.length()-1).append("\t");
+                for (int j = 0; j < this.codedAlleles[positionIndices[i]].length; j++) {
+                    sb.append(FastCall2.getIndelLengthFromCodedAllele(this.codedAlleles[positionIndices[i]][j])).append(",");
+                }
+                sb.deleteCharAt(sb.length()-1);
+                bw.write(sb.toString());
+                bw.newLine();
+            }
+            bw.flush();
+            bw.newLine();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
     public void writeTextFileS (String outfileS) {
         try {
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);

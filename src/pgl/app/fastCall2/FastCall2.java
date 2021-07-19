@@ -76,7 +76,7 @@ public class FastCall2 {
     static int getCodedPosAlleleIndelLength(int binStart, int position, byte alleleByte, int indelLength) {
         int v = (position-binStart) << 8;
         v = v + (alleleByte << 5);
-        if (indelLength > 32) indelLength = 32;
+        if (indelLength > 31) indelLength = 31;
         return (v + indelLength);
     }
 
@@ -87,7 +87,7 @@ public class FastCall2 {
 
     static byte getCodedAllele (byte alleleByte, int indelLength) {
         int v = (alleleByte << 5);
-        if (indelLength > 32) indelLength = 32;
+        if (indelLength > 31) indelLength = 31;
         return (byte)(v + indelLength);
     }
 
