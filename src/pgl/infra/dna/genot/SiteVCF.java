@@ -216,7 +216,9 @@ public class SiteVCF {
                 if (this.genoList.get(i)[j] == 1) cnt++;
             }
         }
-        return (float)((double)cnt/this.getNonMissingTaxaNumber()/2);
+        float maf = (float)((double)cnt/this.getNonMissingTaxaNumber()/2);
+        if (maf > 0.5) return 1-maf;
+        return maf;
     }
 
     /**
