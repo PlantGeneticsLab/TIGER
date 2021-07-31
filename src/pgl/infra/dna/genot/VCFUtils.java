@@ -36,6 +36,15 @@ public class VCFUtils {
         }
         return sb.toString();
     }
+
+    public static String[] getTaxaNames (String vcfHeader) {
+        String[] tem = vcfHeader.split("\t");
+        String[] taxa = new String[tem.length-9];
+        for (int i = 0; i < taxa.length; i++) {
+            taxa[i] = tem[i+9];
+        }
+        return taxa;
+    }
     
     public static String getVCFAnnotation () {
         StringBuilder sb = new StringBuilder();
