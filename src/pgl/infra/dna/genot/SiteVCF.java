@@ -249,15 +249,24 @@ public class SiteVCF {
     }
 
     /**
-     * Return a VCF record
+     * Return a VCF record with combined error rate of 0.05 by default
      * @return
      */
     public String getVCFRecord () {
+        return this.getVCFRecord(0.05);
+    }
+
+    /**
+     * Return a VCF record
+     * @param combinedErrorRate error rate used to calculate the likelihood of genotype
+     * @return
+     */
+    public String getVCFRecord (double combinedErrorRate) {
         StringBuilder sb = new StringBuilder ();
         sb.append(this.chr).append("\t").append(this.pos).append("\t").append(this.chr).append("-").append(this.pos)
                 .append("\t").append(AlleleEncoder.getAlleleBaseFromByte(this.alleles[0])).append("\t");
         for (int i = 0; i < alleles.length-1; i++) {
-            sb.append(AlleleEncoder.getAlleleBaseFromByte(this.alleles[0+1])).append(",");
+            sb.append(AlleleEncoder.getAlleleBaseFromByte(this.alleles[i+1])).append(",");
         }
         sb.deleteCharAt(sb.length()-1);
         sb.append("\t.\t.\t");
@@ -291,7 +300,7 @@ public class SiteVCF {
                 sb.append("\t./.");
             }
             else {
-                sb.append("\t").append(VCFUtils.getGenotypeByShort(this.getAlleleDepth(i), 0.05));
+                sb.append("\t").append(VCFUtils.getGenotypeByShort(this.getAlleleDepth(i), combinedErrorRate));
             }
 
         }
