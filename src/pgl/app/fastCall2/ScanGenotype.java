@@ -57,7 +57,7 @@ class ScanGenotype {
     int vlStartIndex = Integer.MIN_VALUE;
     int vlEndIndex = Integer.MIN_VALUE;
     HashMap<Integer, String> posRefMap = new HashMap<>();
-    HashMap<Integer, byte[]> posCodedAlleleMap = new HashMap<>();
+    HashMap<Integer, short[]> posCodedAlleleMap = new HashMap<>();
     int[] positions = null;
     int vlBinStartIndex = 0;
     int vlBinEndIndex = 0;
@@ -151,7 +151,7 @@ class ScanGenotype {
                     int currentPosition = positions[index+vlBinStartIndex];
                     vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
                             .append("\t").append(posRefMap.get(currentPosition)).append("\t");
-                    byte[] codedAlts = posCodedAlleleMap.get(currentPosition);
+                    short[] codedAlts = posCodedAlleleMap.get(currentPosition);
                     for (int j = 0; j < codedAlts.length; j++) {
                         vsb.append(FastCall2.getAlleleBaseFromCodedAllele(codedAlts[j])).append(",");
                     }
@@ -385,7 +385,7 @@ class ScanGenotype {
                     else {
                         if (positions[i] == currentPosition) {
                             String ref = posRefMap.get(currentPosition);
-                            byte[] codedAltAlleles = posCodedAlleleMap.get(currentPosition);
+                            short[] codedAltAlleles = posCodedAlleleMap.get(currentPosition);
                             baseS.setLength(0);
                             int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {
@@ -445,7 +445,7 @@ class ScanGenotype {
         new File (vLibPosFileS).delete();
     }
 
-    private String getInfoAndGenotypes (List<short[]> siteCountList, byte[] codedAlts) {
+    private String getInfoAndGenotypes (List<short[]> siteCountList, short[] codedAlts) {
         StringBuilder genoSB = new StringBuilder("GT:AD:GL");
         StringBuilder infoSB = new StringBuilder();
         int dp = 0;
@@ -575,7 +575,7 @@ class ScanGenotype {
         return sb.toString();
     }
 
-    private int[] getAlleleCounts (byte[] codedAltAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
+    private int[] getAlleleCounts (short[] codedAltAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
         byte[] baseB = baseS.getBytes();
         int[] altAlleleCounts = new int[codedAltAlleles.length];
         int index = Integer.MIN_VALUE;
@@ -583,12 +583,12 @@ class ScanGenotype {
         for (int i = 0; i < baseB.length; i++) {
             byte alleleByte = FastCall2.pileupAscIIToAlleleByteMap.get(baseB[i]);
             index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
-            byte queryAlleleByte = -1;
+            short queryAlleleShort = -1;
             if (index < 0) continue;
             //weird sign of "^" before a char
             if (i > 0 && baseB[i-1] == 94) continue;
             if (index < 4) {
-                queryAlleleByte = FastCall2.getCodedAllele(alleleByte, 0);
+                queryAlleleShort = FastCall2.getCodedAllele(alleleByte, 0);
             }
             else {
                 int startIndex = i+1;
@@ -604,13 +604,13 @@ class ScanGenotype {
                     baseSb.append((char)baseB[j]);
                 }
                 int length = Integer.parseInt(baseSb.toString());
-                queryAlleleByte = FastCall2.getCodedAllele(alleleByte, length);
+                queryAlleleShort = FastCall2.getCodedAllele(alleleByte, length);
                 i+=baseSb.length();
                 i+=length;
             }
 
             for (int j = 0; j < codedAltAlleles.length; j++) {
-                if (codedAltAlleles[j] == queryAlleleByte) {
+                if (codedAltAlleles[j] == queryAlleleShort) {
                     altAlleleCounts[j]++;
                     vCnt++;
                 }

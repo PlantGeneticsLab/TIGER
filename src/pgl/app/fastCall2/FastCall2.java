@@ -74,29 +74,29 @@ public class FastCall2 {
     }
 
     static int getCodedPosAlleleIndelLength(int binStart, int position, byte alleleByte, int indelLength) {
-        int v = (position-binStart) << 8;
-        v = v + (alleleByte << 5);
-        if (indelLength > 31) indelLength = 31;
+        int v = (position-binStart) << 9;
+        v = v + (alleleByte << 6);
+        if (indelLength > 63) indelLength = 63;
         return (v + indelLength);
     }
 
     static int getAllelePosition(int codedPosAlleleIndelLength, int binStart) {
-        int v = (codedPosAlleleIndelLength >> 8) + binStart;
+        int v = (codedPosAlleleIndelLength >>> 9) + binStart;
         return v;
     }
 
-    static byte getCodedAllele (byte alleleByte, int indelLength) {
-        int v = (alleleByte << 5);
-        if (indelLength > 31) indelLength = 31;
-        return (byte)(v + indelLength);
+    static short getCodedAllele (byte alleleByte, int indelLength) {
+        int v = (alleleByte << 6);
+        if (indelLength > 63) indelLength = 63;
+        return (short)(v + indelLength);
     }
 
-    static byte getCodedAllele (int codedPosAlleleIndelLength) {
-        return (byte)codedPosAlleleIndelLength;
+    static short getCodedAllele (int codedPosAlleleIndelLength) {
+        return (short)(codedPosAlleleIndelLength&511);
     }
 
     static byte getAlleleByte (int codedPosAlleleIndelLength) {
-        int v = (255 & codedPosAlleleIndelLength) >> 5;
+        int v = (511 & codedPosAlleleIndelLength) >>> 6;
         return (byte)v;
     }
 
@@ -105,20 +105,20 @@ public class FastCall2 {
     }
 
     static byte getIndelLength (int codedPosAlleleIndelLength) {
-        return (byte)(31 & codedPosAlleleIndelLength);
+        return (byte)(63 & codedPosAlleleIndelLength);
     }
 
-    static byte getAlleleByteFromCodedAllele (byte codedAllele) {
-        int v = (codedAllele>>>5)&7;
+    static byte getAlleleByteFromCodedAllele (short codedAllele) {
+        int v = (codedAllele>>>6);
         return (byte)v;
     }
 
-    static char getAlleleBaseFromCodedAllele (byte codedAllele) {
+    static char getAlleleBaseFromCodedAllele (short codedAllele) {
         return AlleleEncoder.alleleByteToBaseMap.get(getAlleleByteFromCodedAllele(codedAllele));
     }
 
-    static byte getIndelLengthFromCodedAllele (byte codedAllele) {
-        return (byte)(31 & codedAllele);
+    static byte getIndelLengthFromCodedAllele (short codedAllele) {
+        return (byte)(63 & codedAllele);
     }
 
 }

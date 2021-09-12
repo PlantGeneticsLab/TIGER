@@ -4,6 +4,7 @@ import htsjdk.samtools.util.IOUtil;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 
@@ -21,13 +22,13 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     //set to -1, when bin-based vls are concatenated to a chrom-based vl
     int binStart = Integer.MIN_VALUE;
     int[] positions = null;
-    byte[][] codedAlleles = null;
+    short[][] codedAlleles = null;
 
     private int[] potentialPositions = null;
     private IntArrayList[] pAlleleLists = null;
 
 
-    public VariationLibrary (short chrom, int binStart, int[] positions, byte[][] codedAlleles) {
+    public VariationLibrary (short chrom, int binStart, int[] positions, short[][] codedAlleles) {
         this.chrom = chrom;
         this.binStart = binStart;
         this.positions = positions;
@@ -37,7 +38,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     public static VariationLibrary getInstance(List<VariationLibrary> vList) {
         Collections.sort(vList);
         IntArrayList positionList = new IntArrayList();
-        List<byte[]> alleleList = new ArrayList<>();
+        List<short[]> alleleList = new ArrayList<>();
         for (int i = 0; i < vList.size(); i++) {
             for (int j = 0; j < vList.get(i).positions.length; j++) {
                 positionList.add(vList.get(i).positions[j]);
@@ -45,7 +46,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             }
         }
         int[] positions = positionList.toIntArray();
-        byte[][] codedAlleles = alleleList.toArray(new byte[alleleList.size()][]);
+        short[][] codedAlleles = alleleList.toArray(new short[alleleList.size()][]);
         VariationLibrary vl = new VariationLibrary(vList.get(0).chrom, -1, positions, codedAlleles);
         return vl;
     }
@@ -108,8 +109,8 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             }
         });
         IntArrayList positionList = new IntArrayList();
-        List<byte[]> codedAlleleLists = new ArrayList<>();
-        ByteArrayList codedAlleleList = new ByteArrayList();
+        List<short[]> codedAlleleLists = new ArrayList<>();
+        ShortArrayList codedAlleleList = new ShortArrayList();
         for (int i = 0; i < alts.length; i++) {
             int varifiedNum = maxAltNum;
             for (int j = maxAltNum; j > 0; j--) {
@@ -121,10 +122,10 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             for (int j = 0; j < varifiedNum; j++) {
                 codedAlleleList.add(FastCall2.getCodedAllele(alts[i][j]));
             }
-            codedAlleleLists.add(codedAlleleList.toByteArray());
+            codedAlleleLists.add(codedAlleleList.toShortArray());
         }
         this.positions = positionList.toIntArray();
-        codedAlleles = new byte[positions.length][];
+        codedAlleles = new short[positions.length][];
         for (int i = 0; i < positions.length; i++) {
             this.codedAlleles[i] = codedAlleleLists.get(i);
         }
@@ -191,7 +192,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
                 dos.writeInt(positions[i]);
                 dos.writeByte((byte)codedAlleles[i].length);
                 for (int j = 0; j < codedAlleles[i].length; j++) {
-                    dos.writeByte(codedAlleles[i][j]);
+                    dos.writeShort(codedAlleles[i][j]);
                 }
             }
             dos.flush();
@@ -213,13 +214,13 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             binStart = dis.readInt();
             int positionNum = dis.readInt();
             positions = new int[positionNum];
-            codedAlleles = new byte[positionNum][];
+            codedAlleles = new short[positionNum][];
             for (int i = 0; i < positionNum; i++) {
                 positions[i] = dis.readInt();
                 int alleleNum = dis.readByte();
-                codedAlleles[i] = new byte[alleleNum];
+                codedAlleles[i] = new short[alleleNum];
                 for (int j = 0; j < alleleNum; j++) {
-                    codedAlleles[i][j] = dis.readByte();
+                    codedAlleles[i][j] = dis.readShort();
                 }
             }
         }
