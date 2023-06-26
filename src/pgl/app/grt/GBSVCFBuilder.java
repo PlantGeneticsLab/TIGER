@@ -730,7 +730,7 @@ public class GBSVCFBuilder {
     private int getTagIndex (int[] divergence, int[] tagIndices, int groupIndex, long[] queryTag) {
         byte[][] query = new byte[2][];
         for (int i = 0; i < 2; i++) {
-            query[i] = BaseEncoder.getBaseByteArrayFromLongs(Arrays.copyOfRange(queryTag, i*tas.getTagLengthInLong(), (i+1)*tas.getTagLengthInLong()));
+            query[i] = BaseEncoder.getBaseCodingArrayFromLongs(Arrays.copyOfRange(queryTag, i*tas.getTagLengthInLong(), (i+1)*tas.getTagLengthInLong()));
             //System.out.println(BaseEncoder.getSequenceFromLongs(Arrays.copyOfRange(queryTag, i*tas.getTagLengthInLong(), (i+1)*tas.getTagLengthInLong())));
         }
         for (int i = 0; i < tagIndices.length; i++) {
@@ -738,7 +738,7 @@ public class GBSVCFBuilder {
             List<AlleleInfo> ai = tas.getAlleleOfTag(groupIndex, tagIndices[i]);
             byte[][] dbTag = new byte[2][];
             for (int j = 0; j < dbTag.length; j++) {
-                dbTag[j] = BaseEncoder.getBaseByteArrayFromLongs(Arrays.copyOfRange(tas.getTag(groupIndex, tagIndices[i]), j*tas.getTagLengthInLong(), (j+1)*tas.getTagLengthInLong()));
+                dbTag[j] = BaseEncoder.getBaseCodingArrayFromLongs(Arrays.copyOfRange(tas.getTag(groupIndex, tagIndices[i]), j*tas.getTagLengthInLong(), (j+1)*tas.getTagLengthInLong()));
                 //System.out.println(BaseEncoder.getSequenceFromLongs(Arrays.copyOfRange(tas.getTag(groupIndex, tagIndices[i]), j*tas.getTagLengthInLong(), (j+1)*tas.getTagLengthInLong())));
             }
             for (int j = 0; j < ai.size(); j++) {

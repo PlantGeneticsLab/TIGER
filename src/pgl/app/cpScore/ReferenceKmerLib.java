@@ -29,7 +29,7 @@ public class ReferenceKmerLib {
 //        inputGenomeFileS = "/Users/feilu/Documents/database/maize/reference/AGPv4/maizeAGPv4.fa";
 //        inputGenomeFileS = "/Users/feilu/Documents/database/maize/reference/download/Zea_mays.AGPv4.dna.chromosome.10.fa.gz";
         FastaByte f = new FastaByte(referenceGenomeFileS);
-        HashByteByteMap ascIIByteMap = BaseEncoder.getAscIIBaseByteMap();
+        HashByteByteMap ascIIByteMap = BaseEncoder.getAscIIBaseCodingMap();
         System.out.println("Building kmer library from reference...");
         System.out.println("KmerLength = "+String.valueOf(kmerLength)+ " bp");
         long start = System.nanoTime();
