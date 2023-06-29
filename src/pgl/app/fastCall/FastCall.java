@@ -176,23 +176,24 @@ public class FastCall extends AppAbstract {
         String taxaBamMapFileS = pLineList.get(1);
         this.combinedErrorRate = Double.parseDouble(pLineList.get(2));
         this.segregationPValueThresh = Double.parseDouble(pLineList.get(3));
-        this.minorOccurrenceThresh = Integer.parseInt(pLineList.get(4));
+        this.individualDepthRatioThresh = Double.parseDouble(pLineList.get(4));
+        this.minorOccurrenceThresh = Integer.parseInt(pLineList.get(5));
         int currentChr = Integer.MIN_VALUE;
         int regionStart = Integer.MIN_VALUE;
         int regionEnd = Integer.MIN_VALUE;
-        if (pLineList.get(5).contains(":")) {
-            String[] temp = pLineList.get(5).split(":");
+        if (pLineList.get(6).contains(":")) {
+            String[] temp = pLineList.get(6).split(":");
             currentChr = Integer.valueOf(temp[0]);
             temp = temp[1].split(",");
             regionStart = Integer.valueOf(temp[0]);
             regionEnd = Integer.valueOf(temp[1]);
         }
         else {
-            currentChr = Integer.valueOf(pLineList.get(5));
+            currentChr = Integer.valueOf(pLineList.get(6));
         }
-        String vcfDirS = pLineList.get(6);
-        this.threadsNum = Integer.valueOf(pLineList.get(7));
-        this.samtoolsPath = pLineList.get(8);
+        String vcfDirS = pLineList.get(7);
+        this.threadsNum = Integer.valueOf(pLineList.get(8));
+        this.samtoolsPath = pLineList.get(9);
         long start = System.nanoTime();
         System.out.println("Reading reference genome from "+ referenceFileS);
         genomeFa = new FastaBit(referenceFileS);

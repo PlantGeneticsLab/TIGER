@@ -1,36 +1,39 @@
-#App:	FastCall
-#Author:	Fei Lu
-#Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
-#Homepage:	https://plantgeneticslab.github.io/home/
+@App:	FastCall
+@Author:	Fei Lu
+@Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+@Homepage:	https://plantgeneticslab.weebly.com/
 
 #FastCall is designed to perform SNP calling and genotyping of diploid ourcrossing/incrossing species, based on whole-genome sequencing data.
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a FastCall -p parameter_fastcall.txt > log.txt &
 #To specify options, please edit the the parameters below. Also, please keep the order of parameters.
 
-#Parameter1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
+#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as numbers (1,2,3,4,5...).
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa
 
-#Parameter2:	Taxa bam information file, including the info about what bams are included for each taxon
+#Parameter 2:	Taxa bam information file, including the info about what bams are included for each taxon
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/inputfile/taxaBamMap.txt
 
-#Parameter3:	Combined error rate from sequencing and alignment. It is 0.05 by default. When the error rate is low, orginal heterozygous genotype has higher likelyhood to be heterozygous, and vice versa.
+#Parameter 3:	Combined error rate from sequencing and alignment. When the error rate is low, heterogeneous sites are more likely to be called as heterozygous, and vice versa. It is 0.05 by default.
 0.05
 
-#Parameter4:	P-value threshold of Mendelian segregation test. It is 1 by default. Lower threshold (e.g. 1, the test will be removed) is recommanded if rare alleles are the major interest.
+#Parameter 4:	P-value threshold of Mendelian segregation test. It is 1 by default. Lower threshold (e.g. 1, the test will be removed) is recommanded if rare alleles are the major interest.
 1
 
-#Parameter5:	Minor allele occurance threshhold, representing the minimum number of taxa where the minor allele exist. It is 2 by default.
+#Parameter 5:	Individual depth ratio. This is the depth of the lower-depth allele vs. total depth. When the threshold is low, heterogeneous sites are more likely to be called as heterozygous, and vice versa. the It is 0.4 by default.
+0.4
+
+#Parameter 6:	Minor allele occurrence threshold, representing the minimum number of taxa where the minor allele exist. It is 2 by default.
 2
 
-#Parameter6:	Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. Region 1bp to 100000bp on chromosome 1 is 1:1,100000)
+#Parameter 7:	Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. Region 1bp to 100000bp on chromosome 1 is 1:1,100000)
 1:1,200000
 
-#Parameter7:	VCF output directory
+#Parameter 8:	VCF output directory
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/vcf
 
-#Parameter8:	Number of threads for pileup
+#Parameter 9:	Number of threads for pileup
 32
 
-#Parameter 9: The path of samtools
+#Parameter 10: The path of samtools
 /usr/local/bin/samtools
