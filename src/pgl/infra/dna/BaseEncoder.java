@@ -7,8 +7,7 @@ package pgl.infra.dna;
 
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
-import gnu.trove.list.array.TByteArrayList;
-import it.unimi.dsi.fastutil.bytes.ByteArrayList;
+
 
 
 /**

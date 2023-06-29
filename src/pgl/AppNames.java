@@ -17,6 +17,11 @@ public enum AppNames implements Comparable <AppNames> {
      * SNP calling and genotyping from whole-genome sequence data
      */
     FastCall ("FastCall"),
+
+    /**
+     * Genotyping pipeline of FastCall2
+     */
+    FastCall2 ("FastCall2"),
     
     /**
      * Genotyping from bam files based on a genetic variation library
@@ -26,12 +31,7 @@ public enum AppNames implements Comparable <AppNames> {
     /**
      * Depth profiling in a population using whole-genome sequence data
      */
-    PopDep ("PopDep"),
-
-    /**
-     * Genotyping pipeline of FastCall2
-     */
-    FastCall2 ("FastCall2");
+    PopDep ("PopDep");
     
     public final String name;
     

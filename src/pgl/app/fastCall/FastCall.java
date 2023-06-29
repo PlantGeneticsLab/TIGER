@@ -3,14 +3,15 @@ package pgl.app.fastCall;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.set.hash.TByteHashSet;
 import gnu.trove.set.hash.TIntHashSet;
+import org.apache.commons.cli.*;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
+import pgl.AppAbstract;
+import pgl.PGLAPPEntrance;
 import pgl.infra.dna.FastaBit;
-import pgl.infra.dna.genot.GenoSiteBlockVCF;
 import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 import pgl.infra.utils.PStringUtils;
-
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -20,9 +21,14 @@ import java.util.concurrent.atomic.LongAdder;
 
 import static cern.jet.math.Arithmetic.factorial;
 
-public class FastCall {
-
+public class FastCall extends AppAbstract {
+    String referenceFileS =null;
+    String taxaBamMapFileS = null;
+    String vcfDirS = null;
     String samtoolsPath = null;
+    int currentChr = Integer.MIN_VALUE;
+    int regionStart = Integer.MIN_VALUE;
+    int regionEnd = Integer.MIN_VALUE;
     int[] chroms = null;
     int[] chromLength = null;
     String[] taxaNames = null;
@@ -60,6 +66,95 @@ public class FastCall {
 
     public FastCall(String parameterFileS) {
         this.callSNP(parameterFileS);
+    }
+
+    public FastCall (String[] args) {
+        this.creatAppOptions();
+        this.retrieveAppParameters(args);
+        this.callSNP();
+    }
+
+    @Override
+    public void creatAppOptions() {
+        options.addOption("app", true, "App name.");
+        options.addOption("b", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
+            "Chromosomes are labelled as numbers (1,2,3,4,5...).");
+        options.addOption("c", true, "Taxa bam information file, including the info about what bams are included for each taxon");
+        options.addOption("d", true, "Combined error rate from sequencing and alignment. When the error rate is low, " +
+            "heterogeneous sites are more likely to be called as heterozygous, and vice versa. It is 0.05 by default.");
+        options.addOption("e", true, "Individual depth ratio. This is the depth of the  lower-depth allele vs. total depth. " +
+            "When the threshold is low, heterogeneous sites are more likely to be called as heterozygous, and vice versa. the It is 0.4 by default.");
+        options.addOption("f", true, "P-value threshold of Mendelian segregation test. Lower threshold (e.g. 1, the test will be removed) " +
+            "is recommended if rare alleles are the major interest. It is 1 by default. ");
+        options.addOption("g", true, "Minor allele occurrence threshold, representing the minimum number of taxa where the minor allele exist. " +
+            "It is 2 by default.");
+        options.addOption("h", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
+                "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
+        options.addOption("i", true, "VCF output directory");
+        options.addOption("j", true, "Number of threads for pileup");
+        options.addOption("k", true, "The path of samtools");
+    }
+
+    @Override
+    public void retrieveAppParameters(String[] args) {
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine line = parser.parse(options, args);
+            this.referenceFileS = line.getOptionValue("a");
+            this.taxaBamMapFileS = line.getOptionValue("b");
+            this.combinedErrorRate = Double.parseDouble(line.getOptionValue("c"));
+            this.individualDepthRatioThresh = Double.parseDouble(line.getOptionValue("d"));
+            this.segregationPValueThresh = Double.parseDouble(line.getOptionValue("e"));
+            this.minorOccurrenceThresh = Integer.parseInt(line.getOptionValue("f"));
+            if (line.getOptionValue("g").contains(":")) {
+                String[] temp = line.getOptionValue("g").split(":");
+                currentChr = Integer.parseInt(temp[0]);
+                temp = temp[1].split(",");
+                regionStart = Integer.parseInt(temp[0]);
+                regionEnd = Integer.parseInt(temp[1]);
+            }
+            else {
+                currentChr = Integer.valueOf(line.getOptionValue("g"));
+            }
+            this.vcfDirS = line.getOptionValue("h");
+            this.threadsNum = Integer.valueOf(line.getOptionValue("i"));
+            this.samtoolsPath = line.getOptionValue("j");
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("\nThere are input errors in the command line. Program stops.");
+            this.printInstructionAndUsage();
+            System.exit(0);
+        }
+    }
+    public void printInstructionAndUsage () {
+        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.out.println("Below are the commands of FastCall.");
+        this.printUsage();
+    }
+    private void callSNP() {
+        long start = System.nanoTime();
+        System.out.println("Reading reference genome from "+ referenceFileS);
+        genomeFa = new FastaBit(referenceFileS);
+        System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+        genomeFa.sortByNameValue();
+        chroms = new int[genomeFa.getSeqNumber()];
+        chromLength = new int[genomeFa.getSeqNumber()];
+        for (int i = 0; i < genomeFa.getSeqNumber(); i++) {
+            chroms[i] = Integer.valueOf(genomeFa.getName(i));
+            chromLength[i] = genomeFa.getSeqLength(i);
+        }
+        String pileupDirS = new File(new File(vcfDirS).getParent(), "pileup").getAbsolutePath();
+        new File(pileupDirS).mkdir();
+        new File(vcfDirS).mkdir();
+        this.getTaxaBamMap(taxaBamMapFileS);
+        this.creatPileupMap(pileupDirS);
+        this.creatFactorialMap();
+        this.callSNPByRegion(currentChr, regionStart, regionEnd, referenceFileS, vcfDirS);
+        File[] fs = new File(pileupDirS).listFiles();
+        for (int i = 0; i < fs.length; i++) fs[i].delete();
+        System.out.println("Variant calling completed");
     }
 
     public void callSNP (String parameterFileS) {

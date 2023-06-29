@@ -6,7 +6,6 @@
 package pgl;
 
 import java.io.File;
-import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -16,52 +15,43 @@ import pgl.app.fastCall.FastCall;
 import pgl.app.fastCall2.FastCall2;
 import pgl.app.hapScanner.HapScanner;
 import pgl.app.popdep.PopDep;
-import pgl.app.speedCall.SpeedCall;
 import pgl.infra.utils.CLIInterface;
 
 /**
  * This provides the interface between users and TIGER apps
  * @author feilu
  */
-public class PGLAPPEntrance implements CLIInterface {
+public class PGLAPPEntrance {
     Options options = new Options();
-    HelpFormatter optionFormat = new HelpFormatter();
-    String introduction = this.createIntroduction();
+    static String introduction = createIntroduction();
     String app = null;
     String parameterPath = null;
 
     
     public PGLAPPEntrance (String[] args) {
-        this.createOptions();
-        this.retrieveParameters (args);
-    }
-    
-    @Override
-    public void createOptions() {
-        options = new Options();
-        options.addOption("a", true, "App. e.g. -a FastCall");
-        options.addOption("p", true, "Parameter file path of an app. e.g. parameter_fastcall.txt");
+        this.selectApp(args);
+        this.runApp(args);
     }
 
-    @Override
-    public void retrieveParameters(String[] args) {
-        CommandLineParser parser = new DefaultParser();
-        try {
-            CommandLine line = parser.parse(options, args);
-            app = line.getOptionValue("a");
-            parameterPath = line.getOptionValue("p");
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-            System.exit(0);
+    private void selectApp (String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-app")) {
+                app = args[i+1];
+                break;
+            }
         }
         if (app == null) {
-            System.out.println("App does not exist");
-            this.printIntroductionAndUsage();
+            System.out.println("App does not exist. Programs stops.");
+            System.out.println(introduction);
             System.exit(0);
         }
+
+    }
+
+    private void runApp(String[] args) {
+        options = new Options();
         if (app.equals(AppNames.FastCall.getName())) {
-            new FastCall (this.parameterPath);
+            new FastCall (args);
         }
         else if (app.equals(AppNames.PopDep.getName())) {
             new PopDep(this.parameterPath);
@@ -73,37 +63,18 @@ public class PGLAPPEntrance implements CLIInterface {
             new FastCall2(this.parameterPath);
         }
         else {
-            System.out.println("App does not exist");
-            this.printIntroductionAndUsage();
-            System.exit(0);
-        }
-        if (this.parameterPath == null) {
-            System.out.println("Parametar file does not exist");
-            this.printIntroductionAndUsage();
-            System.exit(0);
-        }
-        File f = new File (this.parameterPath);
-        if (!f.exists()) {
-            System.out.println("Parametar file does not exist");
-            this.printIntroductionAndUsage();
+            System.out.println("App does not exist. Programs stops.");
+            System.out.println(introduction);
             System.exit(0);
         }
     }
 
-    @Override
-    public void printIntroductionAndUsage() {
-        System.out.println("Incorrect options input. Program stops.");
-        System.out.println(introduction);
-        optionFormat.printHelp("TIGER.jar", options );
-    }
-
-    @Override
-    public String createIntroduction() {
+    private static String createIntroduction() {
         StringBuilder sb = new StringBuilder();
         sb.append("\nToolkits Integrated for Genetic and Evolutionary Research (TIGER) is designed to simplify its usage.\n");
-        sb.append("It uses two options to run its apps. \"-a\" is used to select an app. \"-p\" is used to set parameters of an app.\n");
+        sb.append("It uses two sets of options to run its apps. \"-app\" is used to select an app in TIGER. The other options are used to set parameters of a specific app.\n");
         sb.append("e.g. The command line usage of the app FastCall is: ");
-        sb.append("java -Xmx100g -jar TIGER.jar -a FastCall -p parameter_fastcall.txt > log.txt &\n");
+        sb.append("java -Xmx100g -jar TIGER.jar -app FastCall -b parameter_b -c parameter_c > log.txt &\n");
         sb.append("\nAvailable apps in TIGER include,\n");
         for (int i = 0; i < AppNames.values().length; i++) {
             sb.append(AppNames.values()[i].getName()).append("\n");
@@ -111,9 +82,12 @@ public class PGLAPPEntrance implements CLIInterface {
         sb.append("\nPlease visit https://github.com/PlantGeneticsLab/TIGER for details.\n");
         return sb.toString();
     }
-    
+
+    public static String getTIGERIntroduction() {
+        return introduction;
+    }
+
     public static void main (String[] args) {
         new PGLAPPEntrance(args);
     }
-
 }
