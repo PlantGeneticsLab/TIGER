@@ -8,22 +8,22 @@
 #Different form FastCall, FastCall2 performs individual genetic variation discovery first (step 1), then build a genetic variation library of all individuals (step 2), then do genotyping by combining all the individual genotype file into a final VCF (step 3).
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a FastCall2 -p parameter_fastcall2_1.txt > log.txt &
-#To specify options, please edit the the parameters below. Also, please keep the order of parameters. 
+#To specify options, please edit the the parameters below. Also, please keep the order of parameters.
 
-#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
+#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labelled as numbers (1,2,3,4,5...).
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa
 
-#Parameter 2:	Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. Region 1bp to 100000bp on chromosome 1 is 1:1,100000)
+#Parameter 2:	Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. Region 1bp to 100000bp on chromosome 1 is 1:1,100000).
 1:1,200000
 
-#Parameter 3:	Minor allele occurance threshhold, representing the minimum number of taxa where the minor allele exist. It is 2 by default.
+#Parameter 3:	Minor allele occurrence threshold, representing the minimum number of taxa where the minor allele exist. It is 2 by default.
 2
 
 #Parameter 4:	Number of threads (taxa number to be processed at the same time). It is 32 by default.
 32
 
-#Parameter 5:	Individual genotype directory
+#Parameter 5:	Individual genotype directory.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/ing
 
-#Parameter 6:	Variation library directory
+#Parameter 6:	Variation library directory.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/vLib

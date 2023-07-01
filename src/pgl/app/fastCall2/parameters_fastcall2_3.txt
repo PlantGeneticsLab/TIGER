@@ -8,12 +8,12 @@
 #Different form FastCall, FastCall2 performs individual genetic variation discovery first (step 1), then build a genetic variation library of all individuals (step 2), then do genotyping by combining all the individual genotype file into a final VCF (step 3).
 #To run and pipeline, the machine should have both Java 8 and samtools installed. The lib directory should stay with TIGER.jar in the same folder.
 #Command line example. java -Xmx100g -jar TIGER.jar -a FastCall2 -p parameter_fastcall2_1.txt > log.txt &
-#To specify options, please edit the the parameters below. Also, please keep the order of parameters. 
+#To specify options, please edit the the parameters below. Also, please keep the order of parameters.
 
-#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...). It is recommanded to use reference chromosome while perform genotyping for each chromosome because loading reference genome would be much faster.
+#Parameter 1:	Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labelled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform genotyping for each chromosome because loading reference genome would be much faster.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/ref/chr001_1Mb.fa
 
-#Parameter 2:	Taxa bam information file, including the info about what bams are included for each taxon
+#Parameter 2:	The taxaBamMap file contains information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall/inputfile/taxaBamMap.txt
 
 #Parameter 3:	The genetic variation library file, which is from step 2.
@@ -25,11 +25,11 @@
 #Parameter 5: Combined error rate of sequencing and misalignment. Heterozygous read mapping are more likely to be genotyped as homozygote when the combined error rate is high.
 0.05
 
-#Parameter 6: The path of samtools
+#Parameter 6: The path of samtools.
 /usr/local/bin/samtools
 
-#Parameter 7: Number of threads
+#Parameter 7: Number of threads. It is 32 by default.
 32
 
-#Parameter 8: The directory of output
+#Parameter 8: The directory of VCF output.
 /Users/feilu/Documents/analysisL/softwareTest/pgl/fastCall2/gen/

@@ -1,5 +1,10 @@
 package pgl.app.fastCall2;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import pgl.AppAbstract;
+import pgl.PGLAPPEntrance;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.utils.Benchmark;
@@ -14,7 +19,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
-class BuildVariationLibrary {
+class BuildVariationLibrary extends AppAbstract {
 
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
@@ -36,6 +41,63 @@ class BuildVariationLibrary {
     int maxAltNum = 2;
 
     String[] taxaNames = null;
+
+    public BuildVariationLibrary(String[] args) {
+        this.creatAppOptions();
+        this.retrieveAppParameters(args);
+        this.mkLibrary();
+    }
+
+    @Override
+    public void creatAppOptions() {
+        options.addOption("app", true, "App name.");
+        options.addOption("step", true, "Step of FastCall 2 (e.g. 1).");
+        options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
+            "Chromosomes are labelled as numbers (1,2,3,4,5...).");
+        options.addOption("b", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 " +
+            "is designated as 1. Region 1bp to 100000bp on chromosome 1 is 1:1,100000).");
+        options.addOption("c", true, "Minor allele occurrence threshold, representing the minimum number of " +
+            "taxa where the minor allele exist. It is 2 by default.");
+        options.addOption("d", true, "Number of threads (taxa number to be processed at the same time). It is 32 by default.");
+        options.addOption("e", true, "Individual genotype directory.");
+        options.addOption("f", true, "Variation library directory.");
+    }
+
+    @Override
+    public void retrieveAppParameters(String[] args) {
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine line = parser.parse(options, args);
+            this.referenceFileS = line.getOptionValue("a");
+            if (line.getOptionValue("b").contains(":")) {
+                String[] temp = line.getOptionValue("b").split(":");
+                this.chrom = (short)Integer.parseInt(temp[0]);
+                temp = temp[1].split(",");
+                regionStart = Integer.parseInt(temp[0]);
+                regionEnd = Integer.parseInt(temp[1]);
+            }
+            else {
+                this.chrom = (short)Integer.parseInt(line.getOptionValue("b"));
+            }
+            this.maoThresh = Integer.parseInt(line.getOptionValue("c"));
+            this.threadsNum = Integer.parseInt(line.getOptionValue("d"));
+            this.ingDirS = line.getOptionValue("e");
+            this.vLibDirS = line.getOptionValue("f");
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("\nThere are input errors in the command line. Program stops.");
+            this.printInstructionAndUsage();
+            System.exit(0);
+        }
+    }
+
+    @Override
+    public void printInstructionAndUsage() {
+        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.out.println("Below are the commands of Step 2 of FastCall 2.");
+        this.printUsage();
+    }
 
     public BuildVariationLibrary(List<String> pLineList) {
         this.parseParameters(pLineList);

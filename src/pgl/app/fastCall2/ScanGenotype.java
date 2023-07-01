@@ -2,7 +2,12 @@ package pgl.app.fastCall2;
 
 import com.koloboke.collect.map.IntDoubleMap;
 import com.koloboke.collect.map.hash.HashIntDoubleMaps;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.io.FileUtils;
+import pgl.AppAbstract;
+import pgl.PGLAPPEntrance;
 import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.FastaRecordBit;
@@ -19,11 +24,11 @@ import java.util.concurrent.atomic.LongAdder;
 
 import static cern.jet.math.Arithmetic.factorial;
 
-class ScanGenotype {
+class ScanGenotype extends AppAbstract {
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
-    //The taxaRefBam file containing information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder
-    String taxaRefBamFileS = null;
+    //The taxaBamMap file contains information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder.
+    String taxaBamMapFileS = null;
     //The genetic variation library file
     String libFileS = null;
     int chrom = Integer.MIN_VALUE;
@@ -61,6 +66,85 @@ class ScanGenotype {
     int[] positions = null;
     int vlBinStartIndex = 0;
     int vlBinEndIndex = 0;
+
+    public ScanGenotype (String[] args) {
+        this.creatAppOptions();
+        this.retrieveAppParameters(args);
+
+        this.mkDir();
+        this.processVariationLibrary();
+        this.creatFactorialMap();
+
+        /*
+        Output by individual allele count, fast
+         */
+        this.scanIndiCountsByThreadPool();
+        this.mkFinalVCFFromIndiCounts();
+    }
+
+    @Override
+    public void creatAppOptions() {
+        options.addOption("app", true, "App name.");
+        options.addOption("step", true, "Step of FastCall 2 (e.g. 1).");
+        options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
+            "Chromosomes are labelled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform genotyping for " +
+            "each chromosome because loading reference genome would be much faster.");
+        options.addOption("b", true, "The taxaBamMap file contains information of taxon and its corresponding bam files. " +
+            "The bam file should have .bai file in the same folder.");
+        options.addOption("c", true, "The genetic variation library file, which is from step 2.");
+        options.addOption("d", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
+            "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
+        options.addOption("e", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
+            "likely to be genotyped as homozygote when the combined error rate is high.");
+        options.addOption("f", true, "The path of samtools.");
+        options.addOption("g", true, "Number of threads. It is 32 by default.");
+        options.addOption("h", true, "The directory of VCF output.");
+    }
+
+    @Override
+    public void retrieveAppParameters(String[] args) {
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine line = parser.parse(options, args);
+            this.referenceFileS = line.getOptionValue("a");
+            this.taxaBamMapFileS = line.getOptionValue("b");
+            this.libFileS = line.getOptionValue("c");
+            if (line.getOptionValue("d").contains(":")) {
+                String[] temp = line.getOptionValue("d").split(":");
+                this.chrom = Integer.parseInt(temp[0]);
+                temp = temp[1].split(",");
+                regionStart = Integer.parseInt(temp[0]);
+                regionEnd = Integer.parseInt(temp[1]);
+            }
+            else {
+                this.chrom = Integer.valueOf(line.getOptionValue("d"));
+            }
+            this.combinedErrorRate = Double.parseDouble(line.getOptionValue("e"));
+            this.samtoolsPath = line.getOptionValue("f");
+            this.threadsNum = Integer.parseInt(line.getOptionValue("g"));
+            this.outputDirS = line.getOptionValue("h");
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("\nThere are input errors in the command line. Program stops.");
+            this.printInstructionAndUsage();
+            System.exit(0);
+        }
+
+        long start = System.nanoTime();
+        System.out.println("Reading reference genome from "+ referenceFileS);
+        genomeFa = new FastaBit(referenceFileS);
+        System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+        chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
+        this.parseTaxaBamMap(this.taxaBamMapFileS);
+    }
+
+    @Override
+    public void printInstructionAndUsage() {
+        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.out.println("Below are the commands of Step 3 of FastCall 2.");
+        this.printUsage();
+    }
 
     public ScanGenotype (List<String> pLineList) {
         this.parseParameters(pLineList);
@@ -727,7 +811,7 @@ class ScanGenotype {
 
     private void parseParameters (List<String> pLineList) {
         this.referenceFileS = pLineList.get(0);
-        taxaRefBamFileS = pLineList.get(1);
+        taxaBamMapFileS = pLineList.get(1);
         this.libFileS = pLineList.get(2);
         String[] tem = pLineList.get(3).split(":");
         this.chrom = Integer.parseInt(tem[0]);
@@ -749,7 +833,7 @@ class ScanGenotype {
         this.samtoolsPath = pLineList.get(5);
         this.threadsNum = Integer.parseInt(pLineList.get(6));
         this.outputDirS = pLineList.get(7);
-        this.parseTaxaBamMap(this.taxaRefBamFileS);
+        this.parseTaxaBamMap(this.taxaBamMapFileS);
     }
 
     private void parseTaxaBamMap(String taxaBamMapFileS) {

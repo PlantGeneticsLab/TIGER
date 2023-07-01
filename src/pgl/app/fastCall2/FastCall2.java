@@ -20,6 +20,35 @@ public class FastCall2 {
     static final HashByteByteMap pileupAscIIToAlleleByteMap =
             HashByteByteMaps.getDefaultFactory().withDefaultValue((byte)-1).newImmutableMap(pileupAlleleAscIIs, AlleleEncoder.alleleBytes);
 
+    public FastCall2 (String[] args) {
+        long timeStart = System.nanoTime();
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-step")) {
+                this.step = Integer.parseInt(args[i+1]);
+                break;
+            }
+        }
+        if (step == 1) {
+            System.out.println("Running step 1 of FastCall 2...");
+            new DiscoverVariation(args);
+        }
+        else if (step == 2) {
+            System.out.println("Running step 2 of FastCall 2...");
+            new BuildVariationLibrary(args);
+        }
+        else if (step == 3) {
+            System.out.println("Running step 3 of FastCall 2...");
+            new ScanGenotype(args);
+        }
+        else {
+            System.out.println("Input errors in setting steps of FastCall 2. Programs stops.");
+            System.exit(0);
+        }
+        StringBuilder sb = new StringBuilder("FastCall2 is finished in ");
+        sb.append((float)Benchmark.getTimeSpanHours(timeStart)).append(" hours.");
+        System.out.println(sb.toString());
+    }
+
     public FastCall2 (String parameterFileS) {
         this.runSteps(parameterFileS);
     }

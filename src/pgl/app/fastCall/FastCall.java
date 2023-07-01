@@ -77,22 +77,22 @@ public class FastCall extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("b", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
+        options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...).");
-        options.addOption("c", true, "Taxa bam information file, including the info about what bams are included for each taxon");
-        options.addOption("d", true, "Combined error rate from sequencing and alignment. When the error rate is low, " +
+        options.addOption("b", true, "Taxa bam information file, including the info about what bams are included for each taxon");
+        options.addOption("c", true, "Combined error rate from sequencing and alignment. When the error rate is low, " +
             "heterogeneous sites are more likely to be called as heterozygous, and vice versa. It is 0.05 by default.");
-        options.addOption("e", true, "Individual depth ratio. This is the depth of the  lower-depth allele vs. total depth. " +
+        options.addOption("d", true, "Individual depth ratio. This is the depth of the  lower-depth allele vs. total depth. " +
             "When the threshold is low, heterogeneous sites are more likely to be called as heterozygous, and vice versa. the It is 0.4 by default.");
-        options.addOption("f", true, "P-value threshold of Mendelian segregation test. Lower threshold (e.g. 1, the test will be removed) " +
+        options.addOption("e", true, "P-value threshold of Mendelian segregation test. Lower threshold (e.g. 1, the test will be removed) " +
             "is recommended if rare alleles are the major interest. It is 1 by default. ");
-        options.addOption("g", true, "Minor allele occurrence threshold, representing the minimum number of taxa where the minor allele exist. " +
+        options.addOption("f", true, "Minor allele occurrence threshold, representing the minimum number of taxa where the minor allele exist. " +
             "It is 2 by default.");
-        options.addOption("h", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
+        options.addOption("g", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
                 "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
-        options.addOption("i", true, "VCF output directory");
-        options.addOption("j", true, "Number of threads for pileup");
-        options.addOption("k", true, "The path of samtools");
+        options.addOption("h", true, "VCF output directory");
+        options.addOption("i", true, "Number of threads for pileup");
+        options.addOption("j", true, "The path of samtools");
     }
 
     @Override

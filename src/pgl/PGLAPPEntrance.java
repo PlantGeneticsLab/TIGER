@@ -5,17 +5,11 @@
  */
 package pgl;
 
-import java.io.File;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import pgl.app.fastCall.FastCall;
 import pgl.app.fastCall2.FastCall2;
 import pgl.app.hapScanner.HapScanner;
 import pgl.app.popdep.PopDep;
-import pgl.infra.utils.CLIInterface;
 
 /**
  * This provides the interface between users and TIGER apps
@@ -53,14 +47,14 @@ public class PGLAPPEntrance {
         if (app.equals(AppNames.FastCall.getName())) {
             new FastCall (args);
         }
+        else if (app.equals(AppNames.FastCall2.getName())) {
+            new FastCall2(args);
+        }
         else if (app.equals(AppNames.PopDep.getName())) {
             new PopDep(this.parameterPath);
         }
         else if (app.equals(AppNames.HapScanner.getName())) {
             new HapScanner(this.parameterPath);
-        }
-        else if (app.equals(AppNames.FastCall2.getName())) {
-            new FastCall2(this.parameterPath);
         }
         else {
             System.out.println("App does not exist. Programs stops.");
@@ -74,7 +68,7 @@ public class PGLAPPEntrance {
         sb.append("\nToolkits Integrated for Genetic and Evolutionary Research (TIGER) is designed to simplify its usage.\n");
         sb.append("It uses two sets of options to run its apps. \"-app\" is used to select an app in TIGER. The other options are used to set parameters of a specific app.\n");
         sb.append("e.g. The command line usage of the app FastCall is: ");
-        sb.append("java -Xmx100g -jar TIGER.jar -app FastCall -b parameter_b -c parameter_c > log.txt &\n");
+        sb.append("java -Xmx100g -jar TIGER.jar -app FastCall -a parameter_a -b parameter_b > log.txt &\n");
         sb.append("\nAvailable apps in TIGER include,\n");
         for (int i = 0; i < AppNames.values().length; i++) {
             sb.append(AppNames.values()[i].getName()).append("\n");

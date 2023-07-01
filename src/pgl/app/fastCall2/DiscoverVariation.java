@@ -1,6 +1,11 @@
 package pgl.app.fastCall2;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import pgl.AppAbstract;
+import pgl.PGLAPPEntrance;
 import pgl.PGLConstraints;
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.FastaBit;
@@ -16,14 +21,14 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
 
-class DiscoverVariation {
-    //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
+class DiscoverVariation extends AppAbstract {
+    //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as numbers (1,2,3,4,5...).
     String referenceFileS = null;
-    //The taxaRefBam file containing information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder
-    String taxaRefBamFileS = null;
+    //The taxaBamMap file contains information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder.
+    String taxaBamMapFileS = null;
     //The path of samtools
     String samtoolsPath = null;
-    //VCF output directory
+    //Individual genotype output directory
     String outputDirS = null;
     //Minimum mapping quality (MQ) for an alignment to be used for variation calling.
     int mappingQThresh = 30;
@@ -31,9 +36,9 @@ class DiscoverVariation {
     int baseQThresh = 20;
     //Minimum read depth count (MDC) for variation calling, meaning that sites with depth lower than the minimum will not be taken into account for variation discovery.
     int mdcThresh = 2;
-    //Minimum read depth ratio (MiDR) for variation calling, meaning that sites with depth lower than the MiDR by the individual coverage will not be considered for variation discovery.
+    //Minimum read depth ratio (MiDR) for variation calling, meaning that sites with depth lower than the MiDR of the individual sequencing coverage will not be considered for variation discovery.
     double mindrThresh = 0.2;
-    //Maximum read depth ratio (MaDR) for variation calling, meaning that sites with depth higher than the MaDR by the individual coverage will not be considered for variation discovery.
+    //Maximum read depth ratio (MaDR) for variation calling, meaning that sites with depth higher than the MaDR of the individual sequencing coverage will not be considered for variation discovery.
     double maxdrTrresh = 3;
     //Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is greater than HoR are considered to homozygous.
     double horThresh = 0.8;
@@ -56,6 +61,86 @@ class DiscoverVariation {
     HashMap<String, Double> taxaCoverageMap = null;
     String[] taxaNames = null;
 
+    public DiscoverVariation(String[] args) {
+        this.creatAppOptions();
+        this.retrieveAppParameters(args);
+        this.variationDiscovery();
+    }
+
+    @Override
+    public void creatAppOptions() {
+        options.addOption("app", true, "App name.");
+        options.addOption("step", true, "Step of FastCall 2 (e.g. 1).");
+        options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
+                "Chromosomes are labled as numbers (1,2,3,4,5...). It is recommanded to use reference chromosome while perform variation discovery " +
+                "for each chromosome because loading reference genome would be much faster.");
+        options.addOption("b", true, "The taxaBamMap file contains information of taxon and its corresponding bam files. " +
+                "The bam file should have .bai file in the same folder.");
+        options.addOption("c", true, "Minimum mapping quality (MQ) for an alignment to be used for variation calling. It is 30 by default.");
+        options.addOption("d", true, "Minimum base quality (BQ) for a base to be used for variation calling. It is 20 by default.");
+        options.addOption("e", true, "Minimum read depth count (MDC) for variation calling, meaning that sites with depth lower than " +
+                "the minimum will not be taken into account for variation discovery. It is 2 by default.");
+        options.addOption("f", true, "Minimum read depth ratio (MiDR) for variation calling, meaning that sites with depth lower than the " +
+            "MiDR of the individual sequencing coverage will not be considered for variation discovery. It is 0.2 by default.");
+        options.addOption("g", true, "Maximum read depth ratio (MaDR) for variation calling, meaning that sites with depth higher than " +
+            "the MaDR of the individual sequencing coverage will not be considered for variation discovery. It is 3 by default.");
+        options.addOption("h", true, "Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is " +
+            "greater than HoR are considered to homozygous. It is 0.8 by default.");
+        options.addOption("i", true, "Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is " +
+            "greater than HeR and less than (1-HeR) are considered to be hets. It is 0.4 by default.");
+        options.addOption("j", true, "Third allele depth ratio (TDR) for variation calling. If the depth of the third allele is greater " +
+            "than TDR by the individual coverage, the site will be ignored. Otherwise, the third allele will be considered as sequencing error. It is 0.2 by default.");
+        options.addOption("k", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
+            "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
+        options.addOption("l", true, "Number of threads (taxa number to be processed at the same time). It is 32 by default.");
+        options.addOption("m", true, "Individual genotype output directory.");
+        options.addOption("n", true, "The path of samtools.");
+    }
+
+    @Override
+    public void retrieveAppParameters(String[] args) {
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine line = parser.parse(options, args);
+            this.referenceFileS = line.getOptionValue("a");
+            this.taxaBamMapFileS = line.getOptionValue("b");
+            this.mappingQThresh = Integer.parseInt((line.getOptionValue("c")));
+            this.baseQThresh = Integer.parseInt(line.getOptionValue("d"));
+            this.mdcThresh = Integer.parseInt(line.getOptionValue("e"));
+            this.mindrThresh = Double.parseDouble(line.getOptionValue("f"));
+            this.maxdrTrresh = Double.parseDouble(line.getOptionValue("g"));
+            this.horThresh = Double.parseDouble(line.getOptionValue("h"));
+            this.herThresh = Double.parseDouble(line.getOptionValue("i"));
+            this.tdrTresh = Double.parseDouble(line.getOptionValue("j"));
+            if (line.getOptionValue("k").contains(":")) {
+                String[] temp = line.getOptionValue("k").split(":");
+                this.chrom = Integer.parseInt(temp[0]);
+                temp = temp[1].split(",");
+                regionStart = Integer.parseInt(temp[0]);
+                regionEnd = Integer.parseInt(temp[1]);
+            }
+            else {
+                this.chrom = Integer.valueOf(line.getOptionValue("k"));
+            }
+            this.threadsNum = Integer.parseInt(line.getOptionValue("l"));
+            this.outputDirS = line.getOptionValue("m");
+            this.samtoolsPath = line.getOptionValue("n");
+            this.parseTaxaBamMap(this.taxaBamMapFileS);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+            System.out.println("\nThere are input errors in the command line. Program stops.");
+            this.printInstructionAndUsage();
+            System.exit(0);
+        }
+    }
+
+    @Override
+    public void printInstructionAndUsage() {
+        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.out.println("Below are the commands of Step 1 of FastCall 2.");
+        this.printUsage();
+    }
 
     public DiscoverVariation(List<String> pLineList) {
         this.parseParameters(pLineList);
@@ -297,7 +382,7 @@ class DiscoverVariation {
 
     private void parseParameters (List<String> pLineList) {
         this.referenceFileS = pLineList.get(0);
-        taxaRefBamFileS = pLineList.get(1);
+        taxaBamMapFileS = pLineList.get(1);
         this.mappingQThresh = Integer.parseInt(pLineList.get(2));
         this.baseQThresh = Integer.parseInt(pLineList.get(3));
         this.mdcThresh = Integer.parseInt(pLineList.get(4));
@@ -325,9 +410,7 @@ class DiscoverVariation {
         this.threadsNum = Integer.parseInt(pLineList.get(11));
         this.outputDirS = pLineList.get(12);
         this.samtoolsPath = pLineList.get(13);
-
-
-        this.parseTaxaBamMap(this.taxaRefBamFileS);
+        this.parseTaxaBamMap(this.taxaBamMapFileS);
     }
 
     private void parseTaxaBamMap(String taxaBamMapFileS) {
