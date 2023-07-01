@@ -69,15 +69,21 @@ class BuildVariationLibrary extends AppAbstract {
         try {
             CommandLine line = parser.parse(options, args);
             this.referenceFileS = line.getOptionValue("a");
-            if (line.getOptionValue("b").contains(":")) {
-                String[] temp = line.getOptionValue("b").split(":");
-                this.chrom = (short)Integer.parseInt(temp[0]);
-                temp = temp[1].split(",");
-                regionStart = Integer.parseInt(temp[0]);
-                regionEnd = Integer.parseInt(temp[1]);
+            String[] tem = line.getOptionValue("b").split(":");
+            this.chrom = Short.parseShort(tem[0]);
+            long start = System.nanoTime();
+            System.out.println("Reading reference genome from "+ referenceFileS);
+            FastaBit genomeFa = new FastaBit(referenceFileS);
+            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            int chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
+            if (tem.length == 1) {
+                this.regionStart = 1;
+                this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
             }
-            else {
-                this.chrom = (short)Integer.parseInt(line.getOptionValue("b"));
+            else if (tem.length == 2) {
+                tem = tem[1].split(",");
+                this.regionStart = Integer.parseInt(tem[0]);
+                this.regionEnd = Integer.parseInt(tem[1])+1;
             }
             this.maoThresh = Integer.parseInt(line.getOptionValue("c"));
             this.threadsNum = Integer.parseInt(line.getOptionValue("d"));

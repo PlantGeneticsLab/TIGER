@@ -109,15 +109,21 @@ class ScanGenotype extends AppAbstract {
             this.referenceFileS = line.getOptionValue("a");
             this.taxaBamMapFileS = line.getOptionValue("b");
             this.libFileS = line.getOptionValue("c");
-            if (line.getOptionValue("d").contains(":")) {
-                String[] temp = line.getOptionValue("d").split(":");
-                this.chrom = Integer.parseInt(temp[0]);
-                temp = temp[1].split(",");
-                regionStart = Integer.parseInt(temp[0]);
-                regionEnd = Integer.parseInt(temp[1]);
+            String[] tem = line.getOptionValue("d").split(":");
+            this.chrom = Integer.parseInt(tem[0]);
+            long start = System.nanoTime();
+            System.out.println("Reading reference genome from "+ referenceFileS);
+            this.genomeFa = new FastaBit(referenceFileS);
+            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            this.chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
+            if (tem.length == 1) {
+                this.regionStart = 1;
+                this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
             }
-            else {
-                this.chrom = Integer.valueOf(line.getOptionValue("d"));
+            else if (tem.length == 2) {
+                tem = tem[1].split(",");
+                this.regionStart = Integer.parseInt(tem[0]);
+                this.regionEnd = Integer.parseInt(tem[1])+1;
             }
             this.combinedErrorRate = Double.parseDouble(line.getOptionValue("e"));
             this.samtoolsPath = line.getOptionValue("f");
@@ -130,12 +136,6 @@ class ScanGenotype extends AppAbstract {
             this.printInstructionAndUsage();
             System.exit(0);
         }
-
-        long start = System.nanoTime();
-        System.out.println("Reading reference genome from "+ referenceFileS);
-        genomeFa = new FastaBit(referenceFileS);
-        System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-        chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
         this.parseTaxaBamMap(this.taxaBamMapFileS);
     }
 

@@ -112,15 +112,21 @@ class DiscoverVariation extends AppAbstract {
             this.horThresh = Double.parseDouble(line.getOptionValue("h"));
             this.herThresh = Double.parseDouble(line.getOptionValue("i"));
             this.tdrTresh = Double.parseDouble(line.getOptionValue("j"));
-            if (line.getOptionValue("k").contains(":")) {
-                String[] temp = line.getOptionValue("k").split(":");
-                this.chrom = Integer.parseInt(temp[0]);
-                temp = temp[1].split(",");
-                regionStart = Integer.parseInt(temp[0]);
-                regionEnd = Integer.parseInt(temp[1]);
+            String[] tem = line.getOptionValue("k").split(":");
+            this.chrom = Integer.parseInt(tem[0]);
+            long start = System.nanoTime();
+            System.out.println("Reading reference genome from "+ referenceFileS);
+            FastaBit genomeFa = new FastaBit(referenceFileS);
+            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            int chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
+            if (tem.length == 1) {
+                this.regionStart = 1;
+                this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
             }
-            else {
-                this.chrom = Integer.valueOf(line.getOptionValue("k"));
+            else if (tem.length == 2) {
+                tem = tem[1].split(",");
+                this.regionStart = Integer.parseInt(tem[0]);
+                this.regionEnd = Integer.parseInt(tem[1])+1;
             }
             this.threadsNum = Integer.parseInt(line.getOptionValue("l"));
             this.outputDirS = line.getOptionValue("m");
