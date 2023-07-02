@@ -665,8 +665,8 @@ class ScanGenotype extends AppAbstract {
         int index = Integer.MIN_VALUE;
         int vCnt = 0;
         for (int i = 0; i < baseB.length; i++) {
-            byte alleleByte = FastCall2.pileupAscIIToAlleleByteMap.get(baseB[i]);
-            index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
+            byte alleleByte = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
+            index = Arrays.binarySearch(AlleleEncoder.alleleCodings, alleleByte);
             short queryAlleleShort = -1;
             if (index < 0) continue;
             //weird sign of "^" before a char

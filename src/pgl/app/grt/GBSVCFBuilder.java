@@ -449,7 +449,7 @@ public class GBSVCFBuilder {
                     TIntArrayList depthList = new TIntArrayList();
                     for (int k = 0; k < depth.length; k++) {
                         if (depth[k] == 0) continue;
-                        alleleList.add(AlleleEncoder.alleleBytes[k]);
+                        alleleList.add(AlleleEncoder.alleleCodings[k]);
                         depthList.add(depth[k]);
                     }
                     AlleleDepth siteAD = new AlleleDepth(alleleList.toArray(), depthList.toArray());
@@ -460,10 +460,10 @@ public class GBSVCFBuilder {
                     StringBuilder sb = new StringBuilder();
                     sb.append(sc.getChromosome(i)).append("\t").append(sc.getPositionOfSNP(i, j)).append("\t")
                             .append(sc.getChromosome(i)).append("-").append(sc.getPositionOfSNP(i, j)).append("\t")
-                            .append(AlleleEncoder.alleleByteToBaseMap.get(sc.getRefAlleleByteOfSNP(i, j))).append("\t");
+                            .append(AlleleEncoder.alleleCodingToBaseMap.get(sc.getRefAlleleByteOfSNP(i, j))).append("\t");
                     if (altNum > this.maxAltNumber) altNum = this.maxAltNumber;
                     for (int k = 0; k < altNum; k++) {
-                        sb.append(AlleleEncoder.alleleByteToBaseMap.get(altAD.getAllele(k))).append(",");
+                        sb.append(AlleleEncoder.alleleCodingToBaseMap.get(altAD.getAllele(k))).append(",");
                     }
                     sb.deleteCharAt(sb.length()-1).append("\t.\t.\t");
                     sb.append("DP=").append(GRTVCFUtils.getTotalDepth(sampleAD)).append(";AD=").append(GRTVCFUtils.getAlleleTotalDepth(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");
@@ -587,7 +587,7 @@ public class GBSVCFBuilder {
                     TIntArrayList depthList = new TIntArrayList();
                     for (int k = 0; k < depth.length; k++) {
                         if (depth[k] == 0) continue;
-                        alleleList.add(AlleleEncoder.alleleBytes[k]);
+                        alleleList.add(AlleleEncoder.alleleCodings[k]);
                         depthList.add(depth[k]);
                     }
                     AlleleDepth siteAD = new AlleleDepth(alleleList.toArray(), depthList.toArray());
@@ -598,10 +598,10 @@ public class GBSVCFBuilder {
                     StringBuilder sb = new StringBuilder();
                     sb.append(sc.getChromosome(i)).append("\t").append(sc.getPositionOfSNP(i, j)).append("\t")
                             .append(sc.getChromosome(i)).append("-").append(sc.getPositionOfSNP(i, j)).append("\t")
-                            .append(AlleleEncoder.alleleByteToBaseMap.get(sc.getRefAlleleByteOfSNP(i, j))).append("\t");
+                            .append(AlleleEncoder.alleleCodingToBaseMap.get(sc.getRefAlleleByteOfSNP(i, j))).append("\t");
                     if (altNum > this.maxAltNumber) altNum = this.maxAltNumber;
                     for (int k = 0; k < altNum; k++) {
-                        sb.append(AlleleEncoder.alleleByteToBaseMap.get(altAD.getAllele(k))).append(",");
+                        sb.append(AlleleEncoder.alleleCodingToBaseMap.get(altAD.getAllele(k))).append(",");
                     }
                     sb.deleteCharAt(sb.length()-1).append("\t.\t.\t");
                     sb.append("DP=").append(GRTVCFUtils.getTotalDepth(sampleAD)).append(";AD=").append(GRTVCFUtils.getAlleleTotalDepth(sampleAD, sc.getRefAlleleByteOfSNP(i, j))).append(",");

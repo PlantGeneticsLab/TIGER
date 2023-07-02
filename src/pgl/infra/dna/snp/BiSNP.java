@@ -139,7 +139,7 @@ public class BiSNP extends ChrPos {
      * @return
      */
     public byte getReferenceAlleleByte() {
-        return reference.getAlleleByte();
+        return reference.getAlleleCoding();
     }
     
     /**
@@ -147,14 +147,14 @@ public class BiSNP extends ChrPos {
      * @return
      */
     public char getReferenceAlleleBase() {
-        return AlleleEncoder.getAlleleBaseFromByte(this.getReferenceAlleleByte());
+        return AlleleEncoder.getAlleleBaseFromCoding(this.getReferenceAlleleByte());
     }
     /**
      * Return the byte value of the alternative allele
      * @return
      */
     public byte getAlternativeAlleleByte() {
-        return alternative.getAlleleByte();
+        return alternative.getAlleleCoding();
     }
 
     /**
@@ -162,7 +162,7 @@ public class BiSNP extends ChrPos {
      * @return
      */
     public char getAlternativeAlleleBase () {
-        return AlleleEncoder.getAlleleBaseFromByte(this.getAlternativeAlleleByte());
+        return AlleleEncoder.getAlleleBaseFromCoding(this.getAlternativeAlleleByte());
     }
 
     /**

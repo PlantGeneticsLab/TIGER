@@ -1,13 +1,9 @@
 package pgl.app.fastCall2;
 
-import htsjdk.samtools.util.IOUtil;
-import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.IOUtils;
 
 import java.io.DataInputStream;
-import java.io.File;
 
 class IndividualGenotype implements Comparable<IndividualGenotype> {
     String taxonName = null;
@@ -54,7 +50,7 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
     }
 
     public int getAlleleByte (int alleleIndex) {
-        return FastCall2.getAlleleByte(codedAlleleInfo.getInt(alleleIndex));
+        return FastCall2.getAlleleCoding(codedAlleleInfo.getInt(alleleIndex));
     }
 
     public char getAlleleBase (int alleleIndex) {

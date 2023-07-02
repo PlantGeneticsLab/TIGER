@@ -34,9 +34,9 @@ public class SiteVCF {
         ll = PStringUtils.fastSplit(l.get(4), ",");
         int alleleNumber = 1+ll.size();
         alleles = new byte[alleleNumber];
-        alleles[0] = AlleleEncoder.getAlleleByteFromBase(l.get(3).charAt(0));
+        alleles[0] = AlleleEncoder.getAlleleCodingFromBase(l.get(3).charAt(0));
         for (int i = 0; i < ll.size(); i++) {
-            alleles[i+1] = AlleleEncoder.getAlleleByteFromBase(ll.get(i).charAt(0));
+            alleles[i+1] = AlleleEncoder.getAlleleCodingFromBase(ll.get(i).charAt(0));
         }
         this.alleleDepthList = new ArrayList<>();
         this.genoList = new ArrayList<>();
@@ -264,9 +264,9 @@ public class SiteVCF {
     public String getVCFRecord (double combinedErrorRate) {
         StringBuilder sb = new StringBuilder ();
         sb.append(this.chr).append("\t").append(this.pos).append("\t").append(this.chr).append("-").append(this.pos)
-                .append("\t").append(AlleleEncoder.getAlleleBaseFromByte(this.alleles[0])).append("\t");
+                .append("\t").append(AlleleEncoder.getAlleleBaseFromCoding(this.alleles[0])).append("\t");
         for (int i = 0; i < alleles.length-1; i++) {
-            sb.append(AlleleEncoder.getAlleleBaseFromByte(this.alleles[i+1])).append(",");
+            sb.append(AlleleEncoder.getAlleleBaseFromCoding(this.alleles[i+1])).append(",");
         }
         sb.deleteCharAt(sb.length()-1);
         sb.append("\t.\t.\t");

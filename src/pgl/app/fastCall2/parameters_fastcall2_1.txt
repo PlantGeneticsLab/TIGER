@@ -34,8 +34,8 @@
 #Parameter 8:	Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is greater than HoR are considered to homozygous. It is 0.8 by default.
 0.8
 
-#Parameter 9:	Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is greater than HeR and less than (1-HeR) are considered to be hets. It is 0.4 by default.
-0.4
+#Parameter 9:	Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is greater than HeR and less than (1-HeR) are considered to be hets. It is 0.35 by default.
+0.35
 
 #Parameter 10:	Third allele depth ratio (TDR) for variation calling. If the depth of the third allele is greater than TDR by the individual coverage, the site will be ignored. Otherwise, the third allele will be considered as sequencing error. It is 0.2 by default.
 0.2

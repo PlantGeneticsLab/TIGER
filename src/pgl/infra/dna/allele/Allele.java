@@ -6,7 +6,7 @@ package pgl.infra.dna.allele;
  * @author feilu
  */
 public class Allele {
-    byte baseVal = -1;
+    byte baseCoding = -1;
     byte feature = 0;
 
     /**
@@ -21,15 +21,15 @@ public class Allele {
      * @param c
      */
     public Allele (char c) {
-        this.baseVal = AlleleEncoder.getAlleleByteFromBase(c);
+        this.baseCoding = AlleleEncoder.getAlleleCodingFromBase(c);
     }
 
     /**
      * Construct an object of {@link Allele}
-     * @param alleleByte
+     * @param alleleCoding
      */
-    public Allele (byte alleleByte) {
-        this.baseVal = alleleByte;
+    public Allele (byte alleleCoding) {
+        this.baseCoding = alleleCoding;
     }
 
     /**
@@ -37,15 +37,15 @@ public class Allele {
      * @return
      */
     public char getAlleleBase () {
-        return AlleleEncoder.getAlleleBaseFromByte(this.baseVal);
+        return AlleleEncoder.getAlleleBaseFromCoding(this.baseCoding);
     }
 
     /**
      * Return the byte code of the allele, see {@link AlleleEncoder}
      * @return
      */
-    public byte getAlleleByte () {
-        return this.baseVal;
+    public byte getAlleleCoding() {
+        return this.baseCoding;
     }
 
     /**

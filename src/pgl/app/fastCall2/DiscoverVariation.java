@@ -43,7 +43,7 @@ class DiscoverVariation extends AppAbstract {
     //Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is greater than HoR are considered to homozygous.
     double horThresh = 0.8;
     //Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is greater than HR and less than (1-HR) are considered to be hets.
-    double herThresh = 0.4;
+    double herThresh = 0.35;
     //Third allele depth ratio (TDR) for variation calling. If the depth of the third allele is greater than TDR by the individual coverage, the site will be ignored. Otherwise, the third allele will be considered as sequencing error.
     double tdrTresh = 0.2;
     //Current chromosome for variation calling
@@ -87,7 +87,7 @@ class DiscoverVariation extends AppAbstract {
         options.addOption("h", true, "Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is " +
             "greater than HoR are considered to homozygous. It is 0.8 by default.");
         options.addOption("i", true, "Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is " +
-            "greater than HeR and less than (1-HeR) are considered to be hets. It is 0.4 by default.");
+            "greater than HeR and less than (1-HeR) are considered to be hets. It is 0.35 by default.");
         options.addOption("j", true, "Third allele depth ratio (TDR) for variation calling. If the depth of the third allele is greater " +
             "than TDR by the individual coverage, the site will be ignored. Otherwise, the third allele will be considered as sequencing error. It is 0.2 by default.");
         options.addOption("k", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
@@ -210,9 +210,9 @@ class DiscoverVariation extends AppAbstract {
         IntOpenHashSet insertionLengthSet = new IntOpenHashSet();
         IntOpenHashSet deletionLengthSet = new IntOpenHashSet();
         boolean ifWrite = false;
-        byte minorAllele = Byte.MIN_VALUE;
+        byte altAllele = Byte.MIN_VALUE;
         int indelLength = Integer.MIN_VALUE;
-        int minorAlleleDepth = Integer.MIN_VALUE;
+        int altAlleleDepth = Integer.MIN_VALUE;
         DataOutputStream dos = null;
         int currentBinIndex = Integer.MIN_VALUE;
 
@@ -259,11 +259,11 @@ class DiscoverVariation extends AppAbstract {
             int index = 0;
             int vCnt = 0;
             for (int i = 0; i < baseB.length; i++) {
-                byte alleleByte = FastCall2.pileupAscIIToAlleleByteMap.get(baseB[i]);
-                index = Arrays.binarySearch(AlleleEncoder.alleleBytes, alleleByte);
+                byte alleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
+                index = Arrays.binarySearch(AlleleEncoder.alleleCodings, alleleCoding);
                 if (index < 0) continue;
-                //weird sign of "^" before a char
-                if (i > 0 && baseB[i-1] == 94) continue;
+//                weird sign of "^" before a char
+//                if (i > 0 && baseB[i-1] == 94) continue;
                 if (index > 3) {
                     int startIndex = i+1;
                     int endIndex = i+2;
@@ -297,12 +297,12 @@ class DiscoverVariation extends AppAbstract {
                 if (alleleDepthRatio > tdrTresh) return false;
             }
             ifWrite = true;
-            this.minorAllele = AlleleEncoder.alleleBytes[alleleCountDesendingIndex[0]];
-            this.minorAlleleDepth = alleleCount[alleleCountDesendingIndex[0]];
-            if (this.minorAllele == AlleleEncoder.alleleBytes[5] && insertionLengthSet.size() > 0) {
+            this.altAllele = AlleleEncoder.alleleCodings[alleleCountDesendingIndex[0]];
+            this.altAlleleDepth = alleleCount[alleleCountDesendingIndex[0]];
+            if (this.altAllele == AlleleEncoder.alleleCodings[5] && insertionLengthSet.size() > 0) {
                 indelLength = insertionLengthSet.toArray(new int[insertionLengthSet.size()])[0];
             }
-            else if (this.minorAllele == AlleleEncoder.alleleBytes[4] && deletionLengthSet.size() > 0) {
+            else if (this.altAllele == AlleleEncoder.alleleCodings[4] && deletionLengthSet.size() > 0) {
                 indelLength = deletionLengthSet.toArray(new int[deletionLengthSet.size()])[0];
             }
             return ifWrite;
@@ -348,7 +348,7 @@ class DiscoverVariation extends AppAbstract {
         public void writeVariants () {
             this.setDos();
             try {
-                dos.writeInt(FastCall2.getCodedPosAlleleIndelLength(binStarts[currentBinIndex], currentPos, minorAllele, indelLength));
+                dos.writeInt(FastCall2.getCodedPosAlleleIndelLength(binStarts[currentBinIndex], currentPos, altAllele, indelLength));
             }
             catch (Exception e) {
                 e.printStackTrace();

@@ -293,7 +293,7 @@ public class TagAnnotations {
                     for (int k = 0; k < alleleList.size(); k++) {
                         sb.append("\t|").append(k).append("-").append(alleleList.get(k).getEnd()).append("-").append(alleleList.get(k).getRelativePosition())
                                 .append("->").append(alleleList.get(k).getChromosome()).append("\t").append(alleleList.get(k).getPosition())
-                                .append("\t").append(AlleleEncoder.alleleByteToBaseMap.get(alleleList.get(k).getAllele()));
+                                .append("\t").append(AlleleEncoder.alleleCodingToBaseMap.get(alleleList.get(k).getAllele()));
                     }
                     bw.write(sb.toString());
                     bw.newLine();
@@ -347,7 +347,7 @@ public class TagAnnotations {
                     for (int k = 0; k < alleleList.size(); k++) {
                         sb.append("\t|").append(k).append("-").append(alleleList.get(k).getEnd()).append("-").append(alleleList.get(k).getRelativePosition())
                                 .append("->").append(alleleList.get(k).getChromosome()).append("\t").append(alleleList.get(k).getPosition())
-                                .append("\t").append(AlleleEncoder.alleleByteToBaseMap.get(alleleList.get(k).getAllele()));
+                                .append("\t").append(AlleleEncoder.alleleCodingToBaseMap.get(alleleList.get(k).getAllele()));
                     }
                     bw.write(sb.toString());
                     bw.newLine();

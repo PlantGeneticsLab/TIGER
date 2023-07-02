@@ -1,7 +1,6 @@
 package pgl.infra.popg;
 
 import gnu.trove.list.array.TByteArrayList;
-import gnu.trove.list.array.TCharArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.dna.allele.AlleleType;
@@ -56,7 +55,7 @@ public class ChromosomeFd {
             currentPos = oriGT.getPosition(i);
             index = Arrays.binarySearch(ancestralPos, currentPos);
             if (index < 0) continue;
-            currentAlleleByte = AlleleEncoder.getAlleleByteFromBase(oriAncestralAlleles[index]);
+            currentAlleleByte = AlleleEncoder.getAlleleCodingFromBase(oriAncestralAlleles[index]);
             if (currentAlleleByte == oriGT.getReferenceAlleleByte(i) || currentAlleleByte == oriGT.getAlternativeAlleleByte(i)) {
                 posIndexList.add(i);
                 ancestralAlleleByteList.add(currentAlleleByte);

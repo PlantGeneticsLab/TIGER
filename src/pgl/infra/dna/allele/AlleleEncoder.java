@@ -25,14 +25,14 @@ public class AlleleEncoder {
      */
     public static final byte[] alleleAscIIs = {65, 67, 71, 84, 68, 73};
     /**
-     * Alleles in byte code
+     * Alleles in coding values
      */
-    public static final byte[] alleleBytes = {0, 1, 2, 3, 4, 5};
+    public static final byte[] alleleCodings = {0, 1, 2, 3, 4, 5};
 
     /**
-     * The default value of allele missing
+     * The default coding value of allele missing
      */
-    public static final byte alleleMissingByte = 15;
+    public static final byte alleleMissingCoding = 15;
 
     /**
      * The default char of allele missing
@@ -40,75 +40,80 @@ public class AlleleEncoder {
     public static final char alleleMissingBase = 'N';
 
     /**
-     * The default value of genotype missing
+     * The default coding value of genotype missing
      */
-    public static final byte genotypeMissingByte = -1;
+    public static final byte genotypeMissingCoding = -1;
 
     /**
-     * Converter from char to allele byte
+     * A pre-defined builder to accelerate building genotype string
      */
-    public static final HashCharByteMap alleleBaseToByteMap =
-            HashCharByteMaps.getDefaultFactory().withDefaultValue(alleleMissingByte).newImmutableMap(alleleBases, alleleBytes);
+    private static StringBuilder genoSb = new StringBuilder();
 
     /**
-     * Converter from allele byte to char
+     * Converter from char to allele coding
      */
-    public static final HashByteCharMap alleleByteToBaseMap =
-            HashByteCharMaps.getDefaultFactory().withDefaultValue(alleleMissingBase).newImmutableMap(alleleBytes, alleleBases);
+    public static final HashCharByteMap alleleBaseToCodingMap =
+            HashCharByteMaps.getDefaultFactory().withDefaultValue(alleleMissingCoding).newImmutableMap(alleleBases, alleleCodings);
 
     /**
-     * Return an allele byte from char
+     * Converter from allele coding to char
+     */
+    public static final HashByteCharMap alleleCodingToBaseMap =
+            HashByteCharMaps.getDefaultFactory().withDefaultValue(alleleMissingBase).newImmutableMap(alleleCodings, alleleBases);
+
+    /**
+     * Return an allele coding from char
      * @param c
      * @return -1 if not found
      */
-    public static byte getAlleleByteFromBase(char c) {
-        return alleleBaseToByteMap.get(c);
+    public static byte getAlleleCodingFromBase(char c) {
+        return alleleBaseToCodingMap.get(c);
     }
 
     /**
-     * Return an allele char from byte
+     * Return an allele char from coding
      * @param b
      * @return ! if not found
      */
-    public static char getAlleleBaseFromByte(byte b) {
-        return alleleByteToBaseMap.get(b);
+    public static char getAlleleBaseFromCoding(byte b) {
+        return alleleCodingToBaseMap.get(b);
     }
 
     /**
-     * Return a genotype byte from allele bytes of two homologous chromosomes
+     * Return a genotype coding from allele codings of two homologous chromosomes
      * @param b1
      * @param b2
      * @return
      */
-    public static byte getGenotypeByte (byte b1, byte b2) {
+    public static byte getGenotypeCoding(byte b1, byte b2) {
         return (byte)((b1<<4)+b2);
     }
 
     /**
-     * Return a genotype byte from allele chars of two homologous chromosomes
+     * Return a genotype coding from allele chars of two homologous chromosomes
      * @param c1
      * @param c2
      * @return
      */
-    public static byte getGenotypeByte (char c1, char c2) {
-        return getGenotypeByte(getAlleleByteFromBase(c1), getAlleleByteFromBase(c2));
+    public static byte getGenotypeCoding(char c1, char c2) {
+        return getGenotypeCoding(getAlleleCodingFromBase(c1), getAlleleCodingFromBase(c2));
     }
 
     /**
-     * Return the allele byte of the 1st homologous chromosome
+     * Return the allele coding of the 1st homologous chromosome
      * @param g
      * @return
      */
-    public static byte getAlleleByte1FromGenotypeByte (byte g) {
+    public static byte getAlleleCoding1FromGenotypeCoding(byte g) {
         return (byte)(g>>>4);
     }
 
     /**
-     * Return the allele byte of the 2nd homologous chromosome
+     * Return the allele coding of the 2nd homologous chromosome
      * @param g
      * @return
      */
-    public static byte getAlleleByte2FromGenotypeByte (byte g) {
+    public static byte getAlleleCoding2FromGenotypeByte(byte g) {
         return (byte)(g&15);
     }
 
@@ -117,8 +122,8 @@ public class AlleleEncoder {
      * @param g
      * @return
      */
-    public static char getAlleleBase1FromGenotypeByte(byte g) {
-        return getAlleleBaseFromByte(getAlleleByte1FromGenotypeByte(g));
+    public static char getAlleleBase1FromGenotypeCoding(byte g) {
+        return getAlleleBaseFromCoding(getAlleleCoding1FromGenotypeCoding(g));
     }
 
     /**
@@ -126,19 +131,19 @@ public class AlleleEncoder {
      * @param g
      * @return
      */
-    public static char getAlleleBase2FromGenotypeByte(byte g) {
-        return getAlleleBaseFromByte(getAlleleByte2FromGenotypeByte(g));
+    public static char getAlleleBase2FromGenotypeCoding(byte g) {
+        return getAlleleBaseFromCoding(getAlleleCoding2FromGenotypeByte(g));
     }
 
     /**
-     * Return a genotype string from its genotype byte, e.g. AA or TG
+     * Return a genotype string from its genotype coding, e.g. AA or TG
      * @param g
      * @return
      */
-    public static String getGenotypeStringFromGenotypeByte (byte g) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getAlleleBase1FromGenotypeByte(g));
-        sb.append(getAlleleBase2FromGenotypeByte(g));
-        return sb.toString();
+    public static String getGenotypeStringFromGenotypeCoding(byte g) {
+        genoSb.setLength(0);
+        genoSb.append(getAlleleBase1FromGenotypeCoding(g));
+        genoSb.append(getAlleleBase2FromGenotypeCoding(g));
+        return genoSb.toString();
     }
 }

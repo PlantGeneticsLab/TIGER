@@ -370,7 +370,7 @@ public class SAMUtils {
                     else {
                         tagAlleleList.get(index).setRelativePosition((byte)(currentAltPos+frontLength+1));
                         tagAlleleList.get(index).setAllele(seqAllele);
-                        byte base = AlleleEncoder.alleleBaseToByteMap.get(seq.charAt(currentAltPos));
+                        byte base = AlleleEncoder.alleleBaseToCodingMap.get(seq.charAt(currentAltPos));
                         tagAlleleList.get(index).setBase(base);
                     }
                 }
@@ -391,7 +391,7 @@ public class SAMUtils {
                     else {
                         tagAlleleList.get(index).setRelativePosition((byte)(currentAltPos+frontLength));
                         tagAlleleList.get(index).setAllele(seqAllele);
-                        byte base = AlleleEncoder.alleleBaseToByteMap.get(seq.charAt(currentAltPos-1));
+                        byte base = AlleleEncoder.alleleBaseToCodingMap.get(seq.charAt(currentAltPos-1));
                         tagAlleleList.get(index).setBase(base);
                     }
                 }
@@ -417,7 +417,7 @@ public class SAMUtils {
                         j+=cha;
                         continue;
                     }
-                    byte seqAllele = AlleleEncoder.alleleBaseToByteMap.get(seq.charAt(currentAltPos-1));
+                    byte seqAllele = AlleleEncoder.alleleBaseToCodingMap.get(seq.charAt(currentAltPos-1));
                     byte refAllele = sc.getRefAlleleByteOfSNP(chrIndex, index+sIndex);
                     int insertionAlleleIndex = sc.getAltAlleleIndex(chrIndex, index+sIndex, (byte)5);
                     if (seqAllele == refAllele) {

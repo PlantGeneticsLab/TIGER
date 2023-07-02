@@ -17,8 +17,8 @@ public class FastCall2 {
     //A, C, G, T, -, +
     static final byte[] pileupAlleleAscIIs = {65, 67, 71, 84, 45, 43};
 
-    static final HashByteByteMap pileupAscIIToAlleleByteMap =
-            HashByteByteMaps.getDefaultFactory().withDefaultValue((byte)-1).newImmutableMap(pileupAlleleAscIIs, AlleleEncoder.alleleBytes);
+    static final HashByteByteMap pileupAscIIToAlleleCodingMap =
+            HashByteByteMaps.getDefaultFactory().withDefaultValue((byte)-1).newImmutableMap(pileupAlleleAscIIs, AlleleEncoder.alleleCodings);
 
     public FastCall2 (String[] args) {
         long timeStart = System.nanoTime();
@@ -102,9 +102,9 @@ public class FastCall2 {
         return new Dyad<>(binBound, binStarts);
     }
 
-    static int getCodedPosAlleleIndelLength(int binStart, int position, byte alleleByte, int indelLength) {
+    static int getCodedPosAlleleIndelLength(int binStart, int position, byte alleleCoding, int indelLength) {
         int v = (position-binStart) << 9;
-        v = v + (alleleByte << 6);
+        v = v + (alleleCoding << 6);
         if (indelLength > 63) indelLength = 63;
         return (v + indelLength);
     }
@@ -114,8 +114,8 @@ public class FastCall2 {
         return v;
     }
 
-    static short getCodedAllele (byte alleleByte, int indelLength) {
-        int v = (alleleByte << 6);
+    static short getCodedAllele (byte alleleCoding, int indelLength) {
+        int v = (alleleCoding << 6);
         if (indelLength > 63) indelLength = 63;
         return (short)(v + indelLength);
     }
@@ -124,26 +124,26 @@ public class FastCall2 {
         return (short)(codedPosAlleleIndelLength&511);
     }
 
-    static byte getAlleleByte (int codedPosAlleleIndelLength) {
+    static byte getAlleleCoding(int codedPosAlleleIndelLength) {
         int v = (511 & codedPosAlleleIndelLength) >>> 6;
         return (byte)v;
     }
 
     static char getAlleleBase (int codedPosAlleleIndelLength) {
-        return AlleleEncoder.alleleByteToBaseMap.get(getAlleleByte(codedPosAlleleIndelLength));
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(codedPosAlleleIndelLength));
     }
 
     static byte getIndelLength (int codedPosAlleleIndelLength) {
         return (byte)(63 & codedPosAlleleIndelLength);
     }
 
-    static byte getAlleleByteFromCodedAllele (short codedAllele) {
+    static byte getAlleleCodingFromCodedAllele(short codedAllele) {
         int v = (codedAllele>>>6);
         return (byte)v;
     }
 
     static char getAlleleBaseFromCodedAllele (short codedAllele) {
-        return AlleleEncoder.alleleByteToBaseMap.get(getAlleleByteFromCodedAllele(codedAllele));
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCodingFromCodedAllele(codedAllele));
     }
 
     static byte getIndelLengthFromCodedAllele (short codedAllele) {

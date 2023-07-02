@@ -20,7 +20,7 @@ public class SNPOld extends ChrPos implements SNPOldInterface {
     
     public SNPOld (short chr, int pos, char refAllele, char altAllele) {
         super(chr, pos);
-        this.ref = AlleleEncoder.alleleBaseToByteMap.get(refAllele);
+        this.ref = AlleleEncoder.alleleBaseToCodingMap.get(refAllele);
         this.addAltAllele(altAllele);
     }
     
@@ -49,7 +49,7 @@ public class SNPOld extends ChrPos implements SNPOldInterface {
     
     @Override
     public void addAltAllele (char altAllele) {
-        this.addAltAlleleByte(AlleleEncoder.alleleBaseToByteMap.get(altAllele));
+        this.addAltAlleleByte(AlleleEncoder.alleleBaseToCodingMap.get(altAllele));
     }
     
     @Override
@@ -75,7 +75,7 @@ public class SNPOld extends ChrPos implements SNPOldInterface {
     
     @Override
     public int getAltAlleleIndex (char altAllele) {
-        return this.getAltAlleleIndex(AlleleEncoder.alleleBaseToByteMap.get(altAllele));
+        return this.getAltAlleleIndex(AlleleEncoder.alleleBaseToCodingMap.get(altAllele));
     }
     
     @Override
@@ -85,7 +85,7 @@ public class SNPOld extends ChrPos implements SNPOldInterface {
 
     @Override
     public char getRefAllele() {
-        return AlleleEncoder.alleleByteToBaseMap.get(this.getRefAlleleByte());
+        return AlleleEncoder.alleleCodingToBaseMap.get(this.getRefAlleleByte());
     }
 
     @Override
@@ -95,6 +95,6 @@ public class SNPOld extends ChrPos implements SNPOldInterface {
 
     @Override
     public char getAltAllele(int alleleIndex) {
-        return AlleleEncoder.alleleByteToBaseMap.get(this.getAltAlleleByte(alleleIndex));
+        return AlleleEncoder.alleleCodingToBaseMap.get(this.getAltAlleleByte(alleleIndex));
     }
 }

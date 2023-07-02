@@ -272,7 +272,7 @@ public class GenotypeRows implements GenotypeTable {
 
     @Override
     public char getMinorAlleleBase(int siteIndex) {
-        return AlleleEncoder.getAlleleBaseFromByte(this.getMinorAlleleByte(siteIndex));
+        return AlleleEncoder.getAlleleBaseFromCoding(this.getMinorAlleleByte(siteIndex));
     }
 
     @Override
@@ -287,7 +287,7 @@ public class GenotypeRows implements GenotypeTable {
 
     @Override
     public char getMajorAlleleBase(int siteIndex) {
-        return AlleleEncoder.getAlleleBaseFromByte(this.getMinorAlleleByte(siteIndex));
+        return AlleleEncoder.getAlleleBaseFromCoding(this.getMinorAlleleByte(siteIndex));
     }
 
     @Override
@@ -302,7 +302,7 @@ public class GenotypeRows implements GenotypeTable {
 
     @Override
     public char getReferenceAlleleBase(int siteIndex) {
-        return AlleleEncoder.getAlleleBaseFromByte(this.getReferenceAlleleByte(siteIndex));
+        return AlleleEncoder.getAlleleBaseFromCoding(this.getReferenceAlleleByte(siteIndex));
     }
 
     @Override
@@ -317,7 +317,7 @@ public class GenotypeRows implements GenotypeTable {
 
     @Override
     public char getAlternativeAlleleBase(int siteIndex) {
-        return AlleleEncoder.getAlleleBaseFromByte(this.getAlternativeAlleleByte(siteIndex));
+        return AlleleEncoder.getAlleleBaseFromCoding(this.getAlternativeAlleleByte(siteIndex));
     }
 
     @Override

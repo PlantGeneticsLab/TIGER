@@ -170,16 +170,16 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
 
     @Override
     public byte getGenotypeByte(int siteIndex, int taxonIndex) {
-        if (isMissing(siteIndex, taxonIndex)) return AlleleEncoder.genotypeMissingByte;
+        if (isMissing(siteIndex, taxonIndex)) return AlleleEncoder.genotypeMissingCoding;
         byte ref = this.getReferenceAlleleByte(siteIndex);
         byte alt = this.getAlternativeAlleleByte(siteIndex);
-        byte b1 = AlleleEncoder.alleleMissingByte;
-        byte b2 = AlleleEncoder.alleleMissingByte;
+        byte b1 = AlleleEncoder.alleleMissingCoding;
+        byte b2 = AlleleEncoder.alleleMissingCoding;
         if (isPhase1Alternative(siteIndex, taxonIndex)) b1 = alt;
         else b1 = ref;
         if (isPhase2Alternative(siteIndex, taxonIndex)) b2 = alt;
         else b2 = ref;
-        return AlleleEncoder.getGenotypeByte(b1, b2);
+        return AlleleEncoder.getGenotypeCoding(b1, b2);
     }
 
     @Override
@@ -586,7 +586,7 @@ public class GenotypeGrid implements GenotypeTable, Swapper, IntComparator {
     public ByteBuffer getBinaryOutput(int siteIndex, ByteBuffer bb) {
         bb.putShort(this.getChromosome(siteIndex));
         bb.putInt(this.getPosition(siteIndex));
-        bb.put(AlleleEncoder.getGenotypeByte(this.getReferenceAlleleByte(siteIndex), this.getAlternativeAlleleByte(siteIndex)));
+        bb.put(AlleleEncoder.getGenotypeCoding(this.getReferenceAlleleByte(siteIndex), this.getAlternativeAlleleByte(siteIndex)));
         bb.put(this.snps[siteIndex].getReferenceAlleleFeature());
         bb.put(this.snps[siteIndex].getAlternativeAlleleFeature());
         int size = (bb.capacity()-GenotypeExport.getByteSizeOfSNPInBinary())/3;
