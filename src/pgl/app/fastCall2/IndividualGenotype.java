@@ -1,16 +1,21 @@
 package pgl.app.fastCall2;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import pgl.infra.dna.BaseEncoder;
 import pgl.infra.utils.IOUtils;
 
 import java.io.DataInputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 
 class IndividualGenotype implements Comparable<IndividualGenotype> {
     String taxonName = null;
     short chrom = Short.MIN_VALUE;
     int binStart = Integer.MIN_VALUE;
     int binEnd = Integer.MIN_VALUE;
-    IntArrayList codedAlleleInfo = null;
+    IntArrayList codedAllelePackList = new IntArrayList();
+    IntArrayList indelIndexList = new IntArrayList();
+    ArrayList<long[]> indelSeqLList = new ArrayList<>();
 
     public IndividualGenotype (String fileS) {
         this.readFile(fileS);
@@ -23,10 +28,28 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
             this.chrom = dis.readShort();
             this.binStart = dis.readInt();
             this.binEnd = dis.readInt();
-            codedAlleleInfo = new IntArrayList();
             int currentRecord = 0;
+            int counter = 0;
+            int indelLength = 0;
+            long[] indelSeqL = null;
             while ((currentRecord = dis.readInt()) != Integer.MIN_VALUE) {
-                codedAlleleInfo.add(currentRecord);
+                codedAllelePackList.add(currentRecord);
+                indelLength = FastCall2.getIndelLength(currentRecord);
+                if (indelLength != 0) {
+                    if (indelLength < BaseEncoder.longChunkSize) {
+                        indelSeqL = new long[1];
+                        indelSeqL[0] = dis.readLong();
+                    }
+                    else {
+                        indelSeqL = new long[2];
+                        for (int i = 0; i < indelSeqL.length; i++) {
+                            indelSeqL[i] = dis.readLong();
+                        }
+                    }
+                    indelIndexList.add(counter);
+                    indelSeqLList.add(indelSeqL);
+                }
+                counter++;
             }
             dis.close();
         }
@@ -42,27 +65,32 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
     }
 
     public int getPositionNumber () {
-        return codedAlleleInfo.size();
+        return codedAllelePackList.size();
     }
 
     public int getAllelePosition (int alleleIndex) {
-        return FastCall2.getAllelePosition(codedAlleleInfo.getInt(alleleIndex), binStart);
+        return FastCall2.getAllelePosition(codedAllelePackList.getInt(alleleIndex), binStart);
     }
 
-    public int getAlleleByte (int alleleIndex) {
-        return FastCall2.getAlleleCoding(codedAlleleInfo.getInt(alleleIndex));
+    public int getAlleleCoding(int alleleIndex) {
+        return FastCall2.getAlleleCoding(codedAllelePackList.getInt(alleleIndex));
     }
 
     public char getAlleleBase (int alleleIndex) {
-        return FastCall2.getAlleleBase(codedAlleleInfo.getInt(alleleIndex));
+        return FastCall2.getAlleleBase(codedAllelePackList.getInt(alleleIndex));
     }
 
     public byte getIndelLength (int alleleIndex) {
-        return FastCall2.getIndelLength(codedAlleleInfo.getInt(alleleIndex));
+        return FastCall2.getIndelLength(codedAllelePackList.getInt(alleleIndex));
     }
 
-    public int getCodedAlleleInfo (int alleleIndex) {
-        return this.codedAlleleInfo.getInt(alleleIndex);
+    public int getCodedAllelePack(int alleleIndex) {
+        return this.codedAllelePackList.getInt(alleleIndex);
+    }
+
+    public long[] getIndelSeqL (int alleleIndex) {
+        int index = Collections.binarySearch(indelIndexList, alleleIndex);
+        return indelSeqLList.get(index);
     }
 
     @Override

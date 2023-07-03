@@ -237,7 +237,7 @@ class ScanGenotype extends AppAbstract {
                             .append("\t").append(posRefMap.get(currentPosition)).append("\t");
                     short[] codedAlts = posCodedAlleleMap.get(currentPosition);
                     for (int j = 0; j < codedAlts.length; j++) {
-                        vsb.append(FastCall2.getAlleleBaseFromCodedAllele(codedAlts[j])).append(",");
+                        vsb.append(FastCall2.getAlleleBaseFromAlleleCodingLength(codedAlts[j])).append(",");
                     }
                     vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
                     List<short[]> siteCountsList = new ArrayList<>();
@@ -292,7 +292,7 @@ class ScanGenotype extends AppAbstract {
         positions = new int[vlEndIndex-vlStartIndex];
         for (int i = vlStartIndex; i < vlEndIndex; i++) {
             posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));
-            posCodedAlleleMap.put(vl.positions[i], vl.codedAlleles[i]);
+            posCodedAlleleMap.put(vl.positions[i], vl.alleleCodingLengths[i]);
             positions[i-vlStartIndex] = vl.positions[i];
         }
         Set<String> taxaSet = taxaBamsMap.keySet();
@@ -578,7 +578,7 @@ class ScanGenotype extends AppAbstract {
         infoSB.deleteCharAt(infoSB.length()-1);
         infoSB.append(";IL=");
         for (int i = 0; i < codedAlts.length; i++) {
-            infoSB.append(FastCall2.getIndelLengthFromCodedAllele(codedAlts[i])).append(",");
+            infoSB.append(FastCall2.getIndelLengthFromAlleleCodingLength(codedAlts[i])).append(",");
         }
         infoSB.deleteCharAt(infoSB.length()-1);
         infoSB.append(";GN=");
@@ -645,7 +645,7 @@ class ScanGenotype extends AppAbstract {
         sb.deleteCharAt(sb.length()-1);
         sb.append(";IL=");
         for (int i = 0; i < codedAlts.length; i++) {
-            sb.append(FastCall2.getIndelLengthFromCodedAllele(codedAlts[i])).append(",");
+            sb.append(FastCall2.getIndelLengthFromAlleleCodingLength(codedAlts[i])).append(",");
         }
         sb.deleteCharAt(sb.length()-1);
         sb.append(";GN=");
@@ -672,7 +672,7 @@ class ScanGenotype extends AppAbstract {
             //weird sign of "^" before a char
             if (i > 0 && baseB[i-1] == 94) continue;
             if (index < 4) {
-                queryAlleleShort = FastCall2.getCodedAllele(alleleByte, 0);
+                queryAlleleShort = FastCall2.getAlleleCodingLength(alleleByte, 0);
             }
             else {
                 int startIndex = i+1;
@@ -688,7 +688,7 @@ class ScanGenotype extends AppAbstract {
                     baseSb.append((char)baseB[j]);
                 }
                 int length = Integer.parseInt(baseSb.toString());
-                queryAlleleShort = FastCall2.getCodedAllele(alleleByte, length);
+                queryAlleleShort = FastCall2.getAlleleCodingLength(alleleByte, length);
                 i+=baseSb.length();
                 i+=length;
             }

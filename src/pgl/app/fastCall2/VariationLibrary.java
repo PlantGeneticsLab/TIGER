@@ -1,14 +1,11 @@
 package pgl.app.fastCall2;
 
-import htsjdk.samtools.util.IOUtil;
-import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -22,17 +19,16 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     //set to -1, when bin-based vls are concatenated to a chrom-based vl
     int binStart = Integer.MIN_VALUE;
     int[] positions = null;
-    short[][] codedAlleles = null;
-
+    short[][] alleleCodingLengths = null;
     private int[] potentialPositions = null;
-    private IntArrayList[] pAlleleLists = null;
+    private IntArrayList[] potentialAllelePackLists = null;
 
 
     public VariationLibrary (short chrom, int binStart, int[] positions, short[][] codedAlleles) {
         this.chrom = chrom;
         this.binStart = binStart;
         this.positions = positions;
-        this.codedAlleles = codedAlleles;
+        this.alleleCodingLengths = codedAlleles;
     }
 
     public static VariationLibrary getInstance(List<VariationLibrary> vList) {
@@ -42,7 +38,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         for (int i = 0; i < vList.size(); i++) {
             for (int j = 0; j < vList.get(i).positions.length; j++) {
                 positionList.add(vList.get(i).positions[j]);
-                alleleList.add(vList.get(i).codedAlleles[j]);
+                alleleList.add(vList.get(i).alleleCodingLengths[j]);
             }
         }
         int[] positions = positionList.toIntArray();
@@ -72,16 +68,16 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
         potentialPositions = positionSet.toIntArray();
         Arrays.sort(potentialPositions);
-        pAlleleLists = new IntArrayList[potentialPositions.length];
+        potentialAllelePackLists = new IntArrayList[potentialPositions.length];
         for (int i = 0; i < potentialPositions.length; i++) {
-            pAlleleLists[i] = new IntArrayList();
+            potentialAllelePackLists[i] = new IntArrayList();
         }
         for (int i = 0; i < ingList.size(); i++) {
             int positionNum = ingList.get(i).getPositionNumber();
             int currentIndex = Integer.MIN_VALUE;
             for (int j = 0; j < positionNum; j++) {
                 currentIndex = Arrays.binarySearch(potentialPositions, ingList.get(i).getAllelePosition(j));
-                pAlleleLists[currentIndex].add(ingList.get(i).getCodedAlleleInfo(j));
+                potentialAllelePackLists[currentIndex].add(ingList.get(i).getCodedAllelePack(j));
             }
         }
         List<Integer> indexList = new ArrayList<>();
@@ -91,13 +87,13 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             indexList.add(i);
         }
         indexList.parallelStream().forEach(i -> {
-            IntOpenHashSet alleleSet = new IntOpenHashSet(pAlleleLists[i]);
+            IntOpenHashSet alleleSet = new IntOpenHashSet(potentialAllelePackLists[i]);
             int[] alleles = alleleSet.toIntArray();
             Arrays.sort(alleles);
             int[] alleleCount = new int[alleles.length];
             int index = Integer.MIN_VALUE;
-            for (int j = 0; j < pAlleleLists[i].size(); j++) {
-                index = Arrays.binarySearch(alleles, pAlleleLists[i].getInt(j));
+            for (int j = 0; j < potentialAllelePackLists[i].size(); j++) {
+                index = Arrays.binarySearch(alleles, potentialAllelePackLists[i].getInt(j));
                 alleleCount[index]++;
             }
             int[] countIndex = PArrayUtils.getIndicesByDescendingValue(alleleCount);
@@ -109,32 +105,32 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             }
         });
         IntArrayList positionList = new IntArrayList();
-        List<short[]> codedAlleleLists = new ArrayList<>();
-        ShortArrayList codedAlleleList = new ShortArrayList();
+        List<short[]> alleleCodingLengthLists = new ArrayList<>();
+        ShortArrayList alleleCodingLengthList = new ShortArrayList();
         for (int i = 0; i < alts.length; i++) {
             int varifiedNum = maxAltNum;
             for (int j = maxAltNum; j > 0; j--) {
                 if (altCounts[i][j-1] < maoThresh) varifiedNum--;
             }
             if (varifiedNum == 0) continue;
-            codedAlleleList.clear();
+            alleleCodingLengthList.clear();
             positionList.add(FastCall2.getAllelePosition(alts[i][0], binStart));
             for (int j = 0; j < varifiedNum; j++) {
-                codedAlleleList.add(FastCall2.getCodedAllele(alts[i][j]));
+                alleleCodingLengthList.add(FastCall2.getAlleleCodingLength(alts[i][j]));
             }
-            codedAlleleLists.add(codedAlleleList.toShortArray());
+            alleleCodingLengthLists.add(alleleCodingLengthList.toShortArray());
         }
         this.positions = positionList.toIntArray();
-        codedAlleles = new short[positions.length][];
+        alleleCodingLengths = new short[positions.length][];
         for (int i = 0; i < positions.length; i++) {
-            this.codedAlleles[i] = codedAlleleLists.get(i);
+            this.alleleCodingLengths[i] = alleleCodingLengthLists.get(i);
         }
     }
 
     public String[] getAlts (int positionIndex, List<String> l) {
         l.clear();
-        for (int i = 0; i < this.codedAlleles[positionIndex].length; i++) {
-            l.add(String.valueOf(FastCall2.getAlleleBaseFromCodedAllele(this.codedAlleles[positionIndex][i])));
+        for (int i = 0; i < this.alleleCodingLengths[positionIndex].length; i++) {
+            l.add(String.valueOf(FastCall2.getAlleleBaseFromAlleleCodingLength(this.alleleCodingLengths[positionIndex][i])));
         }
         String[] result = l.toArray(new String[l.size()]);
         return result;
@@ -190,9 +186,9 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             dos.writeInt(positions.length);
             for (int i = 0; i < positions.length; i++) {
                 dos.writeInt(positions[i]);
-                dos.writeByte((byte)codedAlleles[i].length);
-                for (int j = 0; j < codedAlleles[i].length; j++) {
-                    dos.writeShort(codedAlleles[i][j]);
+                dos.writeByte((byte) alleleCodingLengths[i].length);
+                for (int j = 0; j < alleleCodingLengths[i].length; j++) {
+                    dos.writeShort(alleleCodingLengths[i][j]);
                 }
             }
             dos.flush();
@@ -214,13 +210,13 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             binStart = dis.readInt();
             int positionNum = dis.readInt();
             positions = new int[positionNum];
-            codedAlleles = new short[positionNum][];
+            alleleCodingLengths = new short[positionNum][];
             for (int i = 0; i < positionNum; i++) {
                 positions[i] = dis.readInt();
                 int alleleNum = dis.readByte();
-                codedAlleles[i] = new short[alleleNum];
+                alleleCodingLengths[i] = new short[alleleNum];
                 for (int j = 0; j < alleleNum; j++) {
-                    codedAlleles[i][j] = dis.readShort();
+                    alleleCodingLengths[i][j] = dis.readShort();
                 }
             }
         }
@@ -239,12 +235,12 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             for (int i = 0; i < positionIndices.length; i++) {
                 sb.setLength(0);
                 sb.append(positions[positionIndices[i]]).append("\t");
-                for (int j = 0; j < this.codedAlleles[positionIndices[i]].length; j++) {
-                    sb.append((FastCall2.getAlleleBaseFromCodedAllele(this.codedAlleles[positionIndices[i]][j]))).append(",");
+                for (int j = 0; j < this.alleleCodingLengths[positionIndices[i]].length; j++) {
+                    sb.append((FastCall2.getAlleleBaseFromAlleleCodingLength(this.alleleCodingLengths[positionIndices[i]][j]))).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1).append("\t");
-                for (int j = 0; j < this.codedAlleles[positionIndices[i]].length; j++) {
-                    sb.append(FastCall2.getIndelLengthFromCodedAllele(this.codedAlleles[positionIndices[i]][j])).append(",");
+                for (int j = 0; j < this.alleleCodingLengths[positionIndices[i]].length; j++) {
+                    sb.append(FastCall2.getIndelLengthFromAlleleCodingLength(this.alleleCodingLengths[positionIndices[i]][j])).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1);
                 bw.write(sb.toString());
@@ -268,12 +264,12 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             for (int i = 0; i < positions.length; i++) {
                 sb.setLength(0);
                 sb.append(positions[i]).append("\t");
-                for (int j = 0; j < this.codedAlleles[i].length; j++) {
-                    sb.append((FastCall2.getAlleleBaseFromCodedAllele(this.codedAlleles[i][j]))).append(",");
+                for (int j = 0; j < this.alleleCodingLengths[i].length; j++) {
+                    sb.append((FastCall2.getAlleleBaseFromAlleleCodingLength(this.alleleCodingLengths[i][j]))).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1).append("\t");
-                for (int j = 0; j < this.codedAlleles[i].length; j++) {
-                    sb.append(FastCall2.getIndelLengthFromCodedAllele(this.codedAlleles[i][j])).append(",");
+                for (int j = 0; j < this.alleleCodingLengths[i].length; j++) {
+                    sb.append(FastCall2.getIndelLengthFromAlleleCodingLength(this.alleleCodingLengths[i][j])).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1);
                 bw.write(sb.toString());

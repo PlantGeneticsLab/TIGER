@@ -38,8 +38,6 @@ class BuildVariationLibrary extends AppAbstract {
     //Variation library directory
     String vLibDirS = null;
 
-    int maxAltNum = 2;
-
     String[] taxaNames = null;
 
     public BuildVariationLibrary(String[] args) {
@@ -152,7 +150,7 @@ class BuildVariationLibrary extends AppAbstract {
                 e.printStackTrace();
                 System.exit(1);
             }
-            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, maxAltNum, chrom, binStarts[i]);
+            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall2.maxAltNum, chrom, binStarts[i]);
             vlList.add(vl);
         }
         VariationLibrary chromVl = VariationLibrary.getInstance(vlList);

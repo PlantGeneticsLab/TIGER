@@ -212,6 +212,8 @@ class DiscoverVariation extends AppAbstract {
         boolean ifWrite = false;
         byte altAllele = Byte.MIN_VALUE;
         int indelLength = Integer.MIN_VALUE;
+        long[] indelSeqL = new long[2];
+        String indelSeq = null;
         int altAlleleDepth = Integer.MIN_VALUE;
         DataOutputStream dos = null;
         int currentBinIndex = Integer.MIN_VALUE;
@@ -280,6 +282,7 @@ class DiscoverVariation extends AppAbstract {
                     int length = Integer.parseInt(baseSb.toString());
                     if (index == 5) insertionLengthSet.add(length);
                     else deletionLengthSet.add(length);
+                    indelSeq = baseS.substring(endIndex, endIndex+length);
                     i+=baseSb.length();
                     i+=length;
                 }
@@ -325,7 +328,9 @@ class DiscoverVariation extends AppAbstract {
             int binIndex = Arrays.binarySearch(binStarts, this.currentPos);
             if (binIndex < 0) binIndex = -binIndex-2;
             if (binIndex != currentBinIndex) {
-                if (currentBinIndex > -1) this.closeDos();
+                if (currentBinIndex > -1) {
+                    this.closeDos();
+                }
                 StringBuilder sb = new StringBuilder();
                 sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ing.gz");
                 String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
@@ -348,7 +353,13 @@ class DiscoverVariation extends AppAbstract {
         public void writeVariants () {
             this.setDos();
             try {
-                dos.writeInt(FastCall2.getCodedPosAlleleIndelLength(binStarts[currentBinIndex], currentPos, altAllele, indelLength));
+                dos.writeInt(FastCall2.getCodedAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength));
+                if (indelLength != 0) {
+                    long[] seqL = FastCall2.getIndelSeqL(indelSeq, indelLength);
+                    for (int i = 0; i < seqL.length; i++) {
+                        dos.writeLong(seqL[i]);
+                    }
+                }
             }
             catch (Exception e) {
                 e.printStackTrace();

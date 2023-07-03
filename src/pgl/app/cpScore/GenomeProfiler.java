@@ -106,7 +106,7 @@ public class GenomeProfiler {
                         }
                         else if (longMaps != null) {
                             int barcodeIndex = ReferenceKmerLib.getBarcodeIndex(bArray, j, barcodeLength);
-                            long query = BaseEncoder.getLongSeqFromSubByteArray(bArray, j, j + kmerLength);
+                            long query = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, j, j + kmerLength);
                             count = longMaps[barcodeIndex].get(query);
                         }
                         int offSet = bound[i][0]-j;
@@ -222,7 +222,7 @@ public class GenomeProfiler {
                         mark = j + kmerLength;
                     }
                     int barcodeIndex = ReferenceKmerLib.getBarcodeIndex(bArray, j, barcodeLength);
-                    long kmerV = BaseEncoder.getLongSeqFromSubByteArray(bArray, j, j + kmerLength);
+                    long kmerV = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, j, j + kmerLength);
                     if (longMaps[barcodeIndex].containsKey(kmerV)) {
                         longMaps[barcodeIndex].addValue(kmerV, 1);
                     }

@@ -149,7 +149,7 @@ public class BaseEncoder {
      * @param endIndex exclusive, end index of the base coding array
      * @return a long representing DNA sequence
      */
-    public static long getLongSeqFromSubByteArray(byte[] a, int startIndex, int endIndex) {
+    public static long getLongSeqFromSubBaseCodingArray(byte[] a, int startIndex, int endIndex) {
         int length = endIndex - startIndex;
         long v = 0;
         if (length > longChunkSize) {

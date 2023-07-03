@@ -3,6 +3,7 @@ package pgl.app.fastCall2;
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
 import pgl.AppUtils;
+import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
 import java.util.*;
@@ -14,6 +15,9 @@ public class FastCall2 {
     static int disBinSize = 5000000;
     //genome block size for genotype scanning
     static int scanBinSize = 20000000;
+    // maximum of the number of alternative alleles
+    static int maxAltNum = 2;
+    static int maxIndelLength = 63;
     //A, C, G, T, -, +
     static final byte[] pileupAlleleAscIIs = {65, 67, 71, 84, 45, 43};
 
@@ -76,6 +80,7 @@ public class FastCall2 {
         System.out.println(sb.toString());
     }
 
+    //Variation discovery is performed at the individual level, so the default bin size is larger
     static Dyad<int[][], int[]> getBinsDiscovery (int regionStart, int regionEnd) {
         int actualChrLength = regionEnd - regionStart;
         //starting from actual genome position
@@ -89,6 +94,7 @@ public class FastCall2 {
         return new Dyad<>(binBound, binStarts);
     }
 
+    //Genotyping/scanning is performed at the population level (>thousands), so the default bin size is smaller
     static Dyad<int[][], int[]> getBinsScanning (int regionStart, int regionEnd) {
         int actualChrLength = regionEnd - regionStart;
         //starting from actual genome position
@@ -102,52 +108,87 @@ public class FastCall2 {
         return new Dyad<>(binBound, binStarts);
     }
 
-    static int getCodedPosAlleleIndelLength(int binStart, int position, byte alleleCoding, int indelLength) {
+    //the first 23 bits are used to record position in a bin (maximum size = 2^23 - 1 = 8,388,607)
+    //the next 3 bits are used to record alleles
+    //the last 6 bits are used record the length of indel (max size = 2^6 -1 = 63)
+    //Above three components are called a "pack"
+    static int getCodedAllelePack(int binStart, int position, byte alleleCoding, int indelLength) {
         int v = (position-binStart) << 9;
         v = v + (alleleCoding << 6);
-        if (indelLength > 63) indelLength = 63;
+        if (indelLength > maxIndelLength) indelLength = maxIndelLength;
         return (v + indelLength);
     }
 
-    static int getAllelePosition(int codedPosAlleleIndelLength, int binStart) {
-        int v = (codedPosAlleleIndelLength >>> 9) + binStart;
+    /**
+     * Convert Indel sequence to an array of long
+     * @param indelSeq
+     * @param indelLength
+     * @return
+     */
+    static long[] getIndelSeqL (String indelSeq, int indelLength) {
+        byte[] seqCodings = BaseEncoder.convertToBaseCodingArray(indelSeq.getBytes());
+        long[] seqL = null;
+        if (seqCodings.length > BaseEncoder.longChunkSize) {
+            seqL = new long[2];
+            seqL[0] = BaseEncoder.getLongSeqFromSubBaseCodingArray(seqCodings,0, BaseEncoder.longChunkSize);
+            seqL[1] = BaseEncoder.getLongSeqFromSubBaseCodingArray(seqCodings, BaseEncoder.longChunkSize, indelLength);
+        }
+        else {
+            seqL = new long[1];
+            seqL[0] = BaseEncoder.getLongSeqFromBaseCodingArray(seqCodings);
+        }
+        return seqL;
+    }
+
+    /**
+     * Convert to Indel sequence
+     * @param seqL
+     * @param indelLength
+     * @return
+     */
+    static String getIndelSeq (long[] seqL, int indelLength) {
+        return BaseEncoder.getSequenceFromLongs(seqL).substring(0, indelLength);
+    }
+
+    static int getAllelePosition(int codedAllelePack, int binStart) {
+        int v = (codedAllelePack >>> 9) + binStart;
         return v;
     }
 
-    static short getCodedAllele (byte alleleCoding, int indelLength) {
+    static short getAlleleCodingLength(byte alleleCoding, int indelLength) {
         int v = (alleleCoding << 6);
-        if (indelLength > 63) indelLength = 63;
+        if (indelLength > maxIndelLength) indelLength = maxIndelLength;
         return (short)(v + indelLength);
     }
 
-    static short getCodedAllele (int codedPosAlleleIndelLength) {
-        return (short)(codedPosAlleleIndelLength&511);
+    static short getAlleleCodingLength(int codedAllelePack) {
+        return (short)(codedAllelePack&511);
     }
 
-    static byte getAlleleCoding(int codedPosAlleleIndelLength) {
-        int v = (511 & codedPosAlleleIndelLength) >>> 6;
+    static byte getAlleleCoding(int codedAllelePack) {
+        int v = (511 & codedAllelePack) >>> 6;
         return (byte)v;
     }
 
-    static char getAlleleBase (int codedPosAlleleIndelLength) {
-        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(codedPosAlleleIndelLength));
+    static char getAlleleBase (int codedAllelePack) {
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(codedAllelePack));
     }
 
-    static byte getIndelLength (int codedPosAlleleIndelLength) {
-        return (byte)(63 & codedPosAlleleIndelLength);
+    static byte getIndelLength (int codedAllelePack) {
+        return (byte)(maxIndelLength & codedAllelePack);
     }
 
-    static byte getAlleleCodingFromCodedAllele(short codedAllele) {
-        int v = (codedAllele>>>6);
+    static byte getAlleleCodingFromAlleleCodingLength(short alleleCodingLength) {
+        int v = (alleleCodingLength>>>6);
         return (byte)v;
     }
 
-    static char getAlleleBaseFromCodedAllele (short codedAllele) {
-        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCodingFromCodedAllele(codedAllele));
+    static char getAlleleBaseFromAlleleCodingLength(short alleleCodingLength) {
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCodingFromAlleleCodingLength(alleleCodingLength));
     }
 
-    static byte getIndelLengthFromCodedAllele (short codedAllele) {
-        return (byte)(63 & codedAllele);
+    static byte getIndelLengthFromAlleleCodingLength(short alleleCodingLength) {
+        return (byte)(maxIndelLength & alleleCodingLength);
     }
 
 }

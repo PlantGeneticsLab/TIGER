@@ -122,7 +122,7 @@ public class ReferenceKmerLib {
                     mark = i + kmerLength;
                 }
                 barcodeIndex = this.getBarcodeIndex(bArray, i, barcodeLength);
-                long kmerL = BaseEncoder.getLongSeqFromSubByteArray(bArray, i, i + kmerLength);
+                long kmerL = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, i, i + kmerLength);
                 if (!kmerSets[barcodeIndex].contains(kmerL)) kmerSets[barcodeIndex].add(kmerL);
                 int pos = i+1;
                 if (pos%50000000 == 0) {

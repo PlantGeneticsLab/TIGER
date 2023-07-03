@@ -35,14 +35,14 @@ public class TagUtils {
             bArray[i] = ascIIByteMap.get(bArray[i]);
         }
         for (int i = 0; i < tagLengthInLong; i++) {
-            tag[i] = BaseEncoder.getLongSeqFromSubByteArray(bArray, i*BaseEncoder.longChunkSize, (i+1)*BaseEncoder.longChunkSize);
+            tag[i] = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, i*BaseEncoder.longChunkSize, (i+1)*BaseEncoder.longChunkSize);
         }
         bArray = readR2.getBytes();
         for (int i = 0; i < bArray.length; i++) {
             bArray[i] = ascIIByteMap.get(bArray[i]);
         }
         for (int i = 0; i < tagLengthInLong; i++) {
-            tag[i+tagLengthInLong] = BaseEncoder.getLongSeqFromSubByteArray(bArray, i*BaseEncoder.longChunkSize, (i+1)*BaseEncoder.longChunkSize);
+            tag[i+tagLengthInLong] = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, i*BaseEncoder.longChunkSize, (i+1)*BaseEncoder.longChunkSize);
         }
         return tag;
     }
