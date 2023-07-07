@@ -9,6 +9,7 @@ import pgl.PGLAPPEntrance;
 import pgl.PGLConstraints;
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.FastaBit;
+import pgl.infra.dna.allele.Allele;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
 
@@ -353,12 +354,9 @@ class DiscoverVariation extends AppAbstract {
         public void writeVariants () {
             this.setDos();
             try {
-                dos.writeInt(FastCall2.getCodedAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength));
-                if (indelLength != 0) {
-                    long[] seqL = FastCall2.getIndelSeqL(indelSeq, indelLength);
-                    for (int i = 0; i < seqL.length; i++) {
-                        dos.writeLong(seqL[i]);
-                    }
+                int[] allelePack = AllelePackage.getAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength, indelSeq);
+                for (int i = 0; i < allelePack.length; i++) {
+                    dos.writeInt(allelePack[i]);
                 }
             }
             catch (Exception e) {
