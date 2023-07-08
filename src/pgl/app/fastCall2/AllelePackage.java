@@ -8,23 +8,54 @@ import pgl.infra.dna.allele.AlleleEncoder;
  * Using array of int, an allele pack stores allele state, relative position of the allele in bin, length of Indel (if it exists), and sequence of the Indel
  */
 class AllelePackage implements Comparable<AllelePackage>{
-    int[] allelePacks = null;
+    int[] allelePack = null;
 
     public AllelePackage (int[] allelePacks) {
-        this.allelePacks = allelePacks;
+        this.allelePack = allelePacks;
     }
 
-    public int[] getAllelePacks() {
-        return this.allelePacks;
+    public int[] getAllelePack() {
+        return this.allelePack;
+    }
+
+    public int getFirstIntOfAllelePack() {
+        return this.allelePack[0];
+    }
+
+    public int getAllelePackSize () {
+        return this.allelePack.length;
+    }
+
+    public char getAlleleBase () {
+        return getAlleleBase(getFirstIntOfAllelePack());
+    }
+
+    public byte getIndelLength () {
+        return getIndelLength(getFirstIntOfAllelePack());
+    }
+
+    public int getAlleleChromPosition (int binStart) {
+        return getAlleleChromPosition (getFirstIntOfAllelePack(), binStart);
     }
 
     @Override
     public int compareTo(AllelePackage o) {
-        return allelePacks[0]-o.allelePacks[0];
+        if (allelePack.length != o.allelePack.length) {
+            return allelePack[0]-o.allelePack[0];
+        }
+        else {
+            for (int i = 0; i < allelePack.length; i++) {
+              if (allelePack[i] != o.allelePack[i]) {
+                  return allelePack[i]-o.allelePack[i];
+              }
+              else continue;
+            }
+        }
+        return 0;
     }
 
     public int hashCode() {
-        return allelePacks[0];
+        return allelePack[0];
     }
 
     public boolean equals(Object o) {
@@ -35,9 +66,9 @@ class AllelePackage implements Comparable<AllelePackage>{
             return false;
         }
         AllelePackage other = (AllelePackage) o;
-        if (allelePacks.length != other.allelePacks.length) return false;
-        for (int i = 0; i < allelePacks.length; i++) {
-            if (allelePacks[i] != other.allelePacks[i]) return false;
+        if (allelePack.length != other.allelePack.length) return false;
+        for (int i = 0; i < allelePack.length; i++) {
+            if (allelePack[i] != other.allelePack[i]) return false;
         }
         return true;
     }
@@ -145,13 +176,13 @@ class AllelePackage implements Comparable<AllelePackage>{
      * @param firstIntOfAllelePack
      * @return
      */
-    static byte getAlleleCoding(int firstIntOfAllelePack) {
+    static byte getAlleleCodingFromFirstInt(int firstIntOfAllelePack) {
         int v = (511 & firstIntOfAllelePack) >>> 6;
         return (byte)v;
     }
 
     static char getAlleleBase (int firstIntOfAllelePack) {
-        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(firstIntOfAllelePack));
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCodingFromFirstInt(firstIntOfAllelePack));
     }
 
     static byte getIndelLength (int firstIntOfAllelePack) {
@@ -161,6 +192,9 @@ class AllelePackage implements Comparable<AllelePackage>{
     static byte getAlleleCodingFromAlleleCodingLength(short alleleCodingLength) {
         int v = (alleleCodingLength>>>6);
         return (byte)v;
+    }
+    static char getAlleleBaseFromFirstInt(int firstIntOfAllelePack) {
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCodingFromFirstInt(firstIntOfAllelePack));
     }
 
     static char getAlleleBaseFromAlleleCodingLength(short alleleCodingLength) {

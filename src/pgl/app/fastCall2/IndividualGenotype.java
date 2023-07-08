@@ -49,7 +49,7 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
         return allelePackList.size();
     }
 
-    public int getAllelePosition (int alleleIndex) {
+    public int getAlleleChromPosition(int alleleIndex) {
         return AllelePackage.getAlleleChromPosition(allelePackList.get(alleleIndex), binStart);
     }
 
