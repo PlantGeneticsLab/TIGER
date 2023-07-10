@@ -288,7 +288,7 @@ class ScanGenotype extends AppAbstract {
     public void scanIndiCountsByThreadPool () {
         FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
         posRefMap = new HashMap<>();
-        posAllelePackMap = new HashMap<>();
+        posAllelePackMap = new HashMap<>(vlEndIndex-vlStartIndex);
         positions = new int[vlEndIndex-vlStartIndex];
         for (int i = vlStartIndex; i < vlEndIndex; i++) {
             posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));

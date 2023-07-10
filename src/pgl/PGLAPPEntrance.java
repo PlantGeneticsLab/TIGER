@@ -68,7 +68,7 @@ public class PGLAPPEntrance {
         sb.append("\nToolkits Integrated for Genetic and Evolutionary Research (TIGER) is designed to simplify its usage.\n");
         sb.append("It uses two sets of options to run its apps. \"-app\" is used to select an app in TIGER. The other options are used to set parameters of a specific app.\n");
         sb.append("e.g. The command line usage of the app FastCall is: ");
-        sb.append("java -Xmx100g -jar TIGER.jar -app FastCall -a parameter_a -b parameter_b > log.txt &\n");
+        sb.append("java -Xmx100g -jar TIGER.jar -app FastCall -a chr001.fa -b taxaBamMap.txt -c 30 -d 20 -e 2 -f 0.2 -g 3 -h 0.8 -i 0.4 -j 0.2 -k 1 -l 32 -m /ing -n /usr/local/bin/samtools > log.txt &\n");
         sb.append("\nAvailable apps in TIGER include,\n");
         for (int i = 0; i < AppNames.values().length; i++) {
             sb.append(AppNames.values()[i].getName()).append("\n");

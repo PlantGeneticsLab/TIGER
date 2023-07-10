@@ -1,21 +1,23 @@
 <img src="https://contattafiles.s3.us-west-1.amazonaws.com/tnt22006/DhRSlDOsdlFY6WL/tiger.png" height=100 align="center"> 
 
 # Toolkits Integrated for Genetic and Evolutionary Research
-*Code packages and apps to conduct efficient genetic and evolutionary analysis*
+*Code packages and apps to conduct efficient analyses on genetics and evolution*
 
 ***
 ## Overview
-TIGER integrates a collection of toolkits facilitating research analysis on genetics and evolution. It is a Java based program, combining efficiency and flexibility to realize high-performance computation of various types of analysis. 
+TIGER integrates a collection of toolkits facilitating research analyses on genetics and evolution. It is a Java-based program, combining efficiency and flexibility to realize high-performance computation of various types of analysis. 
 
 ***
 ## Usage
-TIGER is designed to simpliy its usage for the convinience of end users. It has a list of applications (Apps). Each app has a parameter file, where app parameters can be specified in the parameter file. In parameter files, lines staring with "#" can be changed, lines starting with "@" cannot be changed, lines starting with neither "#" nor "@" are user defined papameters. Users can run apps in TIGER by selecting an app and specifify its parameters. TIGER has only two options,  
-* -a, the name of the selected app  
-* -p, the path of the parameter file 
+TIGER is designed to simplify its usage for the convenience of end users. It has integrated a list of applications (Apps). Users can run apps in TIGER by selecting an app and specify its parameters. TIGER has two sets of options. There is only one option in the first set, which is "-app" and is used to select an app. The other set of options is app-specific parameters, which are listed using alphabet letters in most cases. Below is how app options look like in TIGER.
+* -app, the name of the selected app
+* -a, parameter_a
+* -b, parameter_b
+* ... 
 
 
-Take running app FastCall as an example, the commnand line is,  
-* java -Xmx100g -jar TIGER.jar -a FastCall -p ./parameter_fastcall.txt > log.txt &
+Take running app FastCall as an example, the command line is,  
+* java -Xmx100g -jar TIGER.jar -app FastCall -a chr001.fa -b taxaBamMap.txt -c 30 -d 20 -e 2 -f 0.2 -g 3 -h 0.8 -i 0.4 -j 0.2 -k 1 -l 32 -m /ing -n /usr/local/bin/samtools > log.txt &
 
 TIGER will be developed in a long-term basis. Detailed usage of apps can be seen below.
 
