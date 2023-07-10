@@ -150,7 +150,7 @@ public class TagFinder {
     
     private TIntArrayList getR2IntSeq (long[] tag, byte r2Length) {
         TIntArrayList seqList = new TIntArrayList();
-        int[] intTag = BaseEncoder.getIntSeqsFromLongSeqs(tag);
+        int[] intTag = BaseEncoder.getIntsFromLongs(tag);
         int n = r2Length/BaseEncoder.intChunkSize;
         for (int i = 0; i < n; i++) {
             seqList.add(intTag[i+intTag.length/2]);
@@ -160,7 +160,7 @@ public class TagFinder {
     
     private TIntArrayList getR1IntSeq (long[] tag, byte r1Length) {
         TIntArrayList seqList = new TIntArrayList();
-        int[] intTag = BaseEncoder.getIntSeqsFromLongSeqs(tag);
+        int[] intTag = BaseEncoder.getIntsFromLongs(tag);
         int n = r1Length/BaseEncoder.intChunkSize;
         for (int i = 0; i < n; i++) {
             seqList.add(intTag[i]);
@@ -170,7 +170,7 @@ public class TagFinder {
     
     private TIntArrayList getIntSeq (long[] tag, byte r1Length, byte r2Length) {
         TIntArrayList seqList = new TIntArrayList();
-        int[] intTag = BaseEncoder.getIntSeqsFromLongSeqs(tag);
+        int[] intTag = BaseEncoder.getIntsFromLongs(tag);
         int n = r1Length/BaseEncoder.intChunkSize;
         for (int i = 0; i < n; i++) {
             seqList.add(intTag[i]);

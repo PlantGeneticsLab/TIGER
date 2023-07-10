@@ -62,7 +62,8 @@ class ScanGenotype extends AppAbstract {
     int vlStartIndex = Integer.MIN_VALUE;
     int vlEndIndex = Integer.MIN_VALUE;
     HashMap<Integer, String> posRefMap = new HashMap<>();
-    HashMap<Integer, short[]> posCodedAlleleMap = new HashMap<>();
+    //HashMap would be faster to locate alleles, larger memory though
+    HashMap<Integer, AllelePackage[]> posAllelePackMap = new HashMap<>();
     int[] positions = null;
     int vlBinStartIndex = 0;
     int vlBinEndIndex = 0;
@@ -176,7 +177,7 @@ class ScanGenotype extends AppAbstract {
             bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
             bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
             bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of allele occurence across taxa in order listed\">\n");
-            bw.write("##INFO=<ID=IL,Number=.,Type=Integer,Description=\"Indel length of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=IS,Number=.,Type=Integer,Description=\"Indel sequence of ALT alleles in order listed\">\n");
             bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
             bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
             bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
@@ -235,16 +236,16 @@ class ScanGenotype extends AppAbstract {
                     int currentPosition = positions[index+vlBinStartIndex];
                     vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
                             .append("\t").append(posRefMap.get(currentPosition)).append("\t");
-                    short[] codedAlts = posCodedAlleleMap.get(currentPosition);
-                    for (int j = 0; j < codedAlts.length; j++) {
-                        vsb.append(AllelePackage.getAlleleBaseFromAlleleCodingLength(codedAlts[j])).append(",");
+                    AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition);
+                    for (int j = 0; j < altAlleles.length; j++) {
+                        vsb.append(altAlleles[j].getAlleleBase()).append(",");
                     }
                     vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
                     List<short[]> siteCountsList = new ArrayList<>();
                     for (int j = 0; j < incList.size(); j++) {
                         siteCountsList.add(incList.get(j).alleleCounts[index]);
                     }
-                    vsb.append(this.getInfoAndGenotypes(siteCountsList, codedAlts));
+                    vsb.append(this.getInfoAndGenotypes(siteCountsList, altAlleles));
                     vcfRecords[index] = vsb.toString();
                 });
                 for (int j = 0; j < vcfRecords.length; j++) {
@@ -287,12 +288,11 @@ class ScanGenotype extends AppAbstract {
     public void scanIndiCountsByThreadPool () {
         FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
         posRefMap = new HashMap<>();
-        posCodedAlleleMap = new HashMap<>();
-        List<String> altList = new ArrayList<>();
+        posAllelePackMap = new HashMap<>();
         positions = new int[vlEndIndex-vlStartIndex];
         for (int i = vlStartIndex; i < vlEndIndex; i++) {
             posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));
-            posCodedAlleleMap.put(vl.positions[i], vl.alleleCodingLengths[i]);
+            posAllelePackMap.put(vl.positions[i], vl.getAllelePacks(i));
             positions[i-vlStartIndex] = vl.positions[i];
         }
         Set<String> taxaSet = taxaBamsMap.keySet();
@@ -469,7 +469,7 @@ class ScanGenotype extends AppAbstract {
                     else {
                         if (positions[i] == currentPosition) {
                             String ref = posRefMap.get(currentPosition);
-                            short[] codedAltAlleles = posCodedAlleleMap.get(currentPosition);
+                            AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition);
                             baseS.setLength(0);
                             int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {
@@ -480,7 +480,7 @@ class ScanGenotype extends AppAbstract {
                                 this.writeMissing();
                             }
                             else {
-                                int[] alleleCounts = getAlleleCounts (codedAltAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
+                                int[] alleleCounts = getAlleleCounts (altAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
                                 this.writeAlleleCounts(alleleCounts);
                             }
                             current = br.readLine();
@@ -529,12 +529,12 @@ class ScanGenotype extends AppAbstract {
         new File (vLibPosFileS).delete();
     }
 
-    private String getInfoAndGenotypes (List<short[]> siteCountList, short[] codedAlts) {
+    private String getInfoAndGenotypes (List<short[]> siteCountList, AllelePackage[] altAlleles) {
         StringBuilder genoSB = new StringBuilder("GT:AD:GL");
         StringBuilder infoSB = new StringBuilder();
         int dp = 0;
         int nz = 0;
-        int alleleNumber = codedAlts.length+1;
+        int alleleNumber = altAlleles.length+1;
         int[] adCnt = new int[alleleNumber];
         int[] acCnt = new int[alleleNumber];
         int[][] gnCnt = new int[alleleNumber][alleleNumber];
@@ -576,9 +576,9 @@ class ScanGenotype extends AppAbstract {
             infoSB.append(acCnt[i]).append(",");
         }
         infoSB.deleteCharAt(infoSB.length()-1);
-        infoSB.append(";IL=");
-        for (int i = 0; i < codedAlts.length; i++) {
-            infoSB.append(AllelePackage.getIndelLengthFromAlleleCodingLength(codedAlts[i])).append(",");
+        infoSB.append(";IS=");
+        for (int i = 0; i < altAlleles.length; i++) {
+            infoSB.append(altAlleles[i].getIndelSeq()).append(",");
         }
         infoSB.deleteCharAt(infoSB.length()-1);
         infoSB.append(";GN=");
@@ -593,86 +593,20 @@ class ScanGenotype extends AppAbstract {
         return infoSB.toString();
     }
 
-    private String getInfo (String[] genoArray, byte[] codedAlts) {
-        int dp = 0;
-        int nz = 0;
-        int nAlt = codedAlts.length;
-        int[] adCnt = new int[1+nAlt];
-        int[] acCnt = new int[1+nAlt];
-        int[][] gnCnt = new int[1+nAlt][1+nAlt];
-        int ht = 0;
-        List<String> tempList = null;
-        List<String> temList = null;
-        for (int i = 0; i < genoArray.length; i++) {
-            if (genoArray[i].startsWith(".")) {
-                nz++;
-                continue;
-            }
-            tempList = PStringUtils.fastSplit(genoArray[i], ":");
-            temList = PStringUtils.fastSplit(tempList.get(1), ",");
-            for (int j = 0; j < temList.size(); j++) {
-                int c = Integer.parseInt(temList.get(j));
-                dp+=c;
-                adCnt[j] += c;
-            }
-            temList = PStringUtils.fastSplit(tempList.get(0), "/");
-            for (int j = 0; j < temList.size(); j++) {
-                int c = Integer.parseInt(temList.get(j));
-                acCnt[c]++;
-            }
-            int index1 = Integer.parseInt(temList.get(0));
-            int index2 = Integer.parseInt(temList.get(1));
-            gnCnt[index1][index2]++;
-            if (index1 != index2) ht++;
-        }
-        nz = genoArray.length - nz;
-        int sum = 0;
-        for (int i = 0; i < acCnt.length; i++) {
-            sum+=acCnt[i];
-        }
-        float maf = (float)((double)acCnt[0]/sum);
-        if (maf>0.5) maf = (float)(1-maf);
-        StringBuilder sb = new StringBuilder();
-        sb.append("DP=").append(dp).append(";NZ=").append(nz).append(";AD=");
-        for (int i = 0; i < adCnt.length; i++) {
-            sb.append(adCnt[i]).append(",");
-        }
-        sb.deleteCharAt(sb.length()-1);
-        sb.append(";AC=");
-        for (int i = 0; i < acCnt.length; i++) {
-            sb.append(acCnt[i]).append(",");
-        }
-        sb.deleteCharAt(sb.length()-1);
-        sb.append(";IL=");
-        for (int i = 0; i < codedAlts.length; i++) {
-            sb.append(AllelePackage.getIndelLengthFromAlleleCodingLength(codedAlts[i])).append(",");
-        }
-        sb.deleteCharAt(sb.length()-1);
-        sb.append(";GN=");
-        for (int i = 0; i < gnCnt.length; i++) {
-            for (int j = i; j < gnCnt.length; j++) {
-                sb.append(gnCnt[i][j]).append(",");
-            }
-        }
-        sb.deleteCharAt(sb.length()-1);
-        sb.append(";HT=").append(ht).append(";MAF=").append(maf);
-        return sb.toString();
-    }
-
-    private int[] getAlleleCounts (short[] codedAltAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
+    private int[] getAlleleCounts (AllelePackage[] altAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
         byte[] baseB = baseS.getBytes();
-        int[] altAlleleCounts = new int[codedAltAlleles.length];
+        int[] altAlleleCounts = new int[altAlleles.length];
         int index = Integer.MIN_VALUE;
         int vCnt = 0;
         for (int i = 0; i < baseB.length; i++) {
-            byte alleleByte = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
-            index = Arrays.binarySearch(AlleleEncoder.alleleCodings, alleleByte);
-            short queryAlleleShort = -1;
+            byte queryAlleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
+            int queryIndelLength = 0;
+            index = Arrays.binarySearch(AlleleEncoder.alleleCodings, queryAlleleCoding);
             if (index < 0) continue;
             //weird sign of "^" before a char
-            if (i > 0 && baseB[i-1] == 94) continue;
+//            if (i > 0 && baseB[i-1] == 94) continue;
             if (index < 4) {
-                queryAlleleShort = AllelePackage.getAlleleCodingLength(alleleByte, 0);
+
             }
             else {
                 int startIndex = i+1;
@@ -687,22 +621,20 @@ class ScanGenotype extends AppAbstract {
                 for (int j = startIndex; j < endIndex; j++) {
                     baseSb.append((char)baseB[j]);
                 }
-                int length = Integer.parseInt(baseSb.toString());
-                queryAlleleShort = AllelePackage.getAlleleCodingLength(alleleByte, length);
+                queryIndelLength = Integer.parseInt(baseSb.toString());
                 i+=baseSb.length();
-                i+=length;
+                i+=queryIndelLength;
             }
-
-            for (int j = 0; j < codedAltAlleles.length; j++) {
-                if (codedAltAlleles[j] == queryAlleleShort) {
+            for (int j = 0; j < altAlleles.length; j++) {
+                if (altAlleles[j].getAlleleCoding() == queryAlleleCoding && altAlleles[j].getIndelLength() == queryIndelLength) {
                     altAlleleCounts[j]++;
                     vCnt++;
                 }
             }
         }
-        int[] alleleCounts = new int[codedAltAlleles.length+1];
+        int[] alleleCounts = new int[altAlleles.length+1];
         alleleCounts[0] = siteDepth - vCnt;
-        for (int i = 0; i < codedAltAlleles.length; i++) {
+        for (int i = 0; i < altAlleles.length; i++) {
             alleleCounts[i+1] = altAlleleCounts[i];
         }
         return alleleCounts;

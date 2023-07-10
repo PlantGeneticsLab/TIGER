@@ -101,12 +101,12 @@ public class GenomeProfiler {
                         
                         if (intMaps != null) {
                             int barcodeIndex = ReferenceKmerLib.getBarcodeIndex(bArray, j, barcodeLength);
-                            int query = BaseEncoder.getIntSeqFromSubByteArray(bArray, j, j + kmerLength);
+                            int query = BaseEncoder.getIntSeqFromSubBaseCodingArray(bArray, j, j + kmerLength);
                             count = intMaps[barcodeIndex].get(query);
                         }
                         else if (longMaps != null) {
                             int barcodeIndex = ReferenceKmerLib.getBarcodeIndex(bArray, j, barcodeLength);
-                            long query = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, j, j + kmerLength);
+                            long query = BaseEncoder.getLongFromSubBaseCodingArray(bArray, j, j + kmerLength);
                             count = longMaps[barcodeIndex].get(query);
                         }
                         int offSet = bound[i][0]-j;
@@ -186,7 +186,7 @@ public class GenomeProfiler {
                         mark = j + kmerLength;
                     }
                     int barcodeIndex = ReferenceKmerLib.getBarcodeIndex(bArray, j, barcodeLength);
-                    int kmerV = BaseEncoder.getIntSeqFromSubByteArray(bArray, j, j + kmerLength);
+                    int kmerV = BaseEncoder.getIntSeqFromSubBaseCodingArray(bArray, j, j + kmerLength);
                     if (intMaps[barcodeIndex].containsKey(kmerV)) intMaps[barcodeIndex].addValue(kmerV, 1);
                     int rKmerV = BaseEncoder.getIntReverseComplement(kmerV, kmerLength);
                     if (intMaps[barcodeIndex].containsKey(rKmerV)) intMaps[barcodeIndex].addValue(rKmerV, 1);          
@@ -222,7 +222,7 @@ public class GenomeProfiler {
                         mark = j + kmerLength;
                     }
                     int barcodeIndex = ReferenceKmerLib.getBarcodeIndex(bArray, j, barcodeLength);
-                    long kmerV = BaseEncoder.getLongSeqFromSubBaseCodingArray(bArray, j, j + kmerLength);
+                    long kmerV = BaseEncoder.getLongFromSubBaseCodingArray(bArray, j, j + kmerLength);
                     if (longMaps[barcodeIndex].containsKey(kmerV)) {
                         longMaps[barcodeIndex].addValue(kmerV, 1);
                     }

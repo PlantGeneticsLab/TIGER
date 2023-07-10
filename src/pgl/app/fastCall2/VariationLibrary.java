@@ -2,7 +2,6 @@ package pgl.app.fastCall2;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
 
@@ -124,13 +123,8 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         this.allelePacks = allelePackLists.toArray(new AllelePackage[allelePackLists.size()][]);
     }
 
-    public String[] getAlts (int positionIndex, List<String> l) {
-        l.clear();
-        for (int i = 0; i < this.allelePacks[positionIndex].length; i++) {
-            l.add(String.valueOf(AllelePackage.getAlleleBaseFromFirstInt(this.allelePacks[positionIndex][i].getFirstIntOfAllelePack())));
-        }
-        String[] result = l.toArray(new String[l.size()]);
-        return result;
+    public AllelePackage[] getAllelePacks (int positionIndex) {
+        return this.allelePacks[positionIndex];
     }
 
     public int getPositionIndex (int pos) {
@@ -236,7 +230,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     public void writeTextFileS (String outfileS, int[] positionIndices) {
         try {
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
-            bw.write("Position\tAlts\tIndelLength");
+            bw.write("Position\tAlts\tIndelLength\tIndelSeq");
             bw.newLine();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < positionIndices.length; i++) {
@@ -248,6 +242,10 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
                 sb.deleteCharAt(sb.length()-1).append("\t");
                 for (int j = 0; j < this.allelePacks[positionIndices[i]].length; j++) {
                     sb.append(allelePacks[positionIndices[i]][j].getIndelLength()).append(",");
+                }
+                sb.deleteCharAt(sb.length()-1).append("\t");
+                for (int j = 0; j < this.allelePacks[positionIndices[i]].length; j++) {
+                    sb.append(allelePacks[positionIndices[i]][j].getIndelSeq()).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1);
                 bw.write(sb.toString());
@@ -265,7 +263,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     public void writeTextFileS (String outfileS) {
         try {
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
-            bw.write("Position\tAlts\tIndelLength");
+            bw.write("Position\tAlts\tIndelLength\tIndelSeq");
             bw.newLine();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < positions.length; i++) {
@@ -277,6 +275,10 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
                 sb.deleteCharAt(sb.length()-1).append("\t");
                 for (int j = 0; j < this.allelePacks[i].length; j++) {
                     sb.append(allelePacks[i][j].getIndelLength()).append(",");
+                }
+                sb.deleteCharAt(sb.length()-1).append("\t");
+                for (int j = 0; j < this.allelePacks[i].length; j++) {
+                    sb.append(allelePacks[i][j].getIndelSeq()).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1);
                 bw.write(sb.toString());

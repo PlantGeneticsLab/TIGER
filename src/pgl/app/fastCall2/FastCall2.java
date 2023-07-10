@@ -3,7 +3,6 @@ package pgl.app.fastCall2;
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
 import pgl.AppUtils;
-import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
 import java.util.*;
@@ -11,7 +10,7 @@ import java.util.*;
 public class FastCall2 {
     //Current step ID of the pipeline
     int step = Integer.MIN_VALUE;
-    //genome block size for variation discovery
+    //genome block size for variation discovery. The max bin size should be less than 2^23. see {@link AllelePackage}
     static int disBinSize = 5000000;
     //genome block size for genotype scanning
     static int scanBinSize = 20000000;
@@ -80,7 +79,6 @@ public class FastCall2 {
         System.out.println(sb.toString());
     }
 
-    //Variation discovery is performed at the individual level, so the default bin size is larger
     static Dyad<int[][], int[]> getBinsDiscovery (int regionStart, int regionEnd) {
         int actualChrLength = regionEnd - regionStart;
         //starting from actual genome position
@@ -94,7 +92,6 @@ public class FastCall2 {
         return new Dyad<>(binBound, binStarts);
     }
 
-    //Genotyping/scanning is performed at the population level (>thousands), so the default bin size is smaller
     static Dyad<int[][], int[]> getBinsScanning (int regionStart, int regionEnd) {
         int actualChrLength = regionEnd - regionStart;
         //starting from actual genome position

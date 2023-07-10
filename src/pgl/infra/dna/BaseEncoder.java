@@ -87,9 +87,9 @@ public class BaseEncoder {
      * @param a an array of bytes of AscII code
      * @return an array of base coding
      */
-    public static byte[] convertToBaseCodingArray(byte[] a) {
+    public static byte[] convertAscIIToBaseCodingArray(byte[] a) {
         for (int i = 0; i < a.length; i++) {
-            a[i] = convertToBaseCoding(a[i]);
+            a[i] = convertAscIIToBaseCoding(a[i]);
         }
         return a;
     }
@@ -99,7 +99,7 @@ public class BaseEncoder {
      * @param a a AscII
      * @return a base coding
      */
-    public static byte convertToBaseCoding(byte a) {
+    public static byte convertAscIIToBaseCoding(byte a) {
         return ascIIBaseCodingMap.get(a);
     }
 
@@ -149,7 +149,7 @@ public class BaseEncoder {
      * @param endIndex exclusive, end index of the base coding array
      * @return a long representing DNA sequence
      */
-    public static long getLongSeqFromSubBaseCodingArray(byte[] a, int startIndex, int endIndex) {
+    public static long getLongFromSubBaseCodingArray(byte[] a, int startIndex, int endIndex) {
         int length = endIndex - startIndex;
         long v = 0;
         if (length > longChunkSize) {
@@ -167,10 +167,10 @@ public class BaseEncoder {
      * @param val sequence in a long array
      * @return sequence in a int array
      */
-    public static int[] getIntSeqsFromLongSeqs (long[] val) {
+    public static int[] getIntsFromLongs(long[] val) {
         int[] v = new int[val.length*2];
         for (int i = 0; i < val.length; i++) {
-            int[] cv = getIntSeqsFromLongSeq(val[i]);
+            int[] cv = getIntsFromLong(val[i]);
             v[i*2] = cv[0];
             v[i*2+1] = cv[1];
         }
@@ -182,7 +182,7 @@ public class BaseEncoder {
      * @param val sequence in a long
      * @return sequence in a long array
      */
-    public static int[] getIntSeqsFromLongSeq (long val) {
+    public static int[] getIntsFromLong(long val) {
         int[] v = new int[2];
         v[0] = (int)(val>>>longChunkSize);
         v[1] = (int)val;
@@ -195,7 +195,7 @@ public class BaseEncoder {
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @return sequence in int
      */
-    public static int getIntSeqFromBaseCodingArray(byte[] a) {
+    public static int getIntFromBaseCodingArray(byte[] a) {
         int v = 0;
         if (a.length > intChunkSize) {
             return -1;
@@ -215,7 +215,7 @@ public class BaseEncoder {
      * @param endIndex exclusive, end index of the base coding array
      * @return an int representing DNA sequence
      */
-    public static int getIntSeqFromSubByteArray(byte[] a, int startIndex, int endIndex) {
+    public static int getIntSeqFromSubBaseCodingArray(byte[] a, int startIndex, int endIndex) {
         int length = endIndex - startIndex;
         int v = 0;
         if (length > intChunkSize) {
@@ -234,7 +234,7 @@ public class BaseEncoder {
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @return sequence in short
      */
-    public static short getShortSeqFromBaseCodingArray(byte[] a) {
+    public static short getShortFromBaseCodingArray(byte[] a) {
         int v = 0;
         if (a.length > shortChunkSize) {
             return -1;
@@ -254,7 +254,7 @@ public class BaseEncoder {
      * @param endIndex exclusive, end index of the base coding array
      * @return a short representing DNA sequence
      */
-    public static short getShortSeqFromSubByteArray(byte[] a, int startIndex, int endIndex) {
+    public static short getShortFromSubByteArray(byte[] a, int startIndex, int endIndex) {
         int length = endIndex - startIndex;
         int v = 0;
         if (length > shortChunkSize) {
@@ -378,8 +378,8 @@ public class BaseEncoder {
     }
 
     /**
-     * Return DNA sequence from an array of longs
-     * @param val an array of longs
+     * Return DNA sequence from an array of long
+     * @param val an array of long
      * @return DNA sequence
      */
     public static String getSequenceFromLongs (long[] val) {
@@ -419,7 +419,34 @@ public class BaseEncoder {
     	}
     	return seq.toString();
     }
-    
+
+    /**
+     * Return DNA sequence from an array of int
+     * @param val an array of int
+     * @return DNA sequence
+     */
+    public static String getSequenceFromInts (int[] val) {
+        StringBuilder sb = new StringBuilder(val.length*intChunkSize+1);
+        for (int i = 0; i < val.length; i++) {
+            extendSequenceFromInt(val[i], sb);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Extend DNA sequence from an int
+     * @param val an int
+     * @param sb DNA sequence in a StringBuilder
+     */
+    private static void extendSequenceFromInt (int val, StringBuilder sb) {
+        int mask = 3 << 30;
+        for (int i = 0; i < intChunkSize; i++) {
+            byte base = (byte) (((val & mask) >>> 30));
+            sb.append(bases[base]);
+            val = val << 2;
+        }
+    }
+
     /**
      * Return DNA sequence from int
      * @param val sequence in an int

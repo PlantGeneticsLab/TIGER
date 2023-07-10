@@ -12,7 +12,6 @@ import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.allele.Allele;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
