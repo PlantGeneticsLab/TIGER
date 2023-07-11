@@ -83,7 +83,7 @@ public class FastCall extends AppAbstract {
         options.addOption("c", true, "Combined error rate from sequencing and alignment. When the error rate is low, " +
             "heterogeneous sites are more likely to be called as heterozygous, and vice versa. It is 0.05 by default.");
         options.addOption("d", true, "Individual depth ratio. This is the depth of the  lower-depth allele vs. total depth. " +
-            "When the threshold is low, heterogeneous sites are more likely to be called as heterozygous, and vice versa. the It is 0.4 by default.");
+            "When the threshold is low, heterogeneous sites are more likely to be called as heterozygous, and vice versa. It is 0.4 by default.");
         options.addOption("e", true, "P-value threshold of Mendelian segregation test. Lower threshold (e.g. 1, the test will be removed) " +
             "is recommended if rare alleles are the major interest. It is 1 by default. ");
         options.addOption("f", true, "Minor allele occurrence threshold, representing the minimum number of taxa where the minor allele exist. " +
