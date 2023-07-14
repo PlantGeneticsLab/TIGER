@@ -52,12 +52,15 @@ class AllelePackage implements Comparable<AllelePackage>{
     @Override
     public int compareTo(AllelePackage o) {
         if (allelePack.length != o.allelePack.length) {
-            return allelePack[0]-o.allelePack[0];
+            return allelePack.length - o.allelePack.length;
         }
         else {
             for (int i = 0; i < allelePack.length; i++) {
-              if (allelePack[i] != o.allelePack[i]) {
-                  return allelePack[i]-o.allelePack[i];
+              if (allelePack[i] < o.allelePack[i]) {
+                  return -1;
+              }
+              else if (allelePack[i] > o.allelePack[i]) {
+                  return 1;
               }
               else continue;
             }
