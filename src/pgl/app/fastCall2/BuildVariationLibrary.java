@@ -49,7 +49,7 @@ class BuildVariationLibrary extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("step", true, "Step of FastCall 2 (e.g. 1).");
+        options.addOption("tool", true, "Tool name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...).");
         options.addOption("b", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 " +
@@ -99,7 +99,7 @@ class BuildVariationLibrary extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of Step 2 of FastCall 2.");
+        System.out.println("Below are the commands of tool \"blib\" in FastCall 2.");
         this.printUsage();
     }
 
@@ -115,7 +115,7 @@ class BuildVariationLibrary extends AppAbstract {
             taxaNames[i] = ingTaxaDirList.get(i).getName();
         }
         Arrays.sort(taxaNames);
-        Dyad<int[][], int[]> d = FastCall2.getBinsDiscovery(this.regionStart, this.regionEnd);
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.disBinSize);
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         StringBuilder sb = new StringBuilder();
@@ -159,7 +159,7 @@ class BuildVariationLibrary extends AppAbstract {
         sb.setLength(0);
         sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");
         chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());
-        System.out.println("Step 2 is finished.");
+        System.out.println("Building genetic variation library is finished.");
     }
 
     class TaxonRead implements Callable<IndividualGenotype> {

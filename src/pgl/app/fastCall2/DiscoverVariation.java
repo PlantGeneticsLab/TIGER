@@ -70,7 +70,7 @@ class DiscoverVariation extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("step", true, "Step of FastCall 2 (e.g. 1).");
+        options.addOption("tool", true, "Tool name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
                 "Chromosomes are labled as numbers (1,2,3,4,5...). It is recommanded to use reference chromosome while perform variation discovery " +
                 "for each chromosome because loading reference genome would be much faster.");
@@ -144,7 +144,7 @@ class DiscoverVariation extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of Step 1 of FastCall 2.");
+        System.out.println("Below are the commands of tool \"disc\" in FastCall 2.");
         this.printUsage();
     }
 
@@ -162,7 +162,7 @@ class DiscoverVariation extends AppAbstract {
             f.mkdir();
             taxaOutDirs[i] = f;
         }
-        Dyad<int[][], int[]> d = FastCall2.getBinsDiscovery(this.regionStart, this.regionEnd);
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.disBinSize);
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         try {
@@ -172,7 +172,7 @@ class DiscoverVariation extends AppAbstract {
             for (int i = 0; i < taxaNames.length; i++) {
                 String[] bamFiles = this.taxaBamPathMap.get(taxaNames[i]);
                 sb.setLength(0);
-                sb.append(this.samtoolsPath).append(" mpileup -A -B -q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
+                sb.append(this.samtoolsPath).append(" mpileup -q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
                 for (int j = 0; j < bamFiles.length; j++) {
                     sb.append(" ").append(bamFiles[j]);
                 }
@@ -190,7 +190,7 @@ class DiscoverVariation extends AppAbstract {
             System.exit(1);
         }
         System.out.println("Individual genotype of "+ String.valueOf(this.taxaNames.length)+" taxa is completed.");
-        System.out.println("Step 1 is finished.");
+        System.out.println("Variantion discovery is finished.");
     }
 
     class TaxonCall implements Callable<TaxonCall> {
@@ -456,10 +456,9 @@ class DiscoverVariation extends AppAbstract {
                 System.out.println("Taxa names are not unique. Programs quits");
                 System.exit(0);
             }
-            System.out.println("Created TaxaBamMap from" + taxaBamMapFileS);
+            System.out.println("Created TaxaBamMap from " + taxaBamMapFileS);
             System.out.println("Taxa number:\t"+String.valueOf(taxaNames.length));
             System.out.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
-            System.out.println();
         }
         catch (Exception e) {
             e.printStackTrace();

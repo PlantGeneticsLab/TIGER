@@ -86,13 +86,13 @@ class ScanGenotype extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("step", true, "Step of FastCall 2 (e.g. 1).");
+        options.addOption("tool", true, "Tool name FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform genotyping for " +
             "each chromosome because loading reference genome would be much faster.");
         options.addOption("b", true, "The taxaBamMap file contains information of taxon and its corresponding bam files. " +
             "The bam file should have .bai file in the same folder.");
-        options.addOption("c", true, "The genetic variation library file, which is from step 2.");
+        options.addOption("c", true, "The genetic variation library file.");
         options.addOption("d", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
             "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
         options.addOption("e", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
@@ -143,7 +143,7 @@ class ScanGenotype extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of Step 3 of FastCall 2.");
+        System.out.println("Below are the commands of tool \"scan\" in FastCall 2.");
         this.printUsage();
     }
 
@@ -183,7 +183,7 @@ class ScanGenotype extends AppAbstract {
             bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
             bw.write("##ALT=<ID=D,Description=\"Deletion\">\n");
             bw.write("##ALT=<ID=I,Description=\"Insertion\">\n");
-            Dyad<int[][], int[]> d = FastCall2.getBinsScanning(this.regionStart, this.regionEnd);
+            Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.scanBinSize);
             int[][] binBound = d.getFirstElement();
             int[] binStarts = d.getSecondElement();
                 StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
@@ -264,7 +264,7 @@ class ScanGenotype extends AppAbstract {
         }
         this.deleteTemperateFile();
         System.out.println("Final VCF is completed at " + outfileS);
-        System.out.println("Step 3 is finished.");
+        System.out.println("Genotyping is finished.");
     }
 
     class TaxonCountRead implements Callable<IndividualCount> {
@@ -298,7 +298,7 @@ class ScanGenotype extends AppAbstract {
         Set<String> taxaSet = taxaBamsMap.keySet();
         ArrayList<String> taxaList = new ArrayList(taxaSet);
         Collections.sort(taxaList);
-        Dyad<int[][], int[]> d = FastCall2.getBinsScanning(this.regionStart, this.regionEnd);
+        Dyad<int[][], int[]> d = FastCall2.getBins(this.regionStart, this.regionEnd, FastCall2.scanBinSize);
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         LongAdder counter = new LongAdder();
@@ -307,7 +307,7 @@ class ScanGenotype extends AppAbstract {
         for (int i = 0; i < taxaList.size(); i++) {
             List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
             StringBuilder sb = new StringBuilder(samtoolsPath);
-            sb.append(" mpileup -A -B -q 20 -Q 20 -f ").append(this.referenceFileS);
+            sb.append(" mpileup -q 20 -Q 20 -f ").append(this.referenceFileS);
             for (int j = 0; j < bamPaths.size(); j++) {
                 sb.append(" ").append(bamPaths.get(j));
             }
@@ -801,7 +801,6 @@ class ScanGenotype extends AppAbstract {
             System.out.println("Created TaxaBamMap from" + taxaBamMapFileS);
             System.out.println("Taxa number:\t"+String.valueOf(taxaNames.length));
             System.out.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
-            System.out.println();
         }
         catch (Exception e) {
             e.printStackTrace();
