@@ -36,6 +36,10 @@ class ScanGenotype extends AppAbstract {
     int regionStart = Integer.MIN_VALUE;
     //Ending position the specified regionfor variation calling, exclusive
     int regionEnd = Integer.MIN_VALUE;
+    //Minimum mapping quality (MQ) for an alignment to be used for genotyping.
+    int mappingQThresh = 30;
+    //Minimum base quality (BQ) for a base to be used for genotyping.
+    int baseQThresh = 20;
     //combined: sequencing error and alignment error
     double combinedErrorRate = 0.05;
     //The path of samtools
@@ -86,7 +90,7 @@ class ScanGenotype extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("tool", true, "Tool name FastCall 2.");
+        options.addOption("module", true, "Module name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform genotyping for " +
             "each chromosome because loading reference genome would be much faster.");
@@ -95,11 +99,13 @@ class ScanGenotype extends AppAbstract {
         options.addOption("c", true, "The genetic variation library file.");
         options.addOption("d", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
             "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
-        options.addOption("e", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
+        options.addOption("e", true, "Minimum mapping quality (MQ) for an alignment to be used for genotyping. It is 30 by default.");
+        options.addOption("f", true, "Minimum base quality (BQ) for a base to be used for genotyping. It is 20 by default.");
+        options.addOption("g", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
             "likely to be genotyped as homozygote when the combined error rate is high.");
-        options.addOption("f", true, "The path of samtools.");
-        options.addOption("g", true, "Number of threads. It is 32 by default.");
-        options.addOption("h", true, "The directory of VCF output.");
+        options.addOption("h", true, "The path of samtools.");
+        options.addOption("i", true, "Number of threads. It is 32 by default.");
+        options.addOption("j", true, "The directory of VCF output.");
     }
 
     @Override
@@ -126,10 +132,12 @@ class ScanGenotype extends AppAbstract {
                 this.regionStart = Integer.parseInt(tem[0]);
                 this.regionEnd = Integer.parseInt(tem[1])+1;
             }
-            this.combinedErrorRate = Double.parseDouble(line.getOptionValue("e"));
-            this.samtoolsPath = line.getOptionValue("f");
-            this.threadsNum = Integer.parseInt(line.getOptionValue("g"));
-            this.outputDirS = line.getOptionValue("h");
+            this.mappingQThresh = Integer.parseInt(line.getOptionValue("e"));
+            this.baseQThresh = Integer.parseInt(line.getOptionValue("f"));
+            this.combinedErrorRate = Double.parseDouble(line.getOptionValue("g"));
+            this.samtoolsPath = line.getOptionValue("h");
+            this.threadsNum = Integer.parseInt(line.getOptionValue("i"));
+            this.outputDirS = line.getOptionValue("j");
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -143,21 +151,8 @@ class ScanGenotype extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of tool \"scan\" in FastCall 2.");
+        System.out.println("Below are the commands of module \"scan\" in FastCall 2.");
         this.printUsage();
-    }
-
-    public ScanGenotype (List<String> pLineList) {
-        this.parseParameters(pLineList);
-        this.mkDir();
-        this.processVariationLibrary();
-        this.creatFactorialMap();
-
-        /*
-        Output by individual allele count, fast
-         */
-        this.scanIndiCountsByThreadPool();
-        this.mkFinalVCFFromIndiCounts();
     }
 
     public void mkFinalVCFFromIndiCounts () {
@@ -307,7 +302,7 @@ class ScanGenotype extends AppAbstract {
         for (int i = 0; i < taxaList.size(); i++) {
             List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
             StringBuilder sb = new StringBuilder(samtoolsPath);
-            sb.append(" mpileup -q 20 -Q 20 -f ").append(this.referenceFileS);
+            sb.append(" mpileup -q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
             for (int j = 0; j < bamPaths.size(); j++) {
                 sb.append(" ").append(bamPaths.get(j));
             }
@@ -460,7 +455,7 @@ class ScanGenotype extends AppAbstract {
                     currentPosition = Integer.parseInt(currentList.get(1));
                 }
                 StringBuilder baseS = new StringBuilder();
-                StringBuilder baseSb = new StringBuilder();
+                StringBuilder indelSb = new StringBuilder();
                 for (int i = 0; i < positions.length; i++) {
                     this.setDos(positions[i]);
                     if (current == null) {
@@ -480,7 +475,8 @@ class ScanGenotype extends AppAbstract {
                                 this.writeMissing();
                             }
                             else {
-                                int[] alleleCounts = getAlleleCounts (altAlleles, baseS.toString().toUpperCase(), siteDepth, baseSb);
+                                FastCall2.removeFirstPositionSign(baseS);
+                                int[] alleleCounts = getAlleleCounts (altAlleles, baseS.toString().toUpperCase(), siteDepth, indelSb);
                                 this.writeAlleleCounts(alleleCounts);
                             }
                             current = br.readLine();
@@ -593,7 +589,7 @@ class ScanGenotype extends AppAbstract {
         return infoSB.toString();
     }
 
-    private int[] getAlleleCounts (AllelePackage[] altAlleles, String baseS, int siteDepth, StringBuilder baseSb) {
+    private int[] getAlleleCounts (AllelePackage[] altAlleles, String baseS, int siteDepth, StringBuilder indelSb) {
         byte[] baseB = baseS.getBytes();
         int[] altAlleleCounts = new int[altAlleles.length];
         int index = Integer.MIN_VALUE;
@@ -602,13 +598,7 @@ class ScanGenotype extends AppAbstract {
             byte queryAlleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
             int queryIndelLength = 0;
             index = Arrays.binarySearch(AlleleEncoder.alleleCodings, queryAlleleCoding);
-            if (index < 0) continue;
-            //weird sign of "^" before a char
-//            if (i > 0 && baseB[i-1] == 94) continue;
-            if (index < 4) {
-
-            }
-            else {
+            if (index > 3) {
                 int startIndex = i+1;
                 int endIndex = i+2;
                 for (int j = i+2; j < baseB.length; j++) {
@@ -617,12 +607,12 @@ class ScanGenotype extends AppAbstract {
                         break;
                     }
                 }
-                baseSb.setLength(0);
+                indelSb.setLength(0);
                 for (int j = startIndex; j < endIndex; j++) {
-                    baseSb.append((char)baseB[j]);
+                    indelSb.append((char)baseB[j]);
                 }
-                queryIndelLength = Integer.parseInt(baseSb.toString());
-                i+=baseSb.length();
+                queryIndelLength = Integer.parseInt(indelSb.toString());
+                i+=indelSb.length();
                 i+=queryIndelLength;
             }
             for (int j = 0; j < altAlleles.length; j++) {
@@ -739,33 +729,6 @@ class ScanGenotype extends AppAbstract {
             f = new File(outputDirS, subDirS[i]);
             f.mkdir();
         }
-    }
-
-    private void parseParameters (List<String> pLineList) {
-        this.referenceFileS = pLineList.get(0);
-        taxaBamMapFileS = pLineList.get(1);
-        this.libFileS = pLineList.get(2);
-        String[] tem = pLineList.get(3).split(":");
-        this.chrom = Integer.parseInt(tem[0]);
-        long start = System.nanoTime();
-        System.out.println("Reading reference genome from "+ referenceFileS);
-        genomeFa = new FastaBit(referenceFileS);
-        System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-        chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
-        if (tem.length == 1) {
-            this.regionStart = 1;
-            this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
-        }
-        else if (tem.length == 2) {
-            tem = tem[1].split(",");
-            this.regionStart = Integer.parseInt(tem[0]);
-            this.regionEnd = Integer.parseInt(tem[1])+1;
-        }
-        this.combinedErrorRate = Double.parseDouble(pLineList.get(4));
-        this.samtoolsPath = pLineList.get(5);
-        this.threadsNum = Integer.parseInt(pLineList.get(6));
-        this.outputDirS = pLineList.get(7);
-        this.parseTaxaBamMap(this.taxaBamMapFileS);
     }
 
     private void parseTaxaBamMap(String taxaBamMapFileS) {

@@ -29,7 +29,7 @@ public class FastCall2 {
     public FastCall2 (String[] args) {
         long timeStart = System.nanoTime();
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-tool")) {
+            if (args[i].equals("-module")) {
                 this.currentTool = args[i+1];
                 break;
             }
@@ -69,4 +69,14 @@ public class FastCall2 {
         return new Dyad<>(binBound, binStarts);
     }
 
+    static void removeFirstPositionSign (StringBuilder sb) {
+        char charToRemove = '^';
+        for (int i = 0; i < sb.length(); i++) {
+            if (sb.charAt(i) == charToRemove) {
+                sb.deleteCharAt(i);
+                sb.deleteCharAt(i);
+                i--;
+            }
+        }
+    }
 }

@@ -70,7 +70,7 @@ class DiscoverVariation extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("tool", true, "Tool name of FastCall 2.");
+        options.addOption("module", true, "Module name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
                 "Chromosomes are labled as numbers (1,2,3,4,5...). It is recommanded to use reference chromosome while perform variation discovery " +
                 "for each chromosome because loading reference genome would be much faster.");
@@ -144,13 +144,8 @@ class DiscoverVariation extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of tool \"disc\" in FastCall 2.");
+        System.out.println("Below are the commands of module \"disc\" in FastCall 2.");
         this.printUsage();
-    }
-
-    public DiscoverVariation(List<String> pLineList) {
-        this.parseParameters(pLineList);
-        this.variationDiscovery();
     }
 
     private void variationDiscovery () {
@@ -255,6 +250,7 @@ class DiscoverVariation extends AppAbstract {
             double siteDepthRatio = (double)currentDepth/this.taxonCoverage;
             if (siteDepthRatio < mindrThresh) return false;
             if (siteDepthRatio > maxdrTrresh) return false;
+            FastCall2.removeFirstPositionSign(baseSb);
             String baseS = baseSb.toString().toUpperCase();
             byte[] baseB = baseS.getBytes();
             this.initialize2();
@@ -264,8 +260,6 @@ class DiscoverVariation extends AppAbstract {
                 byte alleleCoding = FastCall2.pileupAscIIToAlleleCodingMap.get(baseB[i]);
                 index = Arrays.binarySearch(AlleleEncoder.alleleCodings, alleleCoding);
                 if (index < 0) continue;
-//                weird sign of "^" before a char
-//                if (i > 0 && baseB[i-1] == 94) continue;
                 if (index > 3) {
                     int startIndex = i+1;
                     int endIndex = i+2;
@@ -392,39 +386,6 @@ class DiscoverVariation extends AppAbstract {
             }
             return null;
         }
-    }
-
-    private void parseParameters (List<String> pLineList) {
-        this.referenceFileS = pLineList.get(0);
-        taxaBamMapFileS = pLineList.get(1);
-        this.mappingQThresh = Integer.parseInt(pLineList.get(2));
-        this.baseQThresh = Integer.parseInt(pLineList.get(3));
-        this.mdcThresh = Integer.parseInt(pLineList.get(4));
-        this.mindrThresh = Double.parseDouble(pLineList.get(5));
-        this.maxdrTrresh = Double.parseDouble(pLineList.get(6));
-        this.horThresh = Double.parseDouble(pLineList.get(7));
-        this.herThresh = Double.parseDouble(pLineList.get(8));
-        this.tdrTresh = Double.parseDouble(pLineList.get(9));
-        String[] tem = pLineList.get(10).split(":");
-        this.chrom = Integer.parseInt(tem[0]);
-        long start = System.nanoTime();
-        System.out.println("Reading reference genome from "+ referenceFileS);
-        FastaBit genomeFa = new FastaBit(referenceFileS);
-        System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-        int chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
-        if (tem.length == 1) {
-            this.regionStart = 1;
-            this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
-        }
-        else if (tem.length == 2) {
-            tem = tem[1].split(",");
-            this.regionStart = Integer.parseInt(tem[0]);
-            this.regionEnd = Integer.parseInt(tem[1])+1;
-        }
-        this.threadsNum = Integer.parseInt(pLineList.get(11));
-        this.outputDirS = pLineList.get(12);
-        this.samtoolsPath = pLineList.get(13);
-        this.parseTaxaBamMap(this.taxaBamMapFileS);
     }
 
     private void parseTaxaBamMap(String taxaBamMapFileS) {

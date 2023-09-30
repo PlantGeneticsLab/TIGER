@@ -49,7 +49,7 @@ class BuildVariationLibrary extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("tool", true, "Tool name of FastCall 2.");
+        options.addOption("module", true, "Module name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...).");
         options.addOption("b", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 " +
@@ -99,13 +99,8 @@ class BuildVariationLibrary extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of tool \"blib\" in FastCall 2.");
+        System.out.println("Below are the commands of module \"blib\" in FastCall 2.");
         this.printUsage();
-    }
-
-    public BuildVariationLibrary(List<String> pLineList) {
-        this.parseParameters(pLineList);
-        this.mkLibrary();
     }
 
     private void mkLibrary () {
@@ -175,29 +170,5 @@ class BuildVariationLibrary extends AppAbstract {
             IndividualGenotype ing = new IndividualGenotype(this.fileS);
             return ing;
         }
-    }
-
-    private void parseParameters (List<String> pLineList) {
-        this.referenceFileS = pLineList.get(0);
-        String[] tem = pLineList.get(1).split(":");
-        this.chrom = Short.parseShort(tem[0]);
-        long start = System.nanoTime();
-        System.out.println("Reading reference genome from "+ referenceFileS);
-        FastaBit genomeFa = new FastaBit(referenceFileS);
-        System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-        int chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
-        if (tem.length == 1) {
-            this.regionStart = 1;
-            this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
-        }
-        else if (tem.length == 2) {
-            tem = tem[1].split(",");
-            this.regionStart = Integer.parseInt(tem[0]);
-            this.regionEnd = Integer.parseInt(tem[1])+1;
-        }
-        this.maoThresh = Integer.parseInt(pLineList.get(2));
-        this.threadsNum = Integer.parseInt(pLineList.get(3));
-        this.ingDirS = pLineList.get(4);
-        this.vLibDirS = pLineList.get(5);
     }
 }
