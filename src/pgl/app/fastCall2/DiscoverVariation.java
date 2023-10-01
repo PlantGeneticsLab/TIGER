@@ -102,16 +102,49 @@ class DiscoverVariation extends AppAbstract {
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine line = parser.parse(options, args);
+            String inOpt = null;
             this.referenceFileS = line.getOptionValue("a");
             this.taxaBamMapFileS = line.getOptionValue("b");
-            this.mappingQThresh = Integer.parseInt((line.getOptionValue("c")));
-            this.baseQThresh = Integer.parseInt(line.getOptionValue("d"));
-            this.mdcThresh = Integer.parseInt(line.getOptionValue("e"));
-            this.mindrThresh = Double.parseDouble(line.getOptionValue("f"));
-            this.maxdrTrresh = Double.parseDouble(line.getOptionValue("g"));
-            this.horThresh = Double.parseDouble(line.getOptionValue("h"));
-            this.herThresh = Double.parseDouble(line.getOptionValue("i"));
-            this.tdrTresh = Double.parseDouble(line.getOptionValue("j"));
+            inOpt = line.getOptionValue("c");
+            if (inOpt != null) {
+                this.mappingQThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("d");
+            if (inOpt != null) {
+                this.baseQThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("e");
+            if (inOpt != null) {
+                this.mdcThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("f");
+            if (inOpt != null) {
+                this.mindrThresh = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("g");
+            if (inOpt != null) {
+                this.maxdrTrresh = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("h");
+            if (inOpt != null) {
+                this.horThresh = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("i");
+            if (inOpt != null) {
+                this.herThresh = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("j");
+            if (inOpt != null) {
+                this.tdrTresh = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
             String[] tem = line.getOptionValue("k").split(":");
             this.chrom = Integer.parseInt(tem[0]);
             long start = System.nanoTime();
@@ -128,7 +161,11 @@ class DiscoverVariation extends AppAbstract {
                 this.regionStart = Integer.parseInt(tem[0]);
                 this.regionEnd = Integer.parseInt(tem[1])+1;
             }
-            this.threadsNum = Integer.parseInt(line.getOptionValue("l"));
+            inOpt = line.getOptionValue("l");
+            if (inOpt != null) {
+                this.threadsNum = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
             this.outputDirS = line.getOptionValue("m");
             this.samtoolsPath = line.getOptionValue("n");
             this.parseTaxaBamMap(this.taxaBamMapFileS);

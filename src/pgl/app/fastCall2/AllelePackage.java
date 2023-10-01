@@ -49,6 +49,15 @@ class AllelePackage implements Comparable<AllelePackage>{
         return getAlleleChromPosition (getFirstIntOfAllelePack(), binStart);
     }
 
+    public StringBuilder getAlleleInfo (int binStart, StringBuilder sb) {
+        sb.setLength(0);
+        sb.append(this.getAlleleChromPosition(binStart)).append("\t").append(this.getAlleleBase());
+        if (this.getIndelLength() != 0) {
+            sb.append("\t").append(this.getIndelSeq());
+        }
+        return sb;
+    }
+
     @Override
     public int compareTo(AllelePackage o) {
         if (allelePack.length != o.allelePack.length) {

@@ -2,10 +2,11 @@ package pgl.app.fastCall2;
 
 import pgl.infra.utils.IOUtils;
 
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 
-class IndividualGenotype implements Comparable<IndividualGenotype> {
+public class IndividualGenotype implements Comparable<IndividualGenotype> {
     String taxonName = null;
     short chrom = Short.MIN_VALUE;
     int binStart = Integer.MIN_VALUE;
@@ -39,6 +40,27 @@ class IndividualGenotype implements Comparable<IndividualGenotype> {
             e.printStackTrace();
         }
 
+    }
+
+    public void writeTextFile (String outfileS) {
+        try {
+            BufferedWriter bw = IOUtils.getTextWriter(outfileS);
+            bw.write(this.getTaxonName());
+            bw.newLine();
+            bw.write("Chromosome: "+String.valueOf(this.chrom));
+            bw.newLine();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < this.getPositionNumber(); i++) {
+                AllelePackage ap = new AllelePackage (this.allelePackList.get(i));
+                bw.write(ap.getAlleleInfo(this.binStart, sb).toString());
+                bw.newLine();
+            }
+            bw.flush();
+            bw.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     public String getTaxonName () {

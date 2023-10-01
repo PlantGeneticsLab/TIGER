@@ -113,6 +113,7 @@ class ScanGenotype extends AppAbstract {
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine line = parser.parse(options, args);
+            String inOpt = null;
             this.referenceFileS = line.getOptionValue("a");
             this.taxaBamMapFileS = line.getOptionValue("b");
             this.libFileS = line.getOptionValue("c");
@@ -132,11 +133,27 @@ class ScanGenotype extends AppAbstract {
                 this.regionStart = Integer.parseInt(tem[0]);
                 this.regionEnd = Integer.parseInt(tem[1])+1;
             }
-            this.mappingQThresh = Integer.parseInt(line.getOptionValue("e"));
-            this.baseQThresh = Integer.parseInt(line.getOptionValue("f"));
-            this.combinedErrorRate = Double.parseDouble(line.getOptionValue("g"));
+            inOpt = line.getOptionValue("e");
+            if (inOpt != null) {
+                this.mappingQThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("f");
+            if (inOpt != null) {
+                this.baseQThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("g");
+            if (inOpt != null) {
+                this.combinedErrorRate = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
             this.samtoolsPath = line.getOptionValue("h");
-            this.threadsNum = Integer.parseInt(line.getOptionValue("i"));
+            inOpt = line.getOptionValue("i");
+            if (inOpt != null) {
+                this.threadsNum = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
             this.outputDirS = line.getOptionValue("j");
         }
         catch(Exception e) {

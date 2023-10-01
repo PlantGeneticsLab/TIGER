@@ -66,6 +66,7 @@ class BuildVariationLibrary extends AppAbstract {
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine line = parser.parse(options, args);
+            String inOpt = null;
             this.referenceFileS = line.getOptionValue("a");
             String[] tem = line.getOptionValue("b").split(":");
             this.chrom = Short.parseShort(tem[0]);
@@ -83,8 +84,16 @@ class BuildVariationLibrary extends AppAbstract {
                 this.regionStart = Integer.parseInt(tem[0]);
                 this.regionEnd = Integer.parseInt(tem[1])+1;
             }
-            this.maoThresh = Integer.parseInt(line.getOptionValue("c"));
-            this.threadsNum = Integer.parseInt(line.getOptionValue("d"));
+            inOpt = line.getOptionValue("c");
+            if (inOpt != null) {
+                this.maoThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("d");
+            if (inOpt != null) {
+                this.threadsNum = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
             this.ingDirS = line.getOptionValue("e");
             this.vLibDirS = line.getOptionValue("f");
         }

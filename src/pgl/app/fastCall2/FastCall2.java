@@ -42,6 +42,14 @@ public class FastCall2 {
             System.out.println("Building the library of genetic variation from all samples...");
             new BuildVariationLibrary(args);
         }
+        else if (currentTool.equals("vlib")) {
+            System.out.println("View the library of genetic variation in text");
+            new ViewVariationLibrary(args);
+        }
+        else if (currentTool.equals("clib")) {
+            System.out.println("customize the library of genetic variation from position list");
+            new CustomizeVariationLibrary(args);
+        }
         else if (currentTool.equals("scan")) {
             System.out.println("Genotyping samples based on the variation library...");
             new ScanGenotype(args);

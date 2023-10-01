@@ -197,6 +197,41 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         System.out.println(sb.toString());
     }
 
+    public void writeBinaryFileS (String outfileS, int[] customPositions) {
+        IntArrayList indexList = new IntArrayList();
+        for (int i = 0; i < positions.length; i++) {
+            int index = Arrays.binarySearch(customPositions, positions[i]);
+            if (index < 0) continue;
+            indexList.add(i);
+        }
+        int[] indices = indexList.toIntArray();
+        try {
+            DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
+            dos.writeShort(chrom);
+            dos.writeInt(binStart);
+            dos.writeInt(indices.length);
+            for (int i = 0; i < indices.length; i++) {
+                dos.writeInt(positions[indices[i]]);
+                dos.writeByte((byte) this.allelePacks[indices[i]].length);
+                for (int j = 0; j < allelePacks[indices[i]].length; j++) {
+                    int num = allelePacks[indices[i]][j].getAllelePackSize();
+                    for (int k = 0; k < num; k++) {
+                        dos.writeInt(allelePacks[indices[i]][j].getAllelePack()[k]);
+                    }
+                }
+            }
+            dos.flush();
+            dos.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(positions.length).append(" polymorphic sites are written to ").append(outfileS);
+        System.out.println(sb.toString());
+    }
+
     private void readBinaryFileS (String infileS) {
         try {
             DataInputStream dis = IOUtils.getBinaryGzipReader(infileS);
@@ -227,39 +262,6 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         }
     }
 
-    public void writeTextFileS (String outfileS, int[] positionIndices) {
-        try {
-            BufferedWriter bw = IOUtils.getTextWriter(outfileS);
-            bw.write("Position\tAlts\tIndelLength\tIndelSeq");
-            bw.newLine();
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < positionIndices.length; i++) {
-                sb.setLength(0);
-                sb.append(positions[positionIndices[i]]).append("\t");
-                for (int j = 0; j < this.allelePacks[positionIndices[i]].length; j++) {
-                    sb.append(allelePacks[positionIndices[i]][j].getAlleleBase()).append(",");
-                }
-                sb.deleteCharAt(sb.length()-1).append("\t");
-                for (int j = 0; j < this.allelePacks[positionIndices[i]].length; j++) {
-                    sb.append(allelePacks[positionIndices[i]][j].getIndelLength()).append(",");
-                }
-                sb.deleteCharAt(sb.length()-1).append("\t");
-                for (int j = 0; j < this.allelePacks[positionIndices[i]].length; j++) {
-                    sb.append(allelePacks[positionIndices[i]][j].getIndelSeq()).append(",");
-                }
-                sb.deleteCharAt(sb.length()-1);
-                bw.write(sb.toString());
-                bw.newLine();
-            }
-            bw.flush();
-            bw.newLine();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
     public void writeTextFileS (String outfileS) {
         try {
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
@@ -273,14 +275,20 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
                     sb.append(allelePacks[i][j].getAlleleBase()).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1).append("\t");
+                int totalLength = 0;
                 for (int j = 0; j < this.allelePacks[i].length; j++) {
-                    sb.append(allelePacks[i][j].getIndelLength()).append(",");
-                }
-                sb.deleteCharAt(sb.length()-1).append("\t");
-                for (int j = 0; j < this.allelePacks[i].length; j++) {
-                    sb.append(allelePacks[i][j].getIndelSeq()).append(",");
+                    int indelLength = allelePacks[i][j].getIndelLength();
+                    sb.append(indelLength).append(",");
+                    totalLength+=indelLength;
                 }
                 sb.deleteCharAt(sb.length()-1);
+                if (totalLength > 0) {
+                    sb.append("\t");
+                    for (int j = 0; j < this.allelePacks[i].length; j++) {
+                        sb.append(allelePacks[i][j].getIndelSeq()).append(",");
+                    }
+                    sb.deleteCharAt(sb.length()-1);
+                }
                 bw.write(sb.toString());
                 bw.newLine();
             }
