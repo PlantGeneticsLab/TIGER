@@ -34,7 +34,7 @@ class ViewVariationLibrary extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("module", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 2.");
         options.addOption("a", true, "The input genetic variation library file in binary format.");
         options.addOption("b", true, "The output genetic variation library file in text format");
     }

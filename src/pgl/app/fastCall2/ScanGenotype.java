@@ -90,7 +90,7 @@ class ScanGenotype extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("module", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform genotyping for " +
             "each chromosome because loading reference genome would be much faster.");

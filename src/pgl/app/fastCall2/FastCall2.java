@@ -29,7 +29,7 @@ public class FastCall2 {
     public FastCall2 (String[] args) {
         long timeStart = System.nanoTime();
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-module")) {
+            if (args[i].equals("-mod")) {
                 this.currentTool = args[i+1];
                 break;
             }

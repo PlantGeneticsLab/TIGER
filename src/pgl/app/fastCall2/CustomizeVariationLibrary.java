@@ -25,7 +25,7 @@ class CustomizeVariationLibrary extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("module", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 2.");
         options.addOption("a", true, "The input genetic variation library file in binary format.");
         options.addOption("b", true, "The user provided file with custom positions.");
         options.addOption("c", true, "The custom genetic variation library file.");

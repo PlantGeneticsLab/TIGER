@@ -49,7 +49,7 @@ class BuildVariationLibrary extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("module", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 2.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...).");
         options.addOption("b", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 " +
