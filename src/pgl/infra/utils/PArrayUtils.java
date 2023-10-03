@@ -8,7 +8,7 @@ package pgl.infra.utils;
 
 import java.util.*;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  *

@@ -7,8 +7,7 @@
 package pgl.graph.r;
 
 import java.io.File;
-import org.apache.commons.lang.math.NumberUtils;
-
+import org.apache.commons.lang3.math.NumberUtils;
 import rcaller.RCaller;
 import rcaller.RCode;
 
