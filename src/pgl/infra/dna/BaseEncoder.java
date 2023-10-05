@@ -11,43 +11,44 @@ import com.koloboke.collect.map.hash.HashByteByteMaps;
 
 
 /**
- * Base encoder for A(00), C(01), G(10), T(11). Bases are compressed into 2 bits and loaded into long, int, and short primitives.
- * The primitives are padded with ployA (0000...) at the end, if sequence length is less than 32, 16, or 8.
- * @author fl262
+ * Base encoder and converting functions for A(00), C(01), G(10), T(11).
+ * <p>
+ * Bases are compressed into 2 bits and loaded into long, int, and short primitives. The primitives are padded with ployA (0000...) at the end, if sequence length is less than 32, 16, or 8.
+ * @author Fei Lu
  */
 public class BaseEncoder {
     /**
-     * Sequence length in long using 2 bits coding
+     * Sequence length in long using 2 bits coding to pack 32 bases.
      */
     public static final int longChunkSize = 32;
     /**
-     * Sequence length in int using 2 bits coding
+     * Sequence length in int using 2 bits coding to pack 16 bases.
      */
     public static final int intChunkSize = 16;
     /**
-     * Sequence length in short using 2 bits coding
+     * Sequence length in short using 2 bits coding to pack 8 bases.
      */
     public static final int shortChunkSize = 8;
     /**
-     * Nucleotide bases in char
+     * Nucleotide bases in char, including "A", "C", "G", "T".
      */
     public static final char[] bases = {'A', 'C', 'G', 'T'};
     /**
-     * Nucleotide bases in AscII (American Standard Code for Information Interchange) code
+     * Nucleotide bases in AscII (American Standard Code for Information Interchange) code, including 65, 67, 71, 84.
      */
     public static final byte[] baseAscIIs = {65, 67, 71, 84};
     /**
-     * Nucleotide bases using base encoding rules
+     * Nucleotide base codings using base encoding rules, including 0, 1, 2, 3.
      */
     public static final byte[] baseCodings = {0, 1, 2, 3};
     /**
-     * Converter from AscII to base byte
+     * Converter from AscII to base coding.
      */
     public static final HashByteByteMap ascIIBaseCodingMap = getAscIIBaseCodingMap();
     
     /**
-     * Build a base byte converter to convert AscII byte following the base encoding rules
-     * A(00000000), C(00000001), G(00000010), T(0000000011), others(00000100)
+     * Build a base-baseCoding converter to convert AscII following the base encoding rules,
+     * A(00000000), C(00000001), G(00000010), T(0000000011), others(00000100).
      * @return 
      */
     public static HashByteByteMap getAscIIBaseCodingMap() {
@@ -83,7 +84,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Convert an array of AscII to an array of base coding
+     * Convert an array of AscII to an array of base coding.
      * @param a an array of bytes of AscII code
      * @return an array of base coding
      */
@@ -95,7 +96,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Convert an AscII to a base coding
+     * Convert an AscII to a base coding.
      * @param a a AscII
      * @return a base coding
      */
@@ -104,7 +105,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return a reverse complementary sequence in base coding array
+     * Return a reverse complementary sequence in base coding array.
      * @param a a base coding array, 0-3 are for A, C, G, T, 4 for other bases
      * @return a base coding array of reverse complementary sequence
      */
@@ -124,8 +125,8 @@ public class BaseEncoder {
     }
 
     /**
-     * Return a long from a base coding array. It is padded with polyA at the end if the length of this array is less than 32
-     * If the length of this array is greater than 32, return -1 (polyT)
+     * Return a long from a base coding array: it is padded with polyA at the end if the length of this array is less than 32;
+     * if the length of this array is greater than 32, return -1 (polyT).
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @return a long representing DNA sequence
      */
@@ -142,8 +143,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a long from a subset of base coding array. It is padded with polyA at the end if the length of this subset array is less than 32
-     * If the length of this subset array is greater than 32, return -1 (polyT)
+     * Return a long from a subset of base coding array: it is padded with polyA at the end if the length of this subset array is less than 32;
+     * if the length of this subset array is greater than 32, return -1 (polyT)
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @param startIndex inclusive, start index of the base coding array
      * @param endIndex exclusive, end index of the base coding array
@@ -163,9 +164,9 @@ public class BaseEncoder {
     }
     
     /**
-     * Return an int array from a long array
+     * Return an int array from a long array.
      * @param val sequence in a long array
-     * @return sequence in a int array
+     * @return sequence in an int array
      */
     public static int[] getIntsFromLongs(long[] val) {
         int[] v = new int[val.length*2];
@@ -178,9 +179,9 @@ public class BaseEncoder {
     }
     
     /**
-     * Return an int array from a long
+     * Return an int array from a long.
      * @param val sequence in a long
-     * @return sequence in a long array
+     * @return sequence in an int array
      */
     public static int[] getIntsFromLong(long val) {
         int[] v = new int[2];
@@ -190,8 +191,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return an int from a base coding array. It is padded with polyA at the end if the length of this array is less than 16
-     * If the length of this array is greater than 16, return -1 (polyT)
+     * Return an int from a base coding array: it is padded with polyA at the end if the length of this array is less than 16;
+     * if the length of this array is greater than 16, return -1 (polyT).
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @return sequence in int
      */
@@ -208,8 +209,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a int from a subset of base coding array. It is padded with polyA at the end if the length of this subset array is less than 16
-     * If the length of this subset array is greater than 16, return -1 (polyT)
+     * Return a int from a subset of base coding array: it is padded with polyA at the end if the length of this subset array is less than 16;
+     * if the length of this subset array is greater than 16, return -1 (polyT).
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @param startIndex inclusive, start index of the base coding array
      * @param endIndex exclusive, end index of the base coding array
@@ -229,8 +230,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a short from a base coding array. It is padded with polyA at the end if the length of this array is less than 8
-     * If the length of this array is greater than 8, return -1 (polyT)
+     * Return a short from a base coding array: it is padded with polyA at the end if the length of this array is less than 8;
+     * if the length of this array is greater than 8, return -1 (polyT).
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @return sequence in short
      */
@@ -247,8 +248,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a short from a subset base coding array. It is padded with polyA at the end if the length of this subset array is less than 8
-     * If the length of this subset array is greater than 8, return -1 (polyT)
+     * Return a short from a subset base coding array: it is padded with polyA at the end if the length of this subset array is less than 8;
+     * if the length of this subset array is greater than 8, return -1 (polyT).
      * @param a an array of base coding. The coding must be in 0-3, representing A, C, G, T
      * @param startIndex inclusive, start index of the base coding array
      * @param endIndex exclusive, end index of the base coding array
@@ -268,8 +269,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a reverse complementary long. It is padded with polyA at the end if the length of this array is less than 32
-     * If the length of this array is greater than 32 or less than 0, return -1 (polyT)
+     * Return a reverse complementary long: it is padded with polyA at the end if the length of this array is less than 32
+     * if the length of this array is greater than 32 or less than 0, return -1 (polyT).
      * @param seq sequence in long
      * @param seqLength The actual length of the seq
      * @return reverse complement sequence in long
@@ -289,8 +290,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a reverse complementary int. It is padded with polyA at the end if the length of this array is less than 16
-     * If the length of this array is greater than 16 or less than 0, return -1 (polyT)
+     * Return a reverse complementary int: it is padded with polyA at the end if the length of this array is less than 16;
+     * if the length of this array is greater than 16 or less than 0, return -1 (polyT).
      * @param seq sequence in int
      * @param seqLength The actual length of the seq
      * @return reverse complement sequence in int
@@ -310,8 +311,8 @@ public class BaseEncoder {
     }
     
     /**
-     * Return a reverse complementary int. It is padded with polyA at the end if the length of this array is less than 8
-     * If the length of this array is greater than 8 or less than 0, return -1 (polyT)
+     * Return a reverse complementary short: it is padded with polyA at the end if the length of this array is less than 8;
+     * if the length of this array is greater than 8 or less than 0, return -1 (polyT).
      * @param seq sequence in short
      * @param seqLength The actual length of the seq
      * @return reverse complement sequence in short
@@ -331,7 +332,7 @@ public class BaseEncoder {
     }
     
     /**
-     * Returns the number of bp differences between two 2-bit encoded longs.
+     * Returns the number of bp differences between two 2-bit encoded longs,
      * Maximum divergence is used to save time when only interested in very similar sequences.
      * @param seq1 2-bit encoded sequence
      * @param seq2 2-bit encoded sequence
@@ -378,7 +379,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return DNA sequence from an array of long
+     * Return DNA sequence from an array of long.
      * @param val an array of long
      * @return DNA sequence
      */
@@ -391,7 +392,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Extend DNA sequence from a long
+     * Extend DNA sequence stored in {@link StringBuilder} from a long.
      * @param val a long
      * @param sb DNA sequence in a StringBuilder
      */
@@ -405,7 +406,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return DNA sequence from long
+     * Return DNA sequence from a long.
      * @param val Sequence in a long
      * @return DNA sequence
      */
@@ -421,7 +422,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return DNA sequence from an array of int
+     * Return DNA sequence from an array of int.
      * @param val an array of int
      * @return DNA sequence
      */
@@ -434,7 +435,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Extend DNA sequence from an int
+     * Extend DNA sequence stored in {@link StringBuilder} from an int.
      * @param val an int
      * @param sb DNA sequence in a StringBuilder
      */
@@ -448,7 +449,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return DNA sequence from int
+     * Return DNA sequence from an int.
      * @param val sequence in an int
      * @return DNA sequence
      */
@@ -464,7 +465,7 @@ public class BaseEncoder {
     }
     
     /**
-     * Return DNA sequence from short
+     * Return DNA sequence from short.
      * @param val sequence in a short
      * @return DNA sequence
      */
@@ -480,7 +481,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return an array of base coding from a sequence in long
+     * Return an array of base coding from a sequence in long.
      * @param val a sequence in long
      * @return an array of base coding
      */
@@ -496,7 +497,7 @@ public class BaseEncoder {
     }
 
     /**
-     * Return an array of base coding from sequence in longs
+     * Return an array of base coding from sequence in longs.
      * @param val sequence in longs
      * @return an array of base coding
      */

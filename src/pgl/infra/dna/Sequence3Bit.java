@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 
 /**
- * Class holding DNA sequence, with 3 bits for each base. Non-"ACGT" bases are automatically converted to "N".
+ * Class holding DNA sequence, with 3 bits for each base. Bases are converted to upper case. Non-"ACGT" bases are automatically converted to "N".
  * <P>
  * Well packed into memory, but lower speed performance than {@link pgl.infra.dna.SequenceByte}
  * This is designed to pack large sequence data set, e.g. wheat genome.

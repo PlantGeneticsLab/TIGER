@@ -9,7 +9,7 @@ import com.koloboke.collect.map.hash.HashByteByteMap;
 import java.util.Arrays;
 
 /**
- * The class uses one byte to store a DNA base. 
+ * The class uses AscII value to store a DNA base.
  * <p>
  * Bases are converted to upper case, with full representation of Non-"ATGC" bases.
  * It supports standard IUPAC DNA coding (https://www.bioinformatics.org/sms/iupac.html).
@@ -18,7 +18,7 @@ import java.util.Arrays;
  */
 public class SequenceByte implements SequenceInterface {
     
-    byte[] seqByte = null;
+    byte[] seqAscII = null;
 
     /**
      * Construct an object
@@ -29,70 +29,69 @@ public class SequenceByte implements SequenceInterface {
     
     /**
      * Constructs a {@code SequenceByte} from {@code String}. The lower case bases are converted to upper case.
-     * @param seq 
-     *        The name of a supported DNA sequence
+     * @param seq A string of DNA sequence
      */
     public SequenceByte (String seq) {
-        seqByte = seq.toUpperCase().getBytes();
+        seqAscII = seq.toUpperCase().getBytes();
     }
     
-    public SequenceByte (byte[] seqByte) {
-        this.seqByte = seqByte;
+    public SequenceByte (byte[] seqAscII) {
+        this.seqAscII = seqAscII;
     }
     
     @Override
     public int getSequenceLength() {
-        return seqByte.length;
+        return seqAscII.length;
     }
 
     @Override
     public double getProportionA() {
         int cnt = 0;
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.seqByte[i] == 65) cnt++;
+            if (this.seqAscII[i] == 65) cnt++;
         }
-        return (double)cnt/this.seqByte.length;
+        return (double)cnt/this.seqAscII.length;
     }
 
     @Override
     public double getProportionT() {
         int cnt = 0;
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.seqByte[i] == 84) cnt++;
+            if (this.seqAscII[i] == 84) cnt++;
         }
-        return (double)cnt/this.seqByte.length;
+        return (double)cnt/this.seqAscII.length;
     }
 
     @Override
     public double getProportionG() {
         int cnt = 0;
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.seqByte[i] == 71) cnt++;
+            if (this.seqAscII[i] == 71) cnt++;
         }
-        return (double)cnt/this.seqByte.length;
+        return (double)cnt/this.seqAscII.length;
     }
 
     @Override
     public double getProportionC() {
         int cnt = 0;
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.seqByte[i] == 67) cnt++;
+            if (this.seqAscII[i] == 67) cnt++;
         }
-        return (double)cnt/this.seqByte.length;
+        return (double)cnt/this.seqAscII.length;
     }
 
     @Override
     public double getGCContent() {
         int cnt = 0;
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.seqByte[i] == 67 || this.seqByte[i] == 84) cnt++;
+            if (this.seqAscII[i] == 67 || this.seqAscII[i] == 84) cnt++;
         }
-        return (double)cnt/this.seqByte.length;
+        return (double)cnt/this.seqAscII.length;
     }
 
     @Override
     public char getBase(int positionIndex) {
-        return (char)this.seqByte[positionIndex];
+        return (char)this.seqAscII[positionIndex];
     }
     
     /**
@@ -101,17 +100,17 @@ public class SequenceByte implements SequenceInterface {
      * @return 
      */
     public byte getBaseByte (int positionIndex) {
-        return this.seqByte[positionIndex];
+        return this.seqAscII[positionIndex];
     }
     
     @Override
     public String getSequence() {
-        return new String(this.seqByte);
+        return new String(this.seqAscII);
     }
 
     @Override
     public String getSequence(int startIndex, int endIndex) {
-        return new String(this.seqByte, startIndex, endIndex-startIndex);
+        return new String(this.seqAscII, startIndex, endIndex-startIndex);
     }
     
     @Override
@@ -127,7 +126,7 @@ public class SequenceByte implements SequenceInterface {
      */
     public SequenceByte getSequenceByte (int startIndex, int endIndex) {
         byte[] bs = new byte[endIndex-startIndex];
-        System.arraycopy(this.seqByte, startIndex, bs, 0, endIndex-startIndex);
+        System.arraycopy(this.seqAscII, startIndex, bs, 0, endIndex-startIndex);
         return new SequenceByte(bs);
     }
     
@@ -141,7 +140,7 @@ public class SequenceByte implements SequenceInterface {
         HashByteByteMap baseCompleByteMap = DNAUtils.getBaseCompleAscIIMap();
         byte[] reverseByte = new byte[endIndex - startIndex];
         for (int i = 0; i < reverseByte.length; i++) {
-            reverseByte[i] = baseCompleByteMap.get(seqByte[endIndex-i-1]);
+            reverseByte[i] = baseCompleByteMap.get(seqAscII[endIndex-i-1]);
         }
         return new String(reverseByte);
     }
@@ -149,7 +148,7 @@ public class SequenceByte implements SequenceInterface {
     @Override
     public boolean isThereN () {
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.seqByte[i] == 78) return true;
+            if (this.seqAscII[i] == 78) return true;
         }
         return false;
     }

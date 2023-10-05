@@ -56,7 +56,7 @@ public class Read extends SequenceByte {
      */
     public byte getMedianQuality (int phredScale) {
         if (sortedQualValue == null) {
-            System.arraycopy(qualValue, 0, sortedQualValue, 0, this.seqByte.length);
+            System.arraycopy(qualValue, 0, sortedQualValue, 0, this.seqAscII.length);
             Arrays.sort(sortedQualValue);
         }
         return sortedQualValue[sortedQualValue.length/2];

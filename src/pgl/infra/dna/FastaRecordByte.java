@@ -15,7 +15,7 @@ public class FastaRecordByte extends SequenceByte implements FastaRecordInterfac
     }
     
     public FastaRecordByte(String name, SequenceByte sb, int id) {
-        super.seqByte = sb.seqByte;
+        super.seqAscII = sb.seqAscII;
         this.name = name;
         this.id = id;
     }

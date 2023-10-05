@@ -13,15 +13,11 @@ import com.koloboke.collect.map.hash.HashByteByteMaps;
  * @author Fei Lu
  */
 public class DNAUtils {
-    /**The byte value of 4 DNA bases, A, C, G, T*/
-    private static final byte[] baseAscIIs = BaseEncoder.baseAscIIs;
     /**The byte value of 4 DNA bases and any base, A, C, G, N, T*/
     private static final byte[] baseAscIIWithN = {65, 67, 71, 78, 84};
     
     private static final byte[] compleBaseAscIIWithN = {84, 71, 67, 78, 65};
-    
-    private static final byte[] lowerBaseAscII = {97, 99, 103, 116};
-    
+
     /**
      * Return byte value hash map pointing to complementary bases
      * @return 
@@ -31,15 +27,15 @@ public class DNAUtils {
     }
     
     /**
-     * Return a byte value base array of A, C, G, T
+     * Return an AscII value array of A, C, G, T
      * @return 
      */
     public static byte[] getBaseAscIIArray() {
-        return baseAscIIs;
+        return BaseEncoder.baseAscIIs;
     }
     
     /**
-     * Return a byte value base array of A, C, G, N, T
+     * Return an AscII value base array of A, C, G, N, T
      * @return 
      */
     public static byte[] getBaseWithNAscIIArray() {
