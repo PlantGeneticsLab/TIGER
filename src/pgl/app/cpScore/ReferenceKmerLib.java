@@ -130,7 +130,7 @@ public class ReferenceKmerLib {
                     for (int u = 0; u < kmerSets.length; u++) {
                         total += (long)kmerSets[u].size();
                     }
-                    System.out.println("Chromosome: "+f.getName(k)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos) + ". Kmer set size: " + String.valueOf(total));
+                    System.out.println("Chromosome: "+f.getDescription(k)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos) + ". Kmer set size: " + String.valueOf(total));
                 }
             }
         }
@@ -177,7 +177,7 @@ public class ReferenceKmerLib {
                     for (int u = 0; u < kmerSets.length; u++) {
                         total += (long)kmerSets[u].size();
                     }
-                    System.out.println("Chromosome: "+f.getName(k)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos) + ". Kmer set size: " + String.valueOf(total));
+                    System.out.println("Chromosome: "+f.getDescription(k)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos) + ". Kmer set size: " + String.valueOf(total));
                 }
             }
         }

@@ -14,13 +14,13 @@ import pgl.infra.utils.IOFileFormat;
 import pgl.infra.utils.IOUtils;
 
 /**
- * Holding FastA format sequence, providing functions of sorting, searching and collecting statistics.
- * Bases are compressed to 3 bits, representing 'A', 'C', 'G', 'T', 'N'. Specially designed for large Fasta sequence.
+ * Holding Fasta format sequence, providing functions of sorting, searching and collecting statistics, and
+ * bases are compressed to 3 bits, representing "A", "C", "G", "T", "N". Specially designed for large Fasta sequences.
  * @author feilu
  */
 public class FastaBit extends FastaAbstract {
     /**
-     * Constructs a {@link pgl.infra.dna.FastaBit} from input file. The file should be either txt format or gz format.
+     * Constructs a {@link FastaBit} from input file, the file should be either txt format or txt.gz format.
      * @param infileS 
      */
     public FastaBit (String infileS) {
@@ -33,7 +33,7 @@ public class FastaBit extends FastaAbstract {
     }
     
     /**
-     * Constructs a {@link pgl.infra.dna.FastaBit} from input file.
+     * Constructs a {@link FastaBit} from input file.
      * @param infileS
      * @param format 
      */
@@ -42,20 +42,20 @@ public class FastaBit extends FastaAbstract {
     }
     
     /**
-     * Constructs a {@link pgl.infra.dna.FastaBit}
-     * @param names
+     * Constructs a {@link FastaBit}.
+     * @param descriptions
      * @param seqs
      * @param ids 
      */
-    public FastaBit (String[] names, String[] seqs, int[] ids) {
-        records = new FastaRecordBit[names.length];
+    public FastaBit (String[] descriptions, String[] seqs, int[] ids) {
+        records = new FastaRecordBit[descriptions.length];
         for (int i = 0; i < records.length; i++) {
-            records[i] = new FastaRecordBit(names[i], seqs[i], ids[i]);
+            records[i] = new FastaRecordBit(descriptions[i], seqs[i], ids[i]);
         }
     }
     
     /**
-     * Constructs a new {@link pgl.infra.dna.FastaBit} from a list of them
+     * Constructs a new {@link FastaBit} from an array of {@link FastaBit}.
      * By rebuilding the references
      * @param fArray 
      */
@@ -79,7 +79,7 @@ public class FastaBit extends FastaAbstract {
     }
 
     /**
-     * Construct an object from a FastaRecord
+     * Construct an object from a Fasta record.
      * @param f
      */
     public FastaBit (FastaRecordBit f) {
@@ -90,7 +90,7 @@ public class FastaBit extends FastaAbstract {
     }
 
     /**
-     * Construct an object from a group of FastaRecord
+     * Construct an object from an array of Fasta record
      * @param fs
      */
     public FastaBit (FastaRecordBit[] fs) {
@@ -117,7 +117,7 @@ public class FastaBit extends FastaAbstract {
             else {
                 throw new UnsupportedOperationException("Invalid input format for the Fasta file");
             }
-            String temp = null, name = null, seq = null;
+            String temp = null, description = null, seq = null;
             StringBuilder sb = new StringBuilder();
             FastaRecordBit fr;
             boolean first = true;
@@ -126,7 +126,7 @@ public class FastaBit extends FastaAbstract {
                 if (temp.startsWith(">")) {
                     if (first == false) {
                         seq = sb.toString();
-                        fr = new FastaRecordBit(name, seq, cnt);
+                        fr = new FastaRecordBit(description, seq, cnt);
                         fl.add(fr);
                         sb = new StringBuilder();
                         if (cnt%1000000 == 0) {
@@ -134,16 +134,16 @@ public class FastaBit extends FastaAbstract {
                         }
                         cnt++;
                     }
-                    name = temp.substring(1, temp.length());
+                    description = temp.substring(1, temp.length());
                     first = false;
                 }
                 else {
                     sb.append(temp);
                 }
             }
-            if (!name.equals("")) {
+            if (!description.equals("")) {
                 seq = sb.toString();
-                fr = new FastaRecordBit(name, seq, cnt);
+                fr = new FastaRecordBit(description, seq, cnt);
                 fl.add(fr);
             }
             records = fl.toArray(new FastaRecordBit[fl.size()]);
@@ -157,16 +157,11 @@ public class FastaBit extends FastaAbstract {
     }
     
     @Override
-    public int getIndexByName (String name) {
+    public int getIndexByDescription(String name) {
         if (this.sType != sortType.byName) {
-            this.sortByName();
+            this.sortByDescription();
         }
         return Arrays.binarySearch(records, new FastaRecordBit(name,"A",-1), new sortByName());
-    }
-    
-    @Override
-    public boolean isThereNonACGTNBase() {
-        return false;
     }
 
     /**
@@ -180,7 +175,7 @@ public class FastaBit extends FastaAbstract {
 
     public FastaRecordBit getFastaRecordBit (int index, int startPositionIndex, int endPositionIndex) {
         Sequence3Bit b3 = (Sequence3Bit)this.records[index].getSequenceInterface(startPositionIndex, endPositionIndex);
-        FastaRecordBit frb = new FastaRecordBit(this.getName(index), b3, this.records[index].getID());
+        FastaRecordBit frb = new FastaRecordBit(this.getDescription(index), b3, this.records[index].getID());
         return frb;
     }
 }

@@ -109,11 +109,11 @@ public class FastCall_old {
         System.out.println("Reading reference genome from "+ referenceFileS);
         genomeFa = new FastaBit(referenceFileS);
         System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-        genomeFa.sortByNameValue();
+        genomeFa.sortByDescriptionValue();
         chroms = new int[genomeFa.getSeqNumber()];
         chromLength = new int[genomeFa.getSeqNumber()];
         for (int i = 0; i < genomeFa.getSeqNumber(); i++) {
-            chroms[i] = Integer.valueOf(genomeFa.getName(i));
+            chroms[i] = Integer.valueOf(genomeFa.getDescription(i));
             chromLength[i] = genomeFa.getSeqLength(i);
         }
         String pileupDirS = new File(new File(vcfDirS).getParent(), "pileup").getAbsolutePath();

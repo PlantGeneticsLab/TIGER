@@ -7,29 +7,49 @@ package pgl.infra.dna;
 
 import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
-import java.util.Arrays;
+
 import java.util.BitSet;
 
 /**
  * Class holding DNA sequence, with 3 bits for each base. Bases are converted to upper case. Non-"ACGT" bases are automatically converted to "N".
  * <P>
+ * The base coding rules are: A(000), C(001), G(010), T(011), N(100).
+ * <p>
  * Well packed into memory, but lower speed performance than {@link pgl.infra.dna.SequenceByte}
- * This is designed to pack large sequence data set, e.g. wheat genome.
+ * This is designed to pack large sequence data set, e.g. the wheat genome.
  * @author feilu
  */
 public class Sequence3Bit implements SequenceInterface {
-    protected static final HashByteByteMap ascIIByteMap = buildAscIIByteMap();
-    protected static final HashByteByteMap byteAscIIMap = buildByteAscIIMap();
+    /**
+     *  A hashmap that converts ascII to base coding.
+     */
+    protected static final HashByteByteMap ascIIBaseCodingMap = buildAscIIByteMap();
+    /**
+     * A hashmap that converts base coding to ascII.
+     */
+    protected static final HashByteByteMap baseCodingAscIIMap = buildByteAscIIMap();
+    /**
+     * The DNA sequence.
+     */
     BitSet seqS = null;
+    /**
+     * The length of DNA sequence.
+     */
     int sequenceLength;
+    /**
+     * The storage size of a base in {@link BitSet}
+     */
     protected int wordSize = 3;
-    
+
+    /**
+     * Constructs an object.
+     */
     public Sequence3Bit () {
         
     }
     
     /**
-     * Constructs the object from DNA sequence {@link java.lang.String}
+     * Constructs the object from DNA sequence in {@link java.lang.String}.
      * @param seq 
      */
     public Sequence3Bit (String seq) {
@@ -37,7 +57,7 @@ public class Sequence3Bit implements SequenceInterface {
     }
 
     /**
-     * Construct the object from a BitSet, with 3bits for each base
+     * Construct the object from DNA sequence in {@link BitSet}, with 3 bits for each base.
      * @param seqS
      */
     public Sequence3Bit (BitSet seqS, int sequenceLength) {
@@ -46,21 +66,7 @@ public class Sequence3Bit implements SequenceInterface {
     }
 
     /**
-     * Constructs the object from DNA sequence {@link java.lang.String}
-     * @param seq
-     * @param wordSize 3 or 2
-     */
-    protected Sequence3Bit (String seq, int wordSize) {
-        if (wordSize > 3 || wordSize < 2) {
-            System.out.println("Word size should be either 3 or 2, program stops");
-            System.exit(1);
-        }
-        this.wordSize = wordSize;
-        this.initialize(seq);
-    }
-    
-    /**
-     * Initialize the object by setting bit set
+     * Initialize the object by setting bit set.
      * @param seq 
      */
     private void initialize (String seq) {
@@ -68,17 +74,17 @@ public class Sequence3Bit implements SequenceInterface {
         byte[] seqByte = seq.toUpperCase().getBytes();
         seqS = new BitSet(seq.length()*wordSize);
         for (int i = 0; i < seq.length(); i++) {
-            this.setCodedBase(i, seqByte[i]);
+            this.setBaseCoding(i, seqByte[i]);
         }
     }
     
     /**
-     * Set the base in bit set from a position index of DNA sequence
+     * Set the base in BitSet from a position index of DNA sequence
      * @param positionIndex index of DNA sequence
      * @param value AscII value of a base
      */
-    protected void setCodedBase (int positionIndex, byte value) {
-        byte v = ascIIByteMap.get(value);
+    protected void setBaseCoding(int positionIndex, byte value) {
+        byte v = ascIIBaseCodingMap.get(value);
         int startIndex = wordSize * positionIndex;
         for (int i = 0; i < wordSize; i++) {
             boolean b = (v & 1) == 1;
@@ -93,7 +99,7 @@ public class Sequence3Bit implements SequenceInterface {
      * @return 
      */
     private static HashByteByteMap buildAscIIByteMap () {
-        if (ascIIByteMap != null) return ascIIByteMap;
+        if (ascIIBaseCodingMap != null) return ascIIBaseCodingMap;
         int size = 128;
         byte[] key = new byte[size];
         byte[] value = new byte[size];
@@ -111,7 +117,7 @@ public class Sequence3Bit implements SequenceInterface {
     } 
     
     private static HashByteByteMap buildByteAscIIMap () {
-        if (byteAscIIMap != null) return byteAscIIMap;
+        if (baseCodingAscIIMap != null) return baseCodingAscIIMap;
         int size = 5;
         byte[] key = new byte[size];
         byte[] value = new byte[size];
@@ -183,7 +189,7 @@ public class Sequence3Bit implements SequenceInterface {
     }
     
     protected byte getBaseAscII (int positionIndex) {
-        return byteAscIIMap.get(getCodedBase(positionIndex));
+        return baseCodingAscIIMap.get(getBaseCoding(positionIndex));
     }
     
     /**
@@ -191,7 +197,7 @@ public class Sequence3Bit implements SequenceInterface {
      * @param positionIndex
      * @return 
      */
-    protected byte getCodedBase (int positionIndex) {
+    protected byte getBaseCoding(int positionIndex) {
         byte value = 0;
         int startIndex = (positionIndex+1) * wordSize - 1;
         for (int i = 0; i < wordSize; i++) {
@@ -212,9 +218,8 @@ public class Sequence3Bit implements SequenceInterface {
     protected void printBits () {
         StringBuilder s = new StringBuilder();
         for( int i = 0; i < seqS.length();  i++ ) {
-            s.append(seqS.get( i ) == true ? 1: 0 );
+            s.append(seqS.get(i) == true ? 1: 0 );
         }
-
         System.out.println( s );
     }
     
@@ -266,7 +271,7 @@ public class Sequence3Bit implements SequenceInterface {
 
     @Override
     public String getReverseComplementarySeq(int startIndex, int endIndex) {
-        HashByteByteMap baseCompleByteMap = DNAUtils.getBaseCompleAscIIMap();
+        HashByteByteMap baseCompleByteMap = SequenceUtils.getBaseCompleAscIIMap();
         byte[] reverseByte = new byte[endIndex - startIndex];
         for (int i = 0; i < reverseByte.length; i++) {
             reverseByte[i] = baseCompleByteMap.get(getBaseAscII(endIndex-i-1));
@@ -275,21 +280,9 @@ public class Sequence3Bit implements SequenceInterface {
     }
 
     @Override
-    public boolean isThereNonACGTNBase() {
-        byte[] baseByteWithN = DNAUtils.getBaseWithNAscIIArray();
-        for (int i = 0; i < this.getSequenceLength(); i++) {
-            int index = Arrays.binarySearch(baseByteWithN, this.getBaseAscII(i));
-            if (index < 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    @Override
     public boolean isThereN () {
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            if (this.getBaseAscII(i) == 78) return true;
+            if (this.getBaseCoding(i) == 4) return true;
         }
         return false;
     }

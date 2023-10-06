@@ -123,7 +123,7 @@ class ScanGenotype extends AppAbstract {
             System.out.println("Reading reference genome from "+ referenceFileS);
             this.genomeFa = new FastaBit(referenceFileS);
             System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-            this.chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
+            this.chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
                 this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;

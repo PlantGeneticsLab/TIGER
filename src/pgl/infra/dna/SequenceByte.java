@@ -21,20 +21,24 @@ public class SequenceByte implements SequenceInterface {
     byte[] seqAscII = null;
 
     /**
-     * Construct an object
+     * Construct an object.
      */
     public SequenceByte () {
         
     }
     
     /**
-     * Constructs a {@code SequenceByte} from {@code String}. The lower case bases are converted to upper case.
+     * Constructs an object from DNA sequence in {@link String}, the lower case bases are converted to upper case.
      * @param seq A string of DNA sequence
      */
     public SequenceByte (String seq) {
         seqAscII = seq.toUpperCase().getBytes();
     }
-    
+
+    /**
+     * Constructs an object from an array of AscII value of DNA sequence
+     * @param seqAscII
+     */
     public SequenceByte (byte[] seqAscII) {
         this.seqAscII = seqAscII;
     }
@@ -99,7 +103,7 @@ public class SequenceByte implements SequenceInterface {
      * @param positionIndex
      * @return 
      */
-    public byte getBaseByte (int positionIndex) {
+    public byte getBaseAscII(int positionIndex) {
         return this.seqAscII[positionIndex];
     }
     
@@ -137,7 +141,7 @@ public class SequenceByte implements SequenceInterface {
 
     @Override
     public String getReverseComplementarySeq(int startIndex, int endIndex) {
-        HashByteByteMap baseCompleByteMap = DNAUtils.getBaseCompleAscIIMap();
+        HashByteByteMap baseCompleByteMap = SequenceUtils.getBaseCompleAscIIMap();
         byte[] reverseByte = new byte[endIndex - startIndex];
         for (int i = 0; i < reverseByte.length; i++) {
             reverseByte[i] = baseCompleByteMap.get(seqAscII[endIndex-i-1]);
@@ -152,12 +156,15 @@ public class SequenceByte implements SequenceInterface {
         }
         return false;
     }
-    
-    @Override
+
+    /**
+     * Return if the sequence has non-“ACGTN” base, e.g ".".
+     * @return
+     */
     public boolean isThereNonACGTNBase () {
-        byte[] baseByteWithN = DNAUtils.getBaseWithNAscIIArray();
+        byte[] baseByteWithN = SequenceUtils.getBaseWithNAscIIArray();
         for (int i = 0; i < this.getSequenceLength(); i++) {
-            int index = Arrays.binarySearch(baseByteWithN, this.getBaseByte(i));
+            int index = Arrays.binarySearch(baseByteWithN, this.getBaseAscII(i));
             if (index < 0) {
                 System.out.println(this.getBase(i));
                 return true;

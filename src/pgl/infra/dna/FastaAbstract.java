@@ -15,8 +15,7 @@ import pgl.infra.utils.IOFileFormat;
 import pgl.infra.utils.IOUtils;
 
 /**
- * Providing functions of sorting, searching and collecting statistics
- * Representing full IUPAC codes. (https://www.bioinformatics.org/sms/iupac.html).
+ * Providing functions of sorting, searching and collecting statistics.
  * @author feilu
  */
 public abstract class FastaAbstract implements FastaInterface {
@@ -40,7 +39,7 @@ public abstract class FastaAbstract implements FastaInterface {
             }
             for (int i = 0; i < records.length; i++) {
                 if (!ifOut[i]) continue;
-                bw.write(">"+records[i].getName());
+                bw.write(">"+records[i].getDescription());
                 bw.newLine();
                 bw.write(PStringUtils.getMultiplelineString(60, records[i].getSequence()));
                 bw.newLine();
@@ -70,7 +69,7 @@ public abstract class FastaAbstract implements FastaInterface {
             else {
                 throw new UnsupportedOperationException("Invalid operation for output");
             }
-            bw.write(">"+records[index].getName());
+            bw.write(">"+records[index].getDescription());
             bw.newLine();
             bw.write(PStringUtils.getMultiplelineString(60, records[index].getSequence()));
             bw.newLine();
@@ -99,7 +98,7 @@ public abstract class FastaAbstract implements FastaInterface {
                 throw new UnsupportedOperationException("Invalid operation for output");
             }
             for (int i = 0; i < records.length; i++) {
-                bw.write(">"+records[i].getName());
+                bw.write(">"+records[i].getDescription());
                 bw.newLine();
                 bw.write(PStringUtils.getMultiplelineString(60, records[i].getSequence()));
                 bw.newLine();
@@ -116,7 +115,7 @@ public abstract class FastaAbstract implements FastaInterface {
     }
     
     /**
-     * Write fast file by chromosome, designed for large genome files
+     * Write fast file by chromosome, designed for large genome files.
      * @param outfileDirS
      * @param format
      * @param prefix
@@ -126,7 +125,7 @@ public abstract class FastaAbstract implements FastaInterface {
         List<FastaRecordInterface> rList = Arrays.asList(records);
         rList.parallelStream().forEach(r -> {
             try {
-                String outfileS = new File (outfileDirS, (prefix+r.getName()+postfix)).getAbsolutePath();
+                String outfileS = new File (outfileDirS, (prefix+r.getDescription()+postfix)).getAbsolutePath();
                 BufferedWriter bw = null;
                 if (format == IOFileFormat.Text) {
                     bw = IOUtils.getTextWriter(outfileS);
@@ -137,13 +136,13 @@ public abstract class FastaAbstract implements FastaInterface {
                 else {
                     throw new UnsupportedOperationException("Invalid operation for output");
                 }
-                bw.write(">"+r.getName());
+                bw.write(">"+r.getDescription());
                 bw.newLine();
                 bw.write(PStringUtils.getMultiplelineString(60, r.getSequence()));
                 bw.newLine();
                 bw.flush();
                 bw.close();
-                System.out.println(r.getName() +" sequence is written in " + outfileS);
+                System.out.println(r.getDescription() +" sequence is written in " + outfileS);
             }
             catch (Exception e) {
                 System.out.println("Error while writing "+ outfileDirS);
@@ -200,15 +199,15 @@ public abstract class FastaAbstract implements FastaInterface {
     }
     
     @Override
-    public String[] getNames () {
+    public String[] getDescriptions() {
         String[] names = new String[this.getSeqNumber()];
-        for (int i = 0; i < names.length; i++) names[i] = this.getName(i);
+        for (int i = 0; i < names.length; i++) names[i] = this.getDescription(i);
         return names;
     }
     
     @Override
-    public String getName (int index) {
-        return records[index].getName();
+    public String getDescription(int index) {
+        return records[index].getDescription();
     }
     
     @Override
@@ -227,19 +226,19 @@ public abstract class FastaAbstract implements FastaInterface {
     }
     
     @Override
-    public void setName (String newName, int index) {
-        records[index].setName(newName);
+    public void setDescription(String description, int index) {
+        records[index].setDescription(description);
     }
     
     @Override
-    public void sortByName () {
+    public void sortByDescription() {
         Arrays.parallelSort(records, new sortByName());
         this.sType = sortType.byName;
     }
     
 
     @Override
-    public void sortByNameValue () {
+    public void sortByDescriptionValue() {
         Arrays.parallelSort(records, new sortByName());
         this.sType = sortType.byNameValue;
     }
@@ -282,15 +281,15 @@ public abstract class FastaAbstract implements FastaInterface {
     protected class sortByName implements Comparator <FastaRecordInterface> {
         @Override
         public int compare (FastaRecordInterface o1, FastaRecordInterface o2) {
-            return o1.getName().compareTo(o2.getName());
+            return o1.getDescription().compareTo(o2.getDescription());
         }
     }
     
     protected class sortByNameValue implements Comparator <FastaRecordInterface> {
         @Override
         public int compare (FastaRecordInterface o1, FastaRecordInterface o2) {
-            int n1 = Integer.parseInt(o1.getName());
-            int n2 = Integer.parseInt(o2.getName());
+            int n1 = Integer.parseInt(o1.getDescription());
+            int n2 = Integer.parseInt(o2.getDescription());
             if (n1 < n2) return -1;
             else if (n1 > n2) return 1;
             return 0;

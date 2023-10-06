@@ -1,28 +1,46 @@
 package pgl.infra.dna;
 
 /**
- * FastaRecord with byte storage
+ * Fasta record with byte storage.
  * @author feilu
  */
 public class FastaRecordByte extends SequenceByte implements FastaRecordInterface {
-    String name;
+    /**
+     * Name of the Fasta record.
+     */
+    String description;
+    /**
+     * ID of the Fasta record.
+     */
     int id;
 
-    public FastaRecordByte(String name, String seq, int id) {
+    /**
+     * Constructs an object.
+     * @param description
+     * @param seq
+     * @param id
+     */
+    public FastaRecordByte(String description, String seq, int id) {
         super(seq);
-        this.name = name;
+        this.description = description;
         this.id = id;
     }
-    
-    public FastaRecordByte(String name, SequenceByte sb, int id) {
+
+    /**
+     * Constructs an object with {@link SequenceByte}.
+     * @param description
+     * @param sb
+     * @param id
+     */
+    public FastaRecordByte(String description, SequenceByte sb, int id) {
         super.seqAscII = sb.seqAscII;
-        this.name = name;
+        this.description = description;
         this.id = id;
     }
     
     @Override
-    public String getName() {
-        return name;
+    public String getDescription() {
+        return description;
     }
 
     @Override
@@ -31,8 +49,8 @@ public class FastaRecordByte extends SequenceByte implements FastaRecordInterfac
     }
 
     @Override
-    public void setName(String newName) {
-        name = newName;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

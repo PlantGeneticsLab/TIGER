@@ -9,10 +9,10 @@ import com.koloboke.collect.map.hash.HashByteByteMap;
 import com.koloboke.collect.map.hash.HashByteByteMaps;
 
 /**
- * Utilities related to DNA sequence
+ * Utilities related to DNA sequence.
  * @author Fei Lu
  */
-public class DNAUtils {
+public class SequenceUtils {
     /**The byte value of 4 DNA bases and any base, A, C, G, N, T*/
     private static final byte[] baseAscIIWithN = {65, 67, 71, 78, 84};
     

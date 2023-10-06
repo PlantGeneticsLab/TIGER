@@ -6,30 +6,30 @@
 package pgl.infra.dna;
 
 /**
- * Interface of FastaRecord
+ * Interface of fasta record.
  * @author feilu
  */
 public interface FastaRecordInterface extends SequenceInterface {
     /**
-     * Return the name of the record
+     * Return the description of the record.
      * @return 
      */
-    public String getName ();
+    public String getDescription();
     
     /**
-     * Return the ID of the record
+     * Return the ID of the record.
      * @return 
      */
     public int getID ();
     
     /**
-     * Set the name of the record
-     * @param newName 
+     * Set the name of the record.
+     * @param description
      */
-    public void setName (String newName);
+    public void setDescription(String description);
     
     /**
-     * Set the ID of the record
+     * Set the ID of the record.
      * @param id 
      */
     public void setID (int id);

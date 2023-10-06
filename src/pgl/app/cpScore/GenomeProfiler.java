@@ -51,7 +51,7 @@ public class GenomeProfiler {
         FastaByte f = new FastaByte(referenceGenomeFileS);
         HashMap<Integer, String> chrSeqMap = new HashMap();
         for (int i = 0; i < f.getSeqNumber(); i++) {
-            chrSeqMap.put(Integer.valueOf(f.getName(i)), f.getSeq(i));
+            chrSeqMap.put(Integer.valueOf(f.getDescription(i)), f.getSeq(i));
         }
         Set<Map.Entry<Integer, String>> chrSeqset = chrSeqMap.entrySet();
         System.out.println("Writing CpScore by chromosomes...");
@@ -192,7 +192,7 @@ public class GenomeProfiler {
                     if (intMaps[barcodeIndex].containsKey(rKmerV)) intMaps[barcodeIndex].addValue(rKmerV, 1);          
                     int pos = j+1;
                     if (pos%50000000 == 0) {
-                        System.out.println(inputGenomeFileS + ". Chromosome: "+f.getName(i)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos));
+                        System.out.println(inputGenomeFileS + ". Chromosome: "+f.getDescription(i)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos));
                     }
                 }
             }
@@ -230,7 +230,7 @@ public class GenomeProfiler {
                     if (longMaps[barcodeIndex].containsKey(rKmerV)) longMaps[barcodeIndex].addValue(rKmerV, 1);
                     int pos = j+1;
                     if (pos%50000000 == 0) {
-                        System.out.println(inputGenomeFileS + ". Chromosome: "+f.getName(i)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos));
+                        System.out.println(inputGenomeFileS + ". Chromosome: "+f.getDescription(i)+". Length = "+String.valueOf(bArray.length)+"bp. Position: "+String.valueOf(pos));
                     }
                 }
             }

@@ -1,29 +1,47 @@
 package pgl.infra.dna;
 
 /**
- * FastaRecord with 3 bits storage
+ * FastaRecord with 3 bits storage.
  * @author feilu
  */
 public class FastaRecordBit extends Sequence3Bit implements FastaRecordInterface {
-    String name;
+    /**
+     * The description of Fasta record
+     */
+    String description;
+    /**
+     * The ID of Fasta record
+     */
     int id;
 
-    public FastaRecordBit(String name, String seq, int id) {
+    /**
+     * Constructs an object with DNA sequence {@link String}.
+     * @param description
+     * @param seq
+     * @param id
+     */
+    public FastaRecordBit(String description, String seq, int id) {
         super(seq);
-        this.name = name;
+        this.description = description;
         this.id = id;
     }
-    
-    public FastaRecordBit (String name, Sequence3Bit s3, int id) {
+
+    /**
+     * Constructs an object with {@link Sequence3Bit}.
+     * @param description
+     * @param s3
+     * @param id
+     */
+    public FastaRecordBit (String description, Sequence3Bit s3, int id) {
         super.sequenceLength = s3.sequenceLength;
         super.seqS = s3.seqS;
-        this.name = name;
+        this.description = description;
         this.id = id;
     }
     
     @Override
-    public String getName() {
-        return name;
+    public String getDescription() {
+        return description;
     }
 
     @Override
@@ -32,8 +50,8 @@ public class FastaRecordBit extends Sequence3Bit implements FastaRecordInterface
     }
 
     @Override
-    public void setName(String newName) {
-        name = newName;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

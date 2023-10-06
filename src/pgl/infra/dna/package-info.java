@@ -1,5 +1,5 @@
 /**
- * Data structures representing a stretch of DNA sequence
- * <p></p>
+ * Data structures representing DNA sequences.
+ * <p>
  */
 package pgl.infra.dna;

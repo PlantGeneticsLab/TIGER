@@ -14,14 +14,14 @@ import pgl.infra.utils.IOFileFormat;
 import pgl.infra.utils.IOUtils;
 
 /**
- * Holding FastA format sequence, providing functions of sorting, searching and collecting statistics
- * Representing full IUPAC codes. (https://www.bioinformatics.org/sms/iupac.html).
- * Higher speed, more memory cost than {@link pgl.infra.dna.FastaBit}.
+ * Holding Fasta format sequence, providing functions of sorting, searching and collecting statistics,
+ * representing full IUPAC codes. (https://www.bioinformatics.org/sms/iupac.html).
+ * Higher speed, more memory cost than {@link FastaBit}.
  * @author feilu
  */
 public class FastaByte extends FastaAbstract {
     /**
-     * Constructs a {@link pgl.infra.dna.FastaByte} from input file. The file should be either txt format or gz format.
+     * Constructs a {@link FastaByte} from input file, the file should be either txt format or txt.gz format.
      * @param infileS 
      */
     public FastaByte (String infileS) {
@@ -34,7 +34,7 @@ public class FastaByte extends FastaAbstract {
     }
     
     /**
-     * Constructs a {@link pgl.infra.dna.FastaByte} from input file.
+     * Constructs a {@link FastaByte} from input file, the file should be either txt format or txt.gz format.
      * @param infileS
      * @param format 
      */
@@ -43,20 +43,20 @@ public class FastaByte extends FastaAbstract {
     }
     
     /**
-     * Constructs a {@link pgl.infra.dna.FastaByte}
-     * @param names
+     * Constructs a {@link FastaByte}.
+     * @param descriptions
      * @param seqs
      * @param ids 
      */
-    public FastaByte (String[] names, String[] seqs, int[] ids) {
-        records = new FastaRecordByte[names.length];
+    public FastaByte (String[] descriptions, String[] seqs, int[] ids) {
+        records = new FastaRecordByte[descriptions.length];
         for (int i = 0; i < records.length; i++) {
-            records[i] = new FastaRecordByte(names[i], seqs[i], ids[i]);
+            records[i] = new FastaRecordByte(descriptions[i], seqs[i], ids[i]);
         }
     }
     
     /**
-     * Constructs a new {@link pgl.infra.dna.FastaByte} from a list of them
+     * Constructs a new {@link FastaByte} from a list of {@link FastaByte}.
      * By rebuilding the references
      * @param fArray 
      */
@@ -80,7 +80,7 @@ public class FastaByte extends FastaAbstract {
     }
 
     /**
-     * Construct an object from a FastaRecord
+     * Construct an object from a {@link FastaByte}.
      * @param f
      */
     public FastaByte (FastaRecordByte f) {
@@ -91,7 +91,7 @@ public class FastaByte extends FastaAbstract {
     }
 
     /**
-     * Construct an object from a group of FastaRecord
+     * Construct an object from an array of {@link FastaByte}
      * @param fs
      */
     public FastaByte (FastaRecordByte[] fs) {
@@ -118,7 +118,7 @@ public class FastaByte extends FastaAbstract {
             else {
                 throw new UnsupportedOperationException("Invalid input format for the Fasta file");
             }
-            String temp = null, name = null, seq = null;
+            String temp = null, description = null, seq = null;
             StringBuilder sb = new StringBuilder();
             FastaRecordByte fr;
             boolean first = true;
@@ -127,7 +127,7 @@ public class FastaByte extends FastaAbstract {
                 if (temp.startsWith(">")) {
                     if (first == false) {
                         seq = sb.toString();
-                        fr = new FastaRecordByte(name, seq, cnt);
+                        fr = new FastaRecordByte(description, seq, cnt);
                         fl.add(fr);
                         sb = new StringBuilder();
                         if (cnt%1000000 == 0) {
@@ -135,16 +135,16 @@ public class FastaByte extends FastaAbstract {
                         }
                         cnt++;
                     }
-                    name = temp.substring(1, temp.length());
+                    description = temp.substring(1, temp.length());
                     first = false;
                 }
                 else {
                     sb.append(temp);
                 }
             }
-            if (!name.equals("")) {
+            if (!description.equals("")) {
                 seq = sb.toString();
-                fr = new FastaRecordByte(name, seq, cnt);
+                fr = new FastaRecordByte(description, seq, cnt);
                 fl.add(fr);
             }
             records = fl.toArray(new FastaRecordByte[fl.size()]);
@@ -156,21 +156,23 @@ public class FastaByte extends FastaAbstract {
             System.exit(1);
         }
     }
-    
-    
+
     @Override
-    public int getIndexByName (String name) {
+    public int getIndexByDescription(String name) {
         if (this.sType != sortType.byName) {
-            this.sortByName();
+            this.sortByDescription();
         }
         return Arrays.binarySearch(records, new FastaRecordByte(name,"A",-1), new sortByName());
     }
-     
-    @Override
+
+    /**
+     * Return if the fasta has non-"ACGTN" base
+     * @return
+     */
     public boolean isThereNonACGTNBase () {
         boolean value;
         for (int i = 0; i < records.length; i++) {
-             value = records[i].isThereNonACGTNBase();
+             value = ((FastaRecordByte)records[i]).isThereNonACGTNBase();
              if (value) return true;
         }
         return false;
@@ -187,7 +189,7 @@ public class FastaByte extends FastaAbstract {
 
     public FastaRecordByte getFastaRecordByte (int index, int startPositionIndex, int endPositionIndex) {
         SequenceByte sb = (SequenceByte)this.records[index].getSequenceInterface(startPositionIndex, endPositionIndex);
-        FastaRecordByte frb = new FastaRecordByte(this.getName(index), sb, this.records[index].getID());
+        FastaRecordByte frb = new FastaRecordByte(this.getDescription(index), sb, this.records[index].getID());
         return frb;
     }
 }

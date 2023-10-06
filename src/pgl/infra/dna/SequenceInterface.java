@@ -6,57 +6,57 @@
 package pgl.infra.dna;
 
 /**
- * The interface holds basic methods for DNA sequence
+ * The interface holds basic methods for DNA sequence.
  * @author Fei Lu
  */
 public interface SequenceInterface {
 
     /**
-     * Return length of sequence
+     * Return the length of sequence.
      * @return 
      */
     public int getSequenceLength ();
     
     
     /**
-     * Return the proportion of base A
+     * Return the proportion of base A.
      * @return 
      */
     public double getProportionA ();
     
     /**
-     * Return the proportion of base T
+     * Return the proportion of base T.
      * @return 
      */
     public double getProportionT ();
     
     /**
-     * Return the proportion of base G
+     * Return the proportion of base G.
      * @return 
      */
     public double getProportionG ();
     
     /**
-     * Return the proportion of base C
+     * Return the proportion of base C.
      * @return 
      */
     public double getProportionC ();
     
     /**
-     * Return the proportion of base G and C
+     * Return the proportion of base G and C.
      * @return 
      */
     public double getGCContent ();
     
     /**
-     * Return the base of a certain position
+     * Return the base of a given position
      * @param positionIndex is 0-based position
      * @return 
      */
     public char getBase (int positionIndex);
     
     /**
-     * Return the DNA sequence
+     * Return the entire DNA sequence.
      * @return 
      */
     public String getSequence();
@@ -90,15 +90,9 @@ public interface SequenceInterface {
      * @return 
      */
     public String getReverseComplementarySeq (int startIndex, int endIndex);
-    
+
     /**
-     * Return if the sequence has non A, C, G, T, N base, e.g '.'
-     * @return 
-     */
-    public boolean isThereNonACGTNBase ();
-    
-    /**
-     * Return if the sequence has 'N' base
+     * Return if the sequence has "N" base.
      * @return 
      */
     public boolean isThereN ();

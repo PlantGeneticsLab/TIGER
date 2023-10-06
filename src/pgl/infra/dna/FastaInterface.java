@@ -8,13 +8,13 @@ package pgl.infra.dna;
 import pgl.infra.utils.IOFileFormat;
 
 /**
- *
+ * Interface that provides operations on Fasta DNA sequences.
  * @author feilu
  */
 public interface FastaInterface {
     
     /**
-     * Read fasta file from either txt or txt.gz file
+     * Read Fasta file from either txt or txt.gz file.
      * @param infileS
      * @param format 
      */
@@ -22,7 +22,7 @@ public interface FastaInterface {
         
     
     /**
-     * Write fasta file from selected sequences 
+     * Write Fasta file from selected sequences.
      * @param outfileS
      * @param ifOut 
      * @param format 
@@ -30,7 +30,7 @@ public interface FastaInterface {
     public void writeFasta (String outfileS, boolean[] ifOut, IOFileFormat format); 
     
     /**
-     * Write fasta file from a specified sequence
+     * Write Fasta file from a specified sequence
      * @param outfileS
      * @param index 
      * @param format 
@@ -38,73 +38,73 @@ public interface FastaInterface {
     public void writeFasta (String outfileS, int index, IOFileFormat format);
     
     /**
-     * Write fasta file
+     * Write Fasta file.
      * @param outfileS 
      * @param format 
      */
     public void writeFasta (String outfileS, IOFileFormat format);
     
     /**
-     * Return N50 statistic
+     * Return N50 statistic.
      * @return 
      */
     public int getN50 ();
     
     /**
-     * Return L50 statistic
+     * Return L50 statistic.
      * @return 
      */
     public int getL50 ();
     
     /**
-     * Return total sequence length in bp
+     * Return total sequence length in bp.
      * @return 
      */
     public long getTotalSeqLength ();
     
     /**
-     * Return number of sequences
+     * Return number of sequences.
      * @return 
      */
     public int getSeqNumber ();
     
     /**
-     * Return index from sequence name
-     * The Fasta will be sorted by name first if it is not
+     * Return index from sequence name,
+     * the sequences will be sorted by description first if it is not.
      * @param name
      * @return 
      */
-    public int getIndexByName (String name);
+    public int getIndexByDescription(String name);
     
     /**
-     * Return sequence length in bp
+     * Return sequence length in bp.
      * @param index
      * @return 
      */
     public int getSeqLength (int index);
     
     /**
-     * Return all of the sequence names
+     * Return all of the sequence descriptions.
      * @return 
      */
-    public String[] getNames () ;
+    public String[] getDescriptions () ;
     
     /**
-     * Return sequence name
+     * Return sequence description.
      * @param index
      * @return 
      */
-    public String getName (int index) ;
+    public String getDescription (int index) ;
     
     /**
-     * Return sequence
+     * Return sequence.
      * @param index
      * @return 
      */
     public String getSeq (int index) ;
     
     /**
-     * Return a stretch of sequence
+     * Return a stretch of sequence.
      * @param index
      * @param startIndex inclusive
      * @param endIndex exclusive
@@ -120,24 +120,24 @@ public interface FastaInterface {
     public FastaRecordInterface getFastaRecord (int index);
     
     /**
-     * Set sequence name
-     * @param newName
+     * Set sequence description.
+     * @param description
      * @param index 
      */
-    public void setName (String newName, int index) ;
+    public void setDescription(String description, int index) ;
     
     /**
-     * Sort the sequences of Fasta by name
+     * Sort the sequences of Fasta by description.
      */
-    public void sortByName () ;
+    public void sortByDescription () ;
     
     /**
-     * Sort the sequences of Fasta by name as value, e.g. when the names are numbers, 1, 2, 3...
+     * Sort the sequences of Fasta by description as value, e.g. when the names are numbers, 1, 2, 3...
      */
-    public void sortByNameValue ();
+    public void sortByDescriptionValue ();
     
     /**
-     * Sort the sequences of Fasta by ID
+     * Sort the sequences of Fasta by ID.
      */
     public void sortByID () ;
     
@@ -156,11 +156,5 @@ public interface FastaInterface {
      * @return 
      */
     public boolean isThereN () ;
-    
-    /**
-     * Return if the fasta has non A, C, G, T, N base
-     * @return 
-     */
-    public boolean isThereNonACGTNBase ();
-    
+
 }

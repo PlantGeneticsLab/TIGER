@@ -9,7 +9,6 @@ import pgl.PGLAPPEntrance;
 import pgl.PGLConstraints;
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.FastaBit;
-import pgl.infra.dna.allele.Allele;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
 import java.io.BufferedReader;
@@ -151,7 +150,7 @@ class DiscoverVariation extends AppAbstract {
             System.out.println("Reading reference genome from "+ referenceFileS);
             FastaBit genomeFa = new FastaBit(referenceFileS);
             System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
-            int chromIndex = genomeFa.getIndexByName(String.valueOf(this.chrom));
+            int chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
                 this.regionEnd = genomeFa.getSeqLength(chromIndex)+1;
