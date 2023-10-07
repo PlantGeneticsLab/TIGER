@@ -232,14 +232,14 @@ public abstract class FastaAbstract implements FastaInterface {
     
     @Override
     public void sortByDescription() {
-        Arrays.parallelSort(records, new sortByName());
+        Arrays.parallelSort(records, new sortByDescription());
         this.sType = sortType.byName;
     }
     
 
     @Override
     public void sortByDescriptionValue() {
-        Arrays.parallelSort(records, new sortByName());
+        Arrays.parallelSort(records, new sortByDescriptionValue());
         this.sType = sortType.byNameValue;
     }
     
@@ -278,14 +278,14 @@ public abstract class FastaAbstract implements FastaInterface {
         }
     }
     
-    protected class sortByName implements Comparator <FastaRecordInterface> {
+    protected class sortByDescription implements Comparator <FastaRecordInterface> {
         @Override
         public int compare (FastaRecordInterface o1, FastaRecordInterface o2) {
             return o1.getDescription().compareTo(o2.getDescription());
         }
     }
     
-    protected class sortByNameValue implements Comparator <FastaRecordInterface> {
+    protected class sortByDescriptionValue implements Comparator <FastaRecordInterface> {
         @Override
         public int compare (FastaRecordInterface o1, FastaRecordInterface o2) {
             int n1 = Integer.parseInt(o1.getDescription());

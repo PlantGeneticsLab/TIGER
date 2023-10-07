@@ -1,7 +1,7 @@
 package pgl.infra.dna;
 
 /**
- * FastaRecord with 3 bits storage.
+ * Fasta record with 3 bits storage.
  * @author feilu
  */
 public class FastaRecordBit extends Sequence3Bit implements FastaRecordInterface {

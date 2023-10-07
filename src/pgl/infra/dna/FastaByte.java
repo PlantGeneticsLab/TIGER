@@ -162,7 +162,7 @@ public class FastaByte extends FastaAbstract {
         if (this.sType != sortType.byName) {
             this.sortByDescription();
         }
-        return Arrays.binarySearch(records, new FastaRecordByte(name,"A",-1), new sortByName());
+        return Arrays.binarySearch(records, new FastaRecordByte(name,"A",-1), new sortByDescription());
     }
 
     /**
