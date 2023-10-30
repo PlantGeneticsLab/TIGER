@@ -29,6 +29,8 @@ class DiscoverVariation extends AppAbstract {
     String samtoolsPath = null;
     //Individual genotype output directory
     String outputDirS = null;
+    //The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled.
+    String baqMode = "-B ";
     //Minimum mapping quality (MQ) for an alignment to be used for variation calling.
     int mappingQThresh = 30;
     //Minimum base quality (BQ) for a base to be used for variation calling.
@@ -75,25 +77,26 @@ class DiscoverVariation extends AppAbstract {
                 "for each chromosome because loading reference genome would be much faster.");
         options.addOption("b", true, "The taxaBamMap file contains information of taxon and its corresponding bam files. " +
                 "The bam file should have .bai file in the same folder.");
-        options.addOption("c", true, "Minimum mapping quality (MQ) for an alignment to be used for variation calling. It is 30 by default.");
-        options.addOption("d", true, "Minimum base quality (BQ) for a base to be used for variation calling. It is 20 by default.");
-        options.addOption("e", true, "Minimum read depth count (MDC) for variation calling, meaning that sites with depth lower than " +
+        options.addOption("c", true, "The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled. It is 0 by default.");
+        options.addOption("d", true, "Minimum mapping quality (MQ) for an alignment to be used for variation calling. It is 30 by default.");
+        options.addOption("e", true, "Minimum base quality (BQ) for a base to be used for variation calling. It is 20 by default.");
+        options.addOption("f", true, "Minimum read depth count (MDC) for variation calling, meaning that sites with depth lower than " +
                 "the minimum will not be taken into account for variation discovery. It is 2 by default.");
-        options.addOption("f", true, "Minimum read depth ratio (MiDR) for variation calling, meaning that sites with depth lower than the " +
+        options.addOption("g", true, "Minimum read depth ratio (MiDR) for variation calling, meaning that sites with depth lower than the " +
             "MiDR of the individual sequencing coverage will not be considered for variation discovery. It is 0.2 by default.");
-        options.addOption("g", true, "Maximum read depth ratio (MaDR) for variation calling, meaning that sites with depth higher than " +
+        options.addOption("h", true, "Maximum read depth ratio (MaDR) for variation calling, meaning that sites with depth higher than " +
             "the MaDR of the individual sequencing coverage will not be considered for variation discovery. It is 3 by default.");
-        options.addOption("h", true, "Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is " +
+        options.addOption("i", true, "Homozygous ratio (HoR) for variation calling, meaning that the depth of alternative allele is " +
             "greater than HoR are considered to homozygous. It is 0.8 by default.");
-        options.addOption("i", true, "Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is " +
+        options.addOption("j", true, "Heterozygous ratio (HeR) for variation calling, meaning that the depth of alternative allele is " +
             "greater than HeR and less than (1-HeR) are considered to be hets. It is 0.35 by default.");
-        options.addOption("j", true, "Third allele depth ratio (TDR) for variation calling. If the depth of the third allele is greater " +
+        options.addOption("k", true, "Third allele depth ratio (TDR) for variation calling. If the depth of the third allele is greater " +
             "than TDR by the individual coverage, the site will be ignored. Otherwise, the third allele will be considered as sequencing error. It is 0.2 by default.");
-        options.addOption("k", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
+        options.addOption("l", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
             "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
-        options.addOption("l", true, "Number of threads (taxa number to be processed at the same time). It is 32 by default.");
-        options.addOption("m", true, "Individual genotype output directory.");
-        options.addOption("n", true, "The path of samtools.");
+        options.addOption("m", true, "Number of threads (taxa number to be processed at the same time). It is 32 by default.");
+        options.addOption("n", true, "Individual genotype output directory.");
+        options.addOption("o", true, "The path of samtools.");
     }
 
     @Override
@@ -106,45 +109,58 @@ class DiscoverVariation extends AppAbstract {
             this.taxaBamMapFileS = line.getOptionValue("b");
             inOpt = line.getOptionValue("c");
             if (inOpt != null) {
-                this.mappingQThresh = Integer.parseInt(inOpt);
+                if (inOpt.equals("1")) {
+                    this.baqMode ="";
+                }
+                else if (inOpt.equals("0")) {
+                    this.baqMode = "-B ";
+                }
+                else {
+                    System.out.println("Warning: Incorrect input for -c option. The BAQ computation is disabled by default");
+                }
                 inOpt = null;
             }
             inOpt = line.getOptionValue("d");
             if (inOpt != null) {
-                this.baseQThresh = Integer.parseInt(inOpt);
+                this.mappingQThresh = Integer.parseInt(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("e");
             if (inOpt != null) {
-                this.mdcThresh = Integer.parseInt(inOpt);
+                this.baseQThresh = Integer.parseInt(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("f");
             if (inOpt != null) {
-                this.mindrThresh = Double.parseDouble(inOpt);
+                this.mdcThresh = Integer.parseInt(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("g");
             if (inOpt != null) {
-                this.maxdrTrresh = Double.parseDouble(inOpt);
+                this.mindrThresh = Double.parseDouble(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("h");
             if (inOpt != null) {
-                this.horThresh = Double.parseDouble(inOpt);
+                this.maxdrTrresh = Double.parseDouble(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("i");
             if (inOpt != null) {
-                this.herThresh = Double.parseDouble(inOpt);
+                this.horThresh = Double.parseDouble(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("j");
             if (inOpt != null) {
+                this.herThresh = Double.parseDouble(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("k");
+            if (inOpt != null) {
                 this.tdrTresh = Double.parseDouble(inOpt);
                 inOpt = null;
             }
-            String[] tem = line.getOptionValue("k").split(":");
+            String[] tem = line.getOptionValue("l").split(":");
             this.chrom = Integer.parseInt(tem[0]);
             long start = System.nanoTime();
             System.out.println("Reading reference genome from "+ referenceFileS);
@@ -160,13 +176,13 @@ class DiscoverVariation extends AppAbstract {
                 this.regionStart = Integer.parseInt(tem[0]);
                 this.regionEnd = Integer.parseInt(tem[1])+1;
             }
-            inOpt = line.getOptionValue("l");
+            inOpt = line.getOptionValue("m");
             if (inOpt != null) {
                 this.threadsNum = Integer.parseInt(inOpt);
                 inOpt = null;
             }
-            this.outputDirS = line.getOptionValue("m");
-            this.samtoolsPath = line.getOptionValue("n");
+            this.outputDirS = line.getOptionValue("n");
+            this.samtoolsPath = line.getOptionValue("o");
             this.parseTaxaBamMap(this.taxaBamMapFileS);
         }
         catch(Exception e) {
@@ -203,7 +219,7 @@ class DiscoverVariation extends AppAbstract {
             for (int i = 0; i < taxaNames.length; i++) {
                 String[] bamFiles = this.taxaBamPathMap.get(taxaNames[i]);
                 sb.setLength(0);
-                sb.append(this.samtoolsPath).append(" mpileup -q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
+                sb.append(this.samtoolsPath).append(" mpileup --no-output-ends ").append(this.baqMode).append("-q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
                 for (int j = 0; j < bamFiles.length; j++) {
                     sb.append(" ").append(bamFiles[j]);
                 }
@@ -286,7 +302,7 @@ class DiscoverVariation extends AppAbstract {
             double siteDepthRatio = (double)currentDepth/this.taxonCoverage;
             if (siteDepthRatio < mindrThresh) return false;
             if (siteDepthRatio > maxdrTrresh) return false;
-            FastCall2.removeFirstPositionSign(baseSb);
+//            FastCall2.removeFirstPositionSign(baseSb);
             String baseS = baseSb.toString().toUpperCase();
             byte[] baseB = baseS.getBytes();
             this.initialize2();

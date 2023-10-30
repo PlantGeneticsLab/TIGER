@@ -36,6 +36,8 @@ class ScanGenotype extends AppAbstract {
     int regionStart = Integer.MIN_VALUE;
     //Ending position the specified regionfor variation calling, exclusive
     int regionEnd = Integer.MIN_VALUE;
+    //The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled.
+    String baqMode = "-B ";
     //Minimum mapping quality (MQ) for an alignment to be used for genotyping.
     int mappingQThresh = 30;
     //Minimum base quality (BQ) for a base to be used for genotyping.
@@ -99,13 +101,14 @@ class ScanGenotype extends AppAbstract {
         options.addOption("c", true, "The genetic variation library file.");
         options.addOption("d", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
             "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
-        options.addOption("e", true, "Minimum mapping quality (MQ) for an alignment to be used for genotyping. It is 30 by default.");
-        options.addOption("f", true, "Minimum base quality (BQ) for a base to be used for genotyping. It is 20 by default.");
-        options.addOption("g", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
+        options.addOption("e", true, "The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled. It is 0 by default.");
+        options.addOption("f", true, "Minimum mapping quality (MQ) for an alignment to be used for genotyping. It is 30 by default.");
+        options.addOption("g", true, "Minimum base quality (BQ) for a base to be used for genotyping. It is 20 by default.");
+        options.addOption("h", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
             "likely to be genotyped as homozygote when the combined error rate is high.");
-        options.addOption("h", true, "The path of samtools.");
-        options.addOption("i", true, "Number of threads. It is 32 by default.");
-        options.addOption("j", true, "The directory of VCF output.");
+        options.addOption("i", true, "The path of samtools.");
+        options.addOption("j", true, "Number of threads. It is 32 by default.");
+        options.addOption("k", true, "The directory of VCF output.");
     }
 
     @Override
@@ -135,26 +138,39 @@ class ScanGenotype extends AppAbstract {
             }
             inOpt = line.getOptionValue("e");
             if (inOpt != null) {
-                this.mappingQThresh = Integer.parseInt(inOpt);
+                if (inOpt.equals("1")) {
+                    this.baqMode ="";
+                }
+                else if (inOpt.equals("0")) {
+                    this.baqMode = "-B ";
+                }
+                else {
+                    System.out.println("Warning: Incorrect input for -c option. The BAQ computation is disabled by default");
+                }
                 inOpt = null;
             }
             inOpt = line.getOptionValue("f");
             if (inOpt != null) {
-                this.baseQThresh = Integer.parseInt(inOpt);
+                this.mappingQThresh = Integer.parseInt(inOpt);
                 inOpt = null;
             }
             inOpt = line.getOptionValue("g");
             if (inOpt != null) {
+                this.baseQThresh = Integer.parseInt(inOpt);
+                inOpt = null;
+            }
+            inOpt = line.getOptionValue("h");
+            if (inOpt != null) {
                 this.combinedErrorRate = Double.parseDouble(inOpt);
                 inOpt = null;
             }
-            this.samtoolsPath = line.getOptionValue("h");
-            inOpt = line.getOptionValue("i");
+            this.samtoolsPath = line.getOptionValue("i");
+            inOpt = line.getOptionValue("j");
             if (inOpt != null) {
                 this.threadsNum = Integer.parseInt(inOpt);
                 inOpt = null;
             }
-            this.outputDirS = line.getOptionValue("j");
+            this.outputDirS = line.getOptionValue("k");
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -319,7 +335,7 @@ class ScanGenotype extends AppAbstract {
         for (int i = 0; i < taxaList.size(); i++) {
             List<String> bamPaths = taxaBamsMap.get(taxaList.get(i));
             StringBuilder sb = new StringBuilder(samtoolsPath);
-            sb.append(" mpileup -q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
+            sb.append(" mpileup --no-output-ends ").append(this.baqMode).append("-q ").append(this.mappingQThresh).append(" -Q ").append(this.baseQThresh).append(" -f ").append(this.referenceFileS);
             for (int j = 0; j < bamPaths.size(); j++) {
                 sb.append(" ").append(bamPaths.get(j));
             }
@@ -492,7 +508,7 @@ class ScanGenotype extends AppAbstract {
                                 this.writeMissing();
                             }
                             else {
-                                FastCall2.removeFirstPositionSign(baseS);
+//                                FastCall2.removeFirstPositionSign(baseS);
                                 int[] alleleCounts = getAlleleCounts (altAlleles, baseS.toString().toUpperCase(), siteDepth, indelSb);
                                 this.writeAlleleCounts(alleleCounts);
                             }
