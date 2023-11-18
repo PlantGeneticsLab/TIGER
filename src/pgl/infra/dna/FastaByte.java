@@ -16,6 +16,7 @@ import pgl.infra.utils.IOUtils;
 /**
  * Holding Fasta format sequence, providing functions of sorting, searching and collecting statistics,
  * representing full IUPAC codes. (https://www.bioinformatics.org/sms/iupac.html).
+ * <p>
  * Higher speed, more memory cost than {@link FastaBit}.
  * @author feilu
  */

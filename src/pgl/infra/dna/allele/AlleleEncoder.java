@@ -11,58 +11,62 @@ import com.koloboke.collect.map.hash.HashCharByteMap;
 import com.koloboke.collect.map.hash.HashCharByteMaps;
 
 /**
- * Class encoding alleles and site genotype from A, C, G, T, D, I
+ * Class encoding alleles and site genotype from A, C, G, T, D, I.
+ * <p>
+ * Binary encoding rules: A = 0001, C = 0010, G = 0011, T = 0100, D = 0101, I = 0110, AlleleMissing = N = 1111.
  * @author feilu
  */
 public class AlleleEncoder {
 
     /**
-     * Alleles in char, D is deletion, I is insertion, . is missing
+     * Alleles in char, D is deletion, I is insertion, "." is missing.
      */
     public static final char[] alleleBases = {'A', 'C', 'G', 'T', 'D', 'I'};
+
     /**
-     * Alleles in AscII code
+     * Alleles in AscII code.
      */
     public static final byte[] alleleAscIIs = {65, 67, 71, 84, 68, 73};
+
     /**
-     * Alleles in coding values
+     * Alleles in coding values.
      */
     public static final byte[] alleleCodings = {0, 1, 2, 3, 4, 5};
 
     /**
-     * The default coding value of allele missing
+     * The default coding value of allele missing.
      */
     public static final byte alleleMissingCoding = 15;
 
     /**
-     * The default char of allele missing
+     * The default char of allele missing.
      */
     public static final char alleleMissingBase = 'N';
 
     /**
-     * The default coding value of genotype missing
+     * The default coding value of genotype missing.
      */
     public static final byte genotypeMissingCoding = -1;
 
     /**
-     * A pre-defined builder to accelerate building genotype string
+     * A pre-defined builder to accelerate building genotype string.
      */
     private static StringBuilder genoSb = new StringBuilder();
 
     /**
-     * Converter from char to allele coding
+     * Converter from char to allele coding.
      */
     public static final HashCharByteMap alleleBaseToCodingMap =
             HashCharByteMaps.getDefaultFactory().withDefaultValue(alleleMissingCoding).newImmutableMap(alleleBases, alleleCodings);
 
     /**
-     * Converter from allele coding to char
+     * Converter from allele coding to char.
      */
     public static final HashByteCharMap alleleCodingToBaseMap =
             HashByteCharMaps.getDefaultFactory().withDefaultValue(alleleMissingBase).newImmutableMap(alleleCodings, alleleBases);
 
     /**
-     * Return an allele coding from char
+     * Return an allele coding from char, return -1 if the char is "non-ACGTDI".
      * @param c
      * @return -1 if not found
      */
@@ -71,16 +75,16 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return an allele char from coding
+     * Return an allele char from coding, return "N" if the coding is not 0, 1, 2, 3, 4, 5.
      * @param b
-     * @return ! if not found
+     * @return "N" if not found
      */
     public static char getAlleleBaseFromCoding(byte b) {
         return alleleCodingToBaseMap.get(b);
     }
 
     /**
-     * Return a genotype coding from allele codings of two homologous chromosomes
+     * Return a genotype coding from allele codings of two homologous chromosomes.
      * @param b1
      * @param b2
      * @return
@@ -90,7 +94,7 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return a genotype coding from allele chars of two homologous chromosomes
+     * Return a genotype coding from allele chars of two homologous chromosomes.
      * @param c1
      * @param c2
      * @return
@@ -100,7 +104,7 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return the allele coding of the 1st homologous chromosome
+     * Return the allele coding of the 1st homologous chromosome.
      * @param g
      * @return
      */
@@ -109,7 +113,7 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return the allele coding of the 2nd homologous chromosome
+     * Return the allele coding of the 2nd homologous chromosome.
      * @param g
      * @return
      */
@@ -118,7 +122,7 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return the allele char of the 1st homologous chromosome
+     * Return the allele char of the 1st homologous chromosome.
      * @param g
      * @return
      */
@@ -127,7 +131,7 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return the allele char of the 2nd homologous chromosome
+     * Return the allele char of the 2nd homologous chromosome.
      * @param g
      * @return
      */
@@ -136,7 +140,7 @@ public class AlleleEncoder {
     }
 
     /**
-     * Return a genotype string from its genotype coding, e.g. AA or TG
+     * Return a genotype string from its genotype coding, for example, AA or TG
      * @param g
      * @return
      */
