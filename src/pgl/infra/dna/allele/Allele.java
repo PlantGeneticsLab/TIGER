@@ -1,55 +1,61 @@
 package pgl.infra.dna.allele;
 
 /**
- * Class holding allele and its basic information
- * Basic information are stored in bits
+ * Class holding allele and its basic information.
+ * <p>
+ * Basic information are stored in 8 bits as a feature.
  * @author feilu
  */
 public class Allele {
-    byte baseCoding = -1;
+    byte alleleCoding = -1;
     byte feature = 0;
 
     /**
-     * Construct an empty object of {@link Allele}
-     */
-    public Allele () {
-
-    }
-
-    /**
-     * Construct an object of {@link Allele}
+     * Construct an object of {@link Allele}.
      * @param c
      */
     public Allele (char c) {
-        this.baseCoding = AlleleEncoder.getAlleleCodingFromBase(c);
+        this.alleleCoding = AlleleEncoder.getAlleleCodingFromBase(c);
+        this.checkBaseCoding();
     }
 
     /**
-     * Construct an object of {@link Allele}
+     * Construct an object of {@link Allele}.
      * @param alleleCoding
      */
     public Allele (byte alleleCoding) {
-        this.baseCoding = alleleCoding;
+        this.alleleCoding = alleleCoding;
+        this.checkBaseCoding();
     }
 
     /**
-     * Return the base of the allele
+     * Double check allele coding to avoid incorrect input.
+     */
+    private void checkBaseCoding() {
+        if (this.alleleCoding < AlleleEncoder.alleleCodings[0] || this.alleleCoding > AlleleEncoder.alleleCodings[AlleleEncoder.alleleCodings.length-1]) {
+            System.out.println("Base coding was incorrectly set in Allele. Program quits.");
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Return the base of the allele.
      * @return
      */
     public char getAlleleBase () {
-        return AlleleEncoder.getAlleleBaseFromCoding(this.baseCoding);
+        return AlleleEncoder.getAlleleBaseFromCoding(this.alleleCoding);
     }
 
     /**
-     * Return the byte code of the allele, see {@link AlleleEncoder}
+     * Return the coding of the allele, see {@link AlleleEncoder}.
      * @return
      */
     public byte getAlleleCoding() {
-        return this.baseCoding;
+        return this.alleleCoding;
     }
 
     /**
-     * Return the code of allele feature
+     * Return the byte code of allele feature.
      * @return
      */
     public byte getAlleleFeature () {
@@ -57,7 +63,7 @@ public class Allele {
     }
 
     /**
-     * Set allele type, see {@link AlleleType}
+     * Set allele type, see {@link AlleleType}.
      * @param at
      */
     public void setAlleleType (AlleleType at) {
@@ -65,7 +71,7 @@ public class Allele {
     }
 
     /**
-     * Set the allele feature at once, see {@link AlleleType}
+     * Set the allele feature at once, see {@link AlleleType}.
      * @param feature
      */
     public void setAlleleFeature (byte feature) {
@@ -73,7 +79,7 @@ public class Allele {
     }
 
     /**
-     * Remove allele type, see {@link AlleleType}
+     * Remove allele type, see {@link AlleleType}.
      * @param at
      */
     public void removeAlleleType (AlleleType at) {
@@ -81,14 +87,14 @@ public class Allele {
     }
 
     /**
-     * Reset all allele types to false, see {@link AlleleType}
+     * Reset all allele types to false (remove all allele types), see {@link AlleleType}.
      */
     public void resetAlleleTypeToDefault () {
         this.feature = 0;
     }
 
     /**
-     * Return the allele is a specific type, see {@link AlleleType}
+     * Return if the allele is a specific type, see {@link AlleleType}.
      * @param at
      * @return
      */

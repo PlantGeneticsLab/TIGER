@@ -1,7 +1,7 @@
 package pgl.infra.dna.allele;
 
 /**
- * Hard coded standard of allele type
+ * Hard coded standard of 8 allele types, representing ref, alt, 2nd alt, major, minor, 2nd minor, ancestral, derived.
  * @author feilu 
  */
 public enum AlleleType {
@@ -47,7 +47,7 @@ public enum AlleleType {
     }
 
     /**
-     * Return the number of allele type
+     * Return the number of allele type.
      * @return
      */
     public int getAlleleTypeNumber () {
@@ -55,7 +55,7 @@ public enum AlleleType {
     }
 
     /**
-     * Return feature value of a specific type
+     * Return feature value of a specific type.
      * @return
      */
     public byte getFeature () {
@@ -63,7 +63,7 @@ public enum AlleleType {
     }
 
     /**
-     * Return the index of a specific type
+     * Return the index of a specific type.
      * @return
      */
     public int getIndex () {
