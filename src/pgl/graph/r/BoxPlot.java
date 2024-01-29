@@ -15,7 +15,7 @@ import rcaller.RCode;
  * Plot box plot
  * @author Fei Lu
  */
-public class BoxPlot extends Rgraphics {
+public class BoxPlot extends RgraphicsAbstract {
     ArrayList<double[]> valueList = null;
     String[] variableNames = null;
     String[] colors = null;

@@ -14,7 +14,7 @@ import rcaller.RCode;
  *
  * @author fl262
  */
-public class CumulativeDistribution extends Rgraphics {
+public class CumulativeDistribution extends RgraphicsAbstract {
     double[] value = null;
     boolean ifOnlyLine = false;
     

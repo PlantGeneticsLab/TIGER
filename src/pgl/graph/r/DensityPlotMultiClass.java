@@ -15,7 +15,7 @@ import rcaller.RCode;
  * Plot density plot of multiple classes in one graph, using ggplot2 package
  * @author Fei Lu
  */
-public class DensityPlotMultiClass extends Rgraphics {
+public class DensityPlotMultiClass extends RgraphicsAbstract {
     ArrayList<double[]> valueList = null;
     String[] variableNames = null;
     

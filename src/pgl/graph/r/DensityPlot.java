@@ -14,7 +14,7 @@ import rcaller.RCode;
  *
  * @author fl262
  */
-public class DensityPlot extends Rgraphics {
+public class DensityPlot extends RgraphicsAbstract {
     double[] value = null;
     int smoothN = 512;
     public DensityPlot (double[] value) {

@@ -14,7 +14,7 @@ import rcaller.RCode;
  * Plot bar plot
  * @author Fei Lu
  */
-public class BarPlot extends Rgraphics {
+public class BarPlot extends RgraphicsAbstract {
     double[] value = null;
     String[] name = null;
     
@@ -48,6 +48,8 @@ public class BarPlot extends Rgraphics {
         catch (Exception e) {
             e.printStackTrace();
         }
+        String s = rCode.getCode().toString();
+        System.out.println(s);
     }
     
     @Override
@@ -69,12 +71,12 @@ public class BarPlot extends Rgraphics {
     @Override
     public String getPlotStatement() {
         StringBuilder sb = new StringBuilder ();
-        sb.append("barplot(x, names.arg = name, ").append("col=\"").append(defaultColor).append("\",");
-        sb.append("main=\"").append(title).append("\",");
-        sb.append("ylab=\"").append(yLab).append("\",");
-        sb.append("cex.main=").append(titleSize).append(",");
-        sb.append("cex.lab=").append(labSize).append(",");
-        sb.append("cex.axis=").append(axisSize).append(",");
+        sb.append("barplot(x, names.arg = name, ").append("col=\"").append(defaultColor).append("\", ");
+        sb.append("main=\"").append(title).append("\", ");
+        sb.append("ylab=\"").append(yLab).append("\", ");
+        sb.append("cex.main=").append(titleSize).append(", ");
+        sb.append("cex.lab=").append(labSize).append(", ");
+        sb.append("cex.axis=").append(axisSize).append(", ");
         sb.append("font.main=").append(titleFont).append(",");
         if (sb.charAt(sb.length()-1) == ',') {
             sb.deleteCharAt(sb.length()-1);

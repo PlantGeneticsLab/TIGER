@@ -14,7 +14,7 @@ import rcaller.RCode;
  * Plot histogram with relative frequency on y axis, using lattice package
  * @author Fei Lu
  */
-public class HistogramRF extends Rgraphics {
+public class HistogramRF extends RgraphicsAbstract {
     
     int breakNum = Integer.MIN_VALUE;
     double[] value = null;

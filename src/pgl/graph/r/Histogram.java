@@ -14,7 +14,7 @@ import rcaller.RCode;
  * Plot histogram
  * @author Fei Lu
  */
-public class Histogram extends Rgraphics {
+public class Histogram extends RgraphicsAbstract {
     
     int breakNum = Integer.MIN_VALUE;
     double[] value = null;

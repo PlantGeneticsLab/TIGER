@@ -137,8 +137,8 @@ public class IlluminaQCGo {
             d.setXLim(0, 1000);
             d.setRPath(rPath);
             d.setTitle(taxon);
-            d.setYLab("Density");
-            d.setXLab("Insert size of library");
+            d.setYLabel("Density");
+            d.setXLabel("Insert size of library");
             d.setSmoothN(10000);
             d.saveGraph(imageFileS);
             System.out.println(taxon + " density plot saved at " + imageFileS);

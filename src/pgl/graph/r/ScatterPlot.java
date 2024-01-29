@@ -14,7 +14,7 @@ import rcaller.RCode;
  * Plot scatter plot
  * @author fl262
  */
-public class ScatterPlot extends Rgraphics {
+public class ScatterPlot extends RgraphicsAbstract {
     double[] xValues;
     double[] yValues;
     boolean ifTrendLine = false;

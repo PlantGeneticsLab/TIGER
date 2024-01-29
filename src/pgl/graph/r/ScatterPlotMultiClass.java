@@ -15,7 +15,7 @@ import rcaller.RCode;
  * Plot scatter plot with multiple classes, each class with different color, using ggplot2 package
  * @author Fei Lu 
  */
-public class ScatterPlotMultiClass extends Rgraphics {
+public class ScatterPlotMultiClass extends RgraphicsAbstract {
     double[] x = null;
     double[] y = null;
     String[] classes = null;

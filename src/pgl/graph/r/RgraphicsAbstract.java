@@ -10,7 +10,7 @@ package pgl.graph.r;
  *
  * @author Fei Lu
  */
-public abstract class Rgraphics implements RgraphicsImpl {
+public abstract class RgraphicsAbstract implements RgraphicsInterface {
     public static String RPath = "/usr/local/bin/Rscript";
     public static String[] defaultColorArray = {"red", "blue", "gold", "cyan", "orange", "chocolate", "green1", "coral"};
     String rPath = RPath;
@@ -48,12 +48,12 @@ public abstract class Rgraphics implements RgraphicsImpl {
     }
     
     @Override
-    public void setXLab (String xLab) {
+    public void setXLabel(String xLab) {
         this.xLab = xLab;
     }
     
     @Override
-    public void setYLab (String yLab) {
+    public void setYLabel(String yLab) {
         this.yLab = yLab;
     }
     
@@ -79,11 +79,7 @@ public abstract class Rgraphics implements RgraphicsImpl {
         this.xLegend = x;
         this.yLegend = y;
     }
-    
-    /**
-     * 1: ordinary, 2: bold, 3: italics
-     * @param n 
-     */
+
     @Override
     public void setTitleFont (int n) {
         this.titleFont = n;

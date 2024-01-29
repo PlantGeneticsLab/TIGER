@@ -15,7 +15,7 @@ import rcaller.RCode;
  *
  * @author Fei Lu
  */
-public class LineChart extends Rgraphics {
+public class LineChart extends RgraphicsAbstract {
     double[] x;
     double[][] ys;
     String[] variableNames;
