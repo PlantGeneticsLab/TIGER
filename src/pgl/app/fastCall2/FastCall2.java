@@ -16,7 +16,7 @@ public class FastCall2 {
     //genome block size for variation discovery. The max bin size should be less than 2^23. see {@link AllelePackage}
     static int disBinSize = 5000000;
     //genome block size for genotype scanning
-    static int scanBinSize = 20000000;
+    static int scanBinSize = 5000000;
     // maximum of the number of alternative alleles
     static int maxAltNum = 2;
     static int maxIndelLength = 63;
