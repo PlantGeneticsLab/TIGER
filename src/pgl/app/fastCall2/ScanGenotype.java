@@ -342,6 +342,7 @@ class ScanGenotype extends AppAbstract {
             sb.append(" -l ").append(vLibPosFileS).append(" -r ");
             sb.append(chrom).append(":").append(this.regionStart).append("-").append(this.regionEnd);
             String command = sb.toString();
+//            System.out.println(command);
             IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);
             Future<IndiCount> result = pool.submit(idv);
             resultList.add(result);
@@ -407,6 +408,9 @@ class ScanGenotype extends AppAbstract {
                     dos.writeInt(binBound[binIndex][1]);
                     vlBinStartIndex = vl.getStartIndex(binBound[binIndex][0]);
                     vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]-1);
+//                    if (vlBinStartIndex < 0 || vlBinEndIndex < 0) {
+////                        unlikely to happen
+//                    }
                     dos.writeInt(vlBinEndIndex-vlBinStartIndex);
                 }
                 catch (Exception e) {
@@ -421,7 +425,12 @@ class ScanGenotype extends AppAbstract {
             try {
                 dos.writeByte((byte)alleleCounts.length);
                 for (int i = 0; i < alleleCounts.length; i++) {
-                    dos.writeShort((short)alleleCounts[i]);
+                    if (alleleCounts[i] < Short.MAX_VALUE) {
+                        dos.writeShort((short)alleleCounts[i]);
+                    }
+                    else {
+                        dos.writeShort(Short.MAX_VALUE);
+                    }
                 }
             }
             catch (Exception e) {
@@ -479,6 +488,7 @@ class ScanGenotype extends AppAbstract {
                 Process p = rt.exec(command);
                 String temp = null;
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 DataOutputStream dis = null;
                 String current = br.readLine();
                 List<String> currentList = null;
@@ -491,6 +501,7 @@ class ScanGenotype extends AppAbstract {
                 StringBuilder indelSb = new StringBuilder();
                 for (int i = 0; i < positions.length; i++) {
                     this.setDos(positions[i]);
+                    //at the end of pileup file
                     if (current == null) {
                         this.writeMissing();
                     }
@@ -531,7 +542,15 @@ class ScanGenotype extends AppAbstract {
                 br.close();
                 p.waitFor();
                 this.writeEmptyFiles();
-                System.out.println("Individual allele counting is completed for taxon "+ this.taxonName);
+                StringBuilder sb = new StringBuilder();
+                sb.append("mpileup command: ").append(command).append("\n");
+                sb.append("mpileup error profile: ");
+                while ((current = bre.readLine()) != null) {
+                    sb.append(current).append("\n");
+                }
+                sb.append("Individual allele counting is completed for taxon ").append(this.taxonName).append("\n");
+                System.out.println(sb.toString());
+
             }
             catch (Exception ee) {
                 ee.printStackTrace();
