@@ -1,4 +1,4 @@
-<img src="https://contattafiles.s3.us-west-1.amazonaws.com/tnt22006/DhRSlDOsdlFY6WL/tiger.png" height=100 align="center"> 
+<img src="tiger.png" height=100 align="center"> 
 
 # Toolkits Integrated for Genetic and Evolutionary Research
 *Code packages and apps to conduct efficient analyses on genetics and evolution*
