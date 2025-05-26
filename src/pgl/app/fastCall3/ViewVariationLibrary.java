@@ -5,7 +5,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import pgl.AppAbstract;
 import pgl.PGLAPPEntrance;
-import pgl.app.fastCall2.VariationLibrary;
 
 class ViewVariationLibrary extends AppAbstract {
     // the genetic variation file in binary format
@@ -44,7 +43,7 @@ class ViewVariationLibrary extends AppAbstract {
     }
 
     public void convertLibrary () {
-        pgl.app.fastCall2.VariationLibrary vl = new VariationLibrary(this.binaryLibFileS);
+        VariationLibrary vl = new VariationLibrary(this.binaryLibFileS);
         vl.writeTextFileS(this.textLibFileS);
     }
 

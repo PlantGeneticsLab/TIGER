@@ -2,10 +2,8 @@ package pgl.app.fastCall3;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import pgl.app.fastCall2.IndividualGenotype;
 import pgl.infra.utils.IOUtils;
 import pgl.infra.utils.PArrayUtils;
-
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -48,7 +46,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         this.readBinaryFileS(infileS);
     }
 
-    public VariationLibrary(List<pgl.app.fastCall2.IndividualGenotype> ingList, int maoThresh, int maxAltNum, short chrom, int binStart) {
+    public VariationLibrary(List<IndividualGenotype> ingList, int maoThresh, int maxAltNum, short chrom, int binStart) {
         this.chrom = chrom;
         this.binStart = binStart;
         this.mergeIngs(ingList, maoThresh, maxAltNum);

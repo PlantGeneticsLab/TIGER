@@ -7,7 +7,6 @@ import org.apache.commons.cli.DefaultParser;
 import pgl.AppAbstract;
 import pgl.PGLAPPEntrance;
 import pgl.PGLConstraints;
-import pgl.app.fastCall2.FastCall2;
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.allele.AlleleEncoder;
@@ -304,7 +303,7 @@ class DiscoverVariation extends AppAbstract {
             double siteDepthRatio = (double)currentDepth/this.taxonCoverage;
             if (siteDepthRatio < mindrThresh) return false;
             if (siteDepthRatio > maxdrTrresh) return false;
-//            FastCall2.removeFirstPositionSign(baseSb);
+//            FastCall3.removeFirstPositionSign(baseSb);
             String baseS = baseSb.toString().toUpperCase();
             byte[] baseB = baseS.getBytes();
             this.initialize2();

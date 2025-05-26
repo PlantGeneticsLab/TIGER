@@ -5,7 +5,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import pgl.AppAbstract;
 import pgl.PGLAPPEntrance;
-import pgl.app.fastCall2.VariationLibrary;
 import pgl.infra.table.RowTable;
 
 import java.util.Arrays;
@@ -50,7 +49,7 @@ class CustomizeVariationLibrary extends AppAbstract {
     }
 
     public void customizeLibrary() {
-        pgl.app.fastCall2.VariationLibrary vl = new VariationLibrary(this.inputLibFileS);
+        VariationLibrary vl = new VariationLibrary(this.inputLibFileS);
         RowTable<String> table = new RowTable<String>(this.positionFileS);
         int[] customPositions = table.getColumnAsIntArray(0);
         Arrays.sort(customPositions);

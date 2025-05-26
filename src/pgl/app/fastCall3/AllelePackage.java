@@ -1,6 +1,5 @@
 package pgl.app.fastCall3;
 
-import pgl.app.fastCall2.FastCall2;
 import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.allele.AlleleEncoder;
 
