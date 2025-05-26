@@ -16,47 +16,47 @@ public class Benchmark {
 
     /**
      * Return timespan of program in nanoseconds
-     * @param timeStart
+     * @param nanoTimeStart
      * @return
      */
-    public static long getTimeSpanNanoseconds (long timeStart) {
-        return System.nanoTime()-timeStart;
+    public static long getTimeSpanNanoseconds (long nanoTimeStart) {
+        return System.nanoTime()-nanoTimeStart;
     }
 
     /**
      * Return timespan of program in milliseconds
-     * @param timeStart
+     * @param nanoTimeStart
      * @return
      */
-    public static double getTimeSpanMilliseconds (long timeStart) {
-        return (double)getTimeSpanNanoseconds(timeStart)/1000000;
+    public static double getTimeSpanMilliseconds (long nanoTimeStart) {
+        return (double)getTimeSpanNanoseconds(nanoTimeStart)/1000000;
     }
 
     /**
      * Return timespan of program in seconds
-     * @param timeStart
+     * @param nanoTimeStart
      * @return
      */
-    public static double getTimeSpanSeconds (long timeStart) {
-        return (double)getTimeSpanNanoseconds(timeStart)/1000000000;
+    public static double getTimeSpanSeconds (long nanoTimeStart) {
+        return (double)getTimeSpanNanoseconds(nanoTimeStart)/1000000000;
     }
 
     /**
      * Return timespan of program in minutes
-     * @param timeStart
+     * @param nanoTimeStart
      * @return
      */
-    public static double getTimeSpanMinutes (long timeStart) {
-        return (double)getTimeSpanSeconds(timeStart)/60;
+    public static double getTimeSpanMinutes (long nanoTimeStart) {
+        return (double)getTimeSpanSeconds(nanoTimeStart)/60;
     }
 
     /**
      * Return timespan of program in hours
-     * @param timeStart
+     * @param nanoTimeStart
      * @return
      */
-    public static double getTimeSpanHours (long timeStart) {
-        return (double)getTimeSpanMinutes(timeStart)/60;
+    public static double getTimeSpanHours (long nanoTimeStart) {
+        return (double)getTimeSpanMinutes(nanoTimeStart)/60;
     }
 
     /**
