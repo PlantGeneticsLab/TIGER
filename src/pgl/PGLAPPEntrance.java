@@ -8,6 +8,7 @@ package pgl;
 import org.apache.commons.cli.Options;
 import pgl.app.fastCall.FastCall;
 import pgl.app.fastCall2.FastCall2;
+import pgl.app.fastCall3.FastCall3;
 import pgl.app.hapScanner.HapScanner;
 import pgl.app.popdep.PopDep;
 
@@ -27,6 +28,11 @@ public class PGLAPPEntrance {
         this.runApp(args);
     }
 
+    /**
+     * This method is used to select the app according to the command line
+     * parameter -app.
+     * @param args the command line parameters
+     */
     private void selectApp (String[] args) {
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-app")) {
@@ -35,13 +41,17 @@ public class PGLAPPEntrance {
             }
         }
         if (app == null) {
-            System.out.println("App does not exist. Programs stops.");
+            System.out.println("App does not exist. The program stops.");
             System.out.println(introduction);
             System.exit(0);
         }
 
     }
 
+    /**
+     * This method runs the specified app with given parameters
+     * @param args the parameters for the app
+     */
     private void runApp(String[] args) {
         options = new Options();
         if (app.equals(AppNames.FastCall.getName())) {
@@ -49,6 +59,9 @@ public class PGLAPPEntrance {
         }
         else if (app.equals(AppNames.FastCall2.getName())) {
             new FastCall2(args);
+        }
+        else if (app.equals(AppNames.FastCall3.getName())) {
+            new FastCall3(args);
         }
         else if (app.equals(AppNames.PopDep.getName())) {
             new PopDep(this.parameterPath);
@@ -63,6 +76,10 @@ public class PGLAPPEntrance {
         }
     }
 
+    /**
+     * Create an introduction string for the main method.
+     * @return an introduction string
+     */
     private static String createIntroduction() {
         StringBuilder sb = new StringBuilder();
         sb.append("\nToolkits Integrated for Genetic and Evolutionary Research (TIGER) is designed to simplify its usage.\n");
@@ -77,10 +94,18 @@ public class PGLAPPEntrance {
         return sb.toString();
     }
 
+    /**
+     * Return the introduction string for the main method.
+     * @return the introduction string
+     */
     public static String getTIGERIntroduction() {
         return introduction;
     }
 
+    /**
+     * This is the main method of TIGER. It creates an instance of {@link PGLAPPEntrance} to run TIGER.
+     * @param args the command line parameters
+     */
     public static void main (String[] args) {
         new PGLAPPEntrance(args);
     }

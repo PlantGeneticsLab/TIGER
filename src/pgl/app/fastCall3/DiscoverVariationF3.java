@@ -11,7 +11,6 @@ import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -21,7 +20,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
 
-class DiscoverVariation extends AppAbstract {
+class DiscoverVariationF3 extends AppAbstract {
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as numbers (1,2,3,4,5...).
     String referenceFileS = null;
     //The taxaBamMap file contains information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder.
@@ -30,7 +29,7 @@ class DiscoverVariation extends AppAbstract {
     String samtoolsPath = null;
     //Individual genotype output directory
     String outputDirS = null;
-    //The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled.
+    //The switch of base alignment quality (BAQ) computation, 0 is disabled and 1 is enabled.
     String baqMode = "-B ";
     //Minimum mapping quality (MQ) for an alignment to be used for variation calling.
     int mappingQThresh = 30;
@@ -52,7 +51,7 @@ class DiscoverVariation extends AppAbstract {
     int chrom = Integer.MIN_VALUE;
     //Starting position of the specified region for variation calling, inclusive
     int regionStart = Integer.MIN_VALUE;
-    //Ending position the specified regionfor variation calling, exclusive
+    //Ending position the specified region for variation calling, exclusive
     int regionEnd = Integer.MIN_VALUE;
     //Number of threads (taxa number to be processed at the same time)
     int threadsNum = PGLConstraints.parallelLevel;
@@ -63,7 +62,7 @@ class DiscoverVariation extends AppAbstract {
     HashMap<String, Double> taxaCoverageMap = null;
     String[] taxaNames = null;
 
-    public DiscoverVariation(String[] args) {
+    public DiscoverVariationF3(String[] args) {
         this.creatAppOptions();
         this.retrieveAppParameters(args);
         this.variationDiscovery();
@@ -72,13 +71,13 @@ class DiscoverVariation extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("mod", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 3.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
-                "Chromosomes are labled as numbers (1,2,3,4,5...). It is recommanded to use reference chromosome while perform variation discovery " +
-                "for each chromosome because loading reference genome would be much faster.");
+                "Chromosomes are labeled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform variation discovery " +
+                "for each chromosome because loading the reference genome would be much faster.");
         options.addOption("b", true, "The taxaBamMap file contains information of taxon and its corresponding bam files. " +
                 "The bam file should have .bai file in the same folder.");
-        options.addOption("c", true, "The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled. It is 0 by default.");
+        options.addOption("c", true, "The switch of base alignment quality (BAQ) computation, 0 is disabled and 1 is enabled. It is 0 by default.");
         options.addOption("d", true, "Minimum mapping quality (MQ) for an alignment to be used for variation calling. It is 30 by default.");
         options.addOption("e", true, "Minimum base quality (BQ) for a base to be used for variation calling. It is 20 by default.");
         options.addOption("f", true, "Minimum read depth count (MDC) for variation calling, meaning that sites with depth lower than " +

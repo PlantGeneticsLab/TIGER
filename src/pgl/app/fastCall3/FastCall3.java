@@ -36,7 +36,7 @@ public class FastCall3 {
         }
         if (currentTool.equals("disc")) {
             System.out.println("Discovering genetic variation...");
-            new DiscoverVariation(args);
+            new DiscoverVariationF3(args);
         }
         else if (currentTool.equals("blib")) {
             System.out.println("Building the library of genetic variation from all samples...");
@@ -58,7 +58,7 @@ public class FastCall3 {
             System.out.println("Input errors in setting steps of FastCall 2. Programs stops.");
             System.exit(0);
         }
-        StringBuilder sb = new StringBuilder("FastCall 2 is finished in ");
+        StringBuilder sb = new StringBuilder("FastCall 3 is finished in ");
         sb.append((float)Benchmark.getTimeSpanHours(timeStart)).append(" hours.");
         System.out.println(sb.toString());
         System.out.println();

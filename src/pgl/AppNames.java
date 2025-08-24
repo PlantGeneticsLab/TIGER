@@ -22,7 +22,12 @@ public enum AppNames implements Comparable <AppNames> {
      * Genotyping pipeline of FastCall2
      */
     FastCall2 ("FastCall2"),
-    
+
+    /**
+     * Genotyping pipeline of FastCall2
+     */
+    FastCall3 ("FastCall3"),
+
     /**
      * Genotyping from bam files based on a genetic variation library
      */

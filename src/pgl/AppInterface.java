@@ -1,7 +1,5 @@
 package pgl;
 
-import org.apache.commons.cli.Options;
-
 public interface AppInterface {
 
     public void creatAppOptions ();
