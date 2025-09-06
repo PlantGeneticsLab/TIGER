@@ -202,7 +202,7 @@ class DiscoverVariationF3 extends AppAbstract {
 
     private void variationDiscovery () {
         File outDir = new File (this.outputDirS);
-        outDir.mkdir();
+        outDir.mkdirs();
         File[] taxaOutDirs = new File[this.taxaNames.length];
         for (int i = 0; i < taxaNames.length; i++) {
             File f = new File (outDir, taxaNames[i]);
