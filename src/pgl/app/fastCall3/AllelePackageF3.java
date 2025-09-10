@@ -7,10 +7,10 @@ import pgl.infra.dna.allele.AlleleEncoder;
  * A wrapper class of allele pack, which enabled {@link java.util.Set} functionality of allele pack
  * Using array of int, an allele pack stores allele state, relative position of the allele in bin, length of Indel (if it exists), and sequence of the Indel
  */
-class AllelePackage implements Comparable<AllelePackage>{
+class AllelePackageF3 implements Comparable<AllelePackageF3>{
     int[] allelePack = null;
 
-    public AllelePackage(int[] allelePacks) {
+    public AllelePackageF3(int[] allelePacks) {
         this.allelePack = allelePacks;
     }
 
@@ -58,8 +58,18 @@ class AllelePackage implements Comparable<AllelePackage>{
         return sb;
     }
 
+    static StringBuilder getAlleleInfo (int allelePack, int binStart, StringBuilder sb) {
+        sb.setLength(0);
+        sb.append(getAlleleChromPosition(allelePack,binStart)).append("\t").append(getAlleleBase(allelePack));
+        int indelLength = getIndelLength(allelePack);
+        if (indelLength != 0) {
+            sb.append("\t").append(indelLength);
+        }
+        return sb;
+    }
+
     @Override
-    public int compareTo(AllelePackage o) {
+    public int compareTo(AllelePackageF3 o) {
         if (allelePack.length != o.allelePack.length) {
             return allelePack.length - o.allelePack.length;
         }
@@ -85,10 +95,10 @@ class AllelePackage implements Comparable<AllelePackage>{
         if (o == this) {
             return true;
         }
-        if (!(o instanceof AllelePackage)) {
+        if (!(o instanceof AllelePackageF3)) {
             return false;
         }
-        AllelePackage other = (AllelePackage) o;
+        AllelePackageF3 other = (AllelePackageF3) o;
         if (allelePack.length != other.allelePack.length) return false;
         for (int i = 0; i < allelePack.length; i++) {
             if (allelePack[i] != other.allelePack[i]) return false;
@@ -98,33 +108,22 @@ class AllelePackage implements Comparable<AllelePackage>{
 
     /**
      * Compares allele information to an allele pack
+     * the first 23 bits are used to record position in a bin (maximum size = 2^23 - 1 = 8,388,607)
+     * the next 3 bits are used to record alleles
+     * the last 6 bits are used record the length of indel (max size = 2^6 -1 = 63)
+     * Above three components are called a "pack"
      * @param binStart
      * @param position
      * @param alleleCoding
      * @param indelLength
-     * @param indelSeq
      * @return compressed information of an allele in allele pack format
      */
-    static int[] getAllelePack (int binStart, int position, byte alleleCoding, int indelLength, String indelSeq) {
+    static int getAllelePack (int binStart, int position, byte alleleCoding, int indelLength) {
         int v = (position-binStart) << 9;
         v = v + (alleleCoding << 6);
         if (indelLength > FastCall3.maxIndelLength) indelLength = FastCall3.maxIndelLength;
         v = v+indelLength;
-        int[] allelePack = new int[getAllelePackSizeFromIndelLength(indelLength)];
-        allelePack[0] = v;
-        if (allelePack.length ==1) return allelePack;
-        byte[] seqCodings = BaseEncoder.convertAscIIToBaseCodingArray(indelSeq.getBytes());
-        for (int i = 0; i < allelePack.length-1; i++) {
-            int remainder = indelLength % BaseEncoder.intChunkSize;
-            if (remainder == 0) {
-                allelePack[i+1] = BaseEncoder.getIntSeqFromSubBaseCodingArray(seqCodings, i*BaseEncoder.intChunkSize, (i+1)*BaseEncoder.intChunkSize);
-            }
-            else {
-                allelePack[i+1] = BaseEncoder.getIntSeqFromSubBaseCodingArray(seqCodings, i*BaseEncoder.intChunkSize, i*BaseEncoder.intChunkSize+remainder);
-            }
-
-        }
-        return allelePack;
+        return v;
     }
 
     /**
@@ -175,19 +174,19 @@ class AllelePackage implements Comparable<AllelePackage>{
 
     /**
      * Return the allele coding
-     * @param firstIntOfAllelePack
+     * @param allelePack
      * @return
      */
-    static byte getAlleleCoding(int firstIntOfAllelePack) {
-        int v = (511 & firstIntOfAllelePack) >>> 6;
+    static byte getAlleleCoding(int allelePack) {
+        int v = (511 & allelePack) >>> 6;
         return (byte)v;
     }
 
-    static char getAlleleBase (int firstIntOfAllelePack) {
-        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(firstIntOfAllelePack));
+    static char getAlleleBase (int allelePack) {
+        return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(allelePack));
     }
 
-    static byte getIndelLength (int firstIntOfAllelePack) {
-        return (byte)(FastCall3.maxIndelLength & firstIntOfAllelePack);
+    static byte getIndelLength (int allelePack) {
+        return (byte)(FastCall3.maxIndelLength & allelePack);
     }
 }

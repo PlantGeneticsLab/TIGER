@@ -43,7 +43,7 @@ class ViewVariationLibrary extends AppAbstract {
     }
 
     public void convertLibrary () {
-        VariationLibrary vl = new VariationLibrary(this.binaryLibFileS);
+        VariationLibraryF3 vl = new VariationLibraryF3(this.binaryLibFileS);
         vl.writeTextFileS(this.textLibFileS);
     }
 

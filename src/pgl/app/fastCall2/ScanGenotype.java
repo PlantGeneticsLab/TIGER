@@ -665,7 +665,7 @@ class ScanGenotype extends AppAbstract {
                 }
                 queryIndelLength = Integer.parseInt(indelSb.toString());
                 i+=indelSb.length();
-                i+=queryIndelLength;
+                i+=queryIndelLength+1;
             }
             for (int j = 0; j < altAlleles.length; j++) {
                 if (altAlleles[j].getAlleleCoding() == queryAlleleCoding && altAlleles[j].getIndelLength() == queryIndelLength) {

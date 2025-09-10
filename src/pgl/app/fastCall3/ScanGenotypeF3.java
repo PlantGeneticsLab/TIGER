@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.LongAdder;
 
 import static cern.jet.math.Arithmetic.factorial;
 
-class ScanGenotype extends AppAbstract {
+class ScanGenotypeF3 extends AppAbstract {
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
     //The taxaBamMap file contains information of taxon and its corresponding bam files. The bam file should have .bai file in the same folder.
@@ -64,17 +64,17 @@ class ScanGenotype extends AppAbstract {
 
     FastaBit genomeFa = null;
     int chromIndex = Integer.MIN_VALUE;
-    VariationLibrary vl = null;
+    VariationLibraryF3 vl = null;
     int vlStartIndex = Integer.MIN_VALUE;
     int vlEndIndex = Integer.MIN_VALUE;
     HashMap<Integer, String> posRefMap = new HashMap<>();
     //HashMap would be faster to locate alleles, larger memory though
-    HashMap<Integer, AllelePackage[]> posAllelePackMap = new HashMap<>();
+    HashMap<Integer, int[]> posAllelePackMap = new HashMap<>();
     int[] positions = null;
     int vlBinStartIndex = 0;
     int vlBinEndIndex = 0;
 
-    public ScanGenotype(String[] args) {
+    public ScanGenotypeF3(String[] args) {
         this.creatAppOptions();
         this.retrieveAppParameters(args);
 
@@ -92,7 +92,7 @@ class ScanGenotype extends AppAbstract {
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("mod", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 3.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...). It is recommended to use reference chromosome while perform genotyping for " +
             "each chromosome because loading reference genome would be much faster.");
@@ -101,7 +101,7 @@ class ScanGenotype extends AppAbstract {
         options.addOption("c", true, "The genetic variation library file.");
         options.addOption("d", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 is designated as 1. " +
             "Region 1bp to 100000bp on chromosome 1 is 1:1,100000)");
-        options.addOption("e", true, "The switch of base alignment quality (BAQ) computaiton, 0 is diabled and 1 is enbabled. It is 0 by default.");
+        options.addOption("e", true, "The switch of base alignment quality (BAQ) computation, 0 is disabled and 1 is enabled. It is 0 by default.");
         options.addOption("f", true, "Minimum mapping quality (MQ) for an alignment to be used for genotyping. It is 30 by default.");
         options.addOption("g", true, "Minimum base quality (BQ) for a base to be used for genotyping. It is 20 by default.");
         options.addOption("h", true, "Combined error rate of sequencing and misalignment. Heterozygous read mapping are more " +
@@ -264,9 +264,9 @@ class ScanGenotype extends AppAbstract {
                     int currentPosition = positions[index+vlBinStartIndex];
                     vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
                             .append("\t").append(posRefMap.get(currentPosition)).append("\t");
-                    AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition);
+                    int[] altAlleles = posAllelePackMap.get(currentPosition);
                     for (int j = 0; j < altAlleles.length; j++) {
-                        vsb.append(altAlleles[j].getAlleleBase()).append(",");
+                        vsb.append(AllelePackageF3.getAlleleBase(altAlleles[j])).append(",");
                     }
                     vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
                     List<short[]> siteCountsList = new ArrayList<>();
@@ -508,7 +508,7 @@ class ScanGenotype extends AppAbstract {
                     else {
                         if (positions[i] == currentPosition) {
                             String ref = posRefMap.get(currentPosition);
-                            AllelePackage[] altAlleles = posAllelePackMap.get(currentPosition);
+                            int[] altAlleles = posAllelePackMap.get(currentPosition);
                             baseS.setLength(0);
                             int siteDepth = 0;
                             for (int j = 0; j < bamPaths.size(); j++) {
@@ -577,7 +577,7 @@ class ScanGenotype extends AppAbstract {
         new File (vLibPosFileS).delete();
     }
 
-    private String getInfoAndGenotypes (List<short[]> siteCountList, AllelePackage[] altAlleles) {
+    private String getInfoAndGenotypes (List<short[]> siteCountList, int[] altAlleles) {
         StringBuilder genoSB = new StringBuilder("GT:AD:GL");
         StringBuilder infoSB = new StringBuilder();
         int dp = 0;
@@ -624,11 +624,6 @@ class ScanGenotype extends AppAbstract {
             infoSB.append(acCnt[i]).append(",");
         }
         infoSB.deleteCharAt(infoSB.length()-1);
-        infoSB.append(";IS=");
-        for (int i = 0; i < altAlleles.length; i++) {
-            infoSB.append(altAlleles[i].getIndelSeq()).append(",");
-        }
-        infoSB.deleteCharAt(infoSB.length()-1);
         infoSB.append(";GN=");
         for (int i = 0; i < gnCnt.length; i++) {
             for (int j = i; j < gnCnt.length; j++) {
@@ -641,7 +636,7 @@ class ScanGenotype extends AppAbstract {
         return infoSB.toString();
     }
 
-    private int[] getAlleleCounts (AllelePackage[] altAlleles, String baseS, int siteDepth, StringBuilder indelSb) {
+    private int[] getAlleleCounts (int[] altAlleles, String baseS, int siteDepth, StringBuilder indelSb) {
         byte[] baseB = baseS.getBytes();
         int[] altAlleleCounts = new int[altAlleles.length];
         int index = Integer.MIN_VALUE;
@@ -665,10 +660,10 @@ class ScanGenotype extends AppAbstract {
                 }
                 queryIndelLength = Integer.parseInt(indelSb.toString());
                 i+=indelSb.length();
-                i+=queryIndelLength;
+                i+=queryIndelLength+1;
             }
             for (int j = 0; j < altAlleles.length; j++) {
-                if (altAlleles[j].getAlleleCoding() == queryAlleleCoding && altAlleles[j].getIndelLength() == queryIndelLength) {
+                if (AllelePackageF3.getAlleleCoding(altAlleles[j]) == queryAlleleCoding && AllelePackageF3.getIndelLength(altAlleles[j]) == queryIndelLength) {
                     altAlleleCounts[j]++;
                     vCnt++;
                 }
@@ -740,7 +735,7 @@ class ScanGenotype extends AppAbstract {
         StringBuilder sb = new StringBuilder();
         sb.append(this.chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".pos.txt");
         this.vLibPosFileS = new File (this.outputDirS, sb.toString()).getAbsolutePath();
-        this.vl = new VariationLibrary(this.libFileS);
+        this.vl = new VariationLibraryF3(this.libFileS);
         if (this.chrom != vl.getChrom()) {
             System.out.println("The chromosome number of library and the specified one do not match. Program quits.");
             System.exit(0);

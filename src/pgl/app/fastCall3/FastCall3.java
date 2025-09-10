@@ -40,7 +40,7 @@ public class FastCall3 {
         }
         else if (currentTool.equals("blib")) {
             System.out.println("Building the library of genetic variation from all samples...");
-            new BuildVariationLibrary(args);
+            new BuildVariationLibraryF3(args);
         }
         else if (currentTool.equals("vlib")) {
             System.out.println("View the library of genetic variation in text");
@@ -52,10 +52,10 @@ public class FastCall3 {
         }
         else if (currentTool.equals("scan")) {
             System.out.println("Genotyping samples based on the variation library...");
-            new ScanGenotype(args);
+            new ScanGenotypeF3(args);
         }
         else {
-            System.out.println("Input errors in setting steps of FastCall 2. Programs stops.");
+            System.out.println("Input errors in setting steps of FastCall 3. Programs stops.");
             System.exit(0);
         }
         StringBuilder sb = new StringBuilder("FastCall 3 is finished in ");

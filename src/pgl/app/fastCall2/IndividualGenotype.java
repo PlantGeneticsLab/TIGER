@@ -25,7 +25,7 @@ public class IndividualGenotype implements Comparable<IndividualGenotype> {
             this.binStart = dis.readInt();
             this.binEnd = dis.readInt();
             int currentInt = 0;
-            while ((currentInt = dis.readInt()) != Integer.MIN_VALUE) {
+            while ((currentInt = dis.readInt()) != Integer.MAX_VALUE) {
                 int [] currentRecord = new int[AllelePackage.getAllelePackSizeFromFirstInt(currentInt)];
                 currentRecord[0] = currentInt;
                 for (int i = 0; i < currentRecord.length-1; i++) {

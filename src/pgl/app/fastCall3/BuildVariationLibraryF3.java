@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
-class BuildVariationLibrary extends AppAbstract {
+class BuildVariationLibraryF3 extends AppAbstract {
 
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
@@ -40,7 +40,7 @@ class BuildVariationLibrary extends AppAbstract {
 
     String[] taxaNames = null;
 
-    public BuildVariationLibrary(String[] args) {
+    public BuildVariationLibraryF3(String[] args) {
         this.creatAppOptions();
         this.retrieveAppParameters(args);
         this.mkLibrary();
@@ -123,9 +123,9 @@ class BuildVariationLibrary extends AppAbstract {
         int[][] binBound = d.getFirstElement();
         int[] binStarts = d.getSecondElement();
         StringBuilder sb = new StringBuilder();
-        List<Future<IndividualGenotype>> futureList = new ArrayList<>();
-        List<IndividualGenotype> ingList = new ArrayList<>();
-        List<VariationLibrary> vlList = new ArrayList<>();
+        List<Future<IndividualGenotypeF3>> futureList = new ArrayList<>();
+        List<IndividualGenotypeF3> ingList = new ArrayList<>();
+        List<VariationLibraryF3> vlList = new ArrayList<>();
         for (int i = 0; i < binBound.length; i++) {
             futureList.clear();
             ingList.clear();
@@ -137,14 +137,14 @@ class BuildVariationLibrary extends AppAbstract {
                 for (int j = 0; j < taxaNames.length; j++) {
                     String fileS = new File (ingTaxaDirList.get(j), sb.toString()).getAbsolutePath();
                     TaxonRead tr = new TaxonRead(fileS);
-                    Future<IndividualGenotype> result = pool.submit(tr);
+                    Future<IndividualGenotypeF3> result = pool.submit(tr);
                     futureList.add(result);
                 }
                 pool.shutdown();
                 pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
 
                 for (int j = 0; j < futureList.size(); j++) {
-                    IndividualGenotype ing = futureList.get(j).get();
+                    IndividualGenotypeF3 ing = futureList.get(j).get();
                     if (ing == null) continue;
                     ingList.add(ing);
                 }
@@ -154,10 +154,10 @@ class BuildVariationLibrary extends AppAbstract {
                 e.printStackTrace();
                 System.exit(1);
             }
-            VariationLibrary vl = new VariationLibrary (ingList, maoThresh, FastCall3.maxAltNum, chrom, binStarts[i]);
+            VariationLibraryF3 vl = new VariationLibraryF3(ingList, maoThresh, FastCall3.maxAltNum, chrom, binStarts[i]);
             vlList.add(vl);
         }
-        VariationLibrary chromVl = VariationLibrary.getInstance(vlList);
+        VariationLibraryF3 chromVl = VariationLibraryF3.getInstance(vlList);
         File f = new File (vLibDirS);
         f.mkdir();
         sb.setLength(0);
@@ -166,17 +166,17 @@ class BuildVariationLibrary extends AppAbstract {
         System.out.println("Building genetic variation library is finished.");
     }
 
-    class TaxonRead implements Callable<IndividualGenotype> {
+    class TaxonRead implements Callable<IndividualGenotypeF3> {
         String fileS;
         public TaxonRead (String fileS) {
             this.fileS = fileS;
         }
 
         @Override
-        public IndividualGenotype call() throws Exception {
+        public IndividualGenotypeF3 call() throws Exception {
             File f = new File (fileS);
             if (!f.exists()) return null;
-            IndividualGenotype ing = new IndividualGenotype(this.fileS);
+            IndividualGenotypeF3 ing = new IndividualGenotypeF3(this.fileS);
             return ing;
         }
     }

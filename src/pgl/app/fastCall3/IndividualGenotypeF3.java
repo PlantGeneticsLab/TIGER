@@ -1,19 +1,17 @@
 package pgl.app.fastCall3;
-
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import pgl.infra.utils.IOUtils;
-
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
-import java.util.ArrayList;
 
-public class IndividualGenotype implements Comparable<IndividualGenotype> {
+public class IndividualGenotypeF3 implements Comparable<IndividualGenotypeF3> {
     String taxonName = null;
     short chrom = Short.MIN_VALUE;
     int binStart = Integer.MIN_VALUE;
     int binEnd = Integer.MIN_VALUE;
-    ArrayList<int[]> allelePackList = new ArrayList<>();
+    IntArrayList allelePackList = new IntArrayList();
 
-    public IndividualGenotype(String fileS) {
+    public IndividualGenotypeF3(String fileS) {
         this.readFile(fileS);
     }
 
@@ -25,13 +23,8 @@ public class IndividualGenotype implements Comparable<IndividualGenotype> {
             this.binStart = dis.readInt();
             this.binEnd = dis.readInt();
             int currentInt = 0;
-            while ((currentInt = dis.readInt()) != Integer.MIN_VALUE) {
-                int [] currentRecord = new int[pgl.app.fastCall3.AllelePackage.getAllelePackSizeFromFirstInt(currentInt)];
-                currentRecord[0] = currentInt;
-                for (int i = 0; i < currentRecord.length-1; i++) {
-                    currentRecord[i+1] = dis.readInt();
-                }
-                allelePackList.add(currentRecord);
+            while ((currentInt = dis.readInt()) != Integer.MAX_VALUE) {
+                allelePackList.add(currentInt);
             }
             dis.close();
         }
@@ -51,8 +44,7 @@ public class IndividualGenotype implements Comparable<IndividualGenotype> {
             bw.newLine();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < this.getPositionNumber(); i++) {
-                pgl.app.fastCall3.AllelePackage ap = new pgl.app.fastCall3.AllelePackage(this.allelePackList.get(i));
-                bw.write(ap.getAlleleInfo(this.binStart, sb).toString());
+                bw.write(AllelePackageF3.getAlleleInfo(this.allelePackList.getInt(i), this.binStart, sb).toString());
                 bw.newLine();
             }
             bw.flush();
@@ -72,15 +64,15 @@ public class IndividualGenotype implements Comparable<IndividualGenotype> {
     }
 
     public int getAlleleChromPosition(int alleleIndex) {
-        return pgl.app.fastCall3.AllelePackage.getAlleleChromPosition(allelePackList.get(alleleIndex), binStart);
+        return AllelePackageF3.getAlleleChromPosition(allelePackList.get(alleleIndex), binStart);
     }
 
-    public int[] getAllelePack(int alleleIndex) {
-        return this.allelePackList.get(alleleIndex);
+    public int getAllelePack(int alleleIndex) {
+        return this.allelePackList.getInt(alleleIndex);
     }
 
     @Override
-    public int compareTo(IndividualGenotype o) {
+    public int compareTo(IndividualGenotypeF3 o) {
         return taxonName.compareTo(o.taxonName);
     }
 }

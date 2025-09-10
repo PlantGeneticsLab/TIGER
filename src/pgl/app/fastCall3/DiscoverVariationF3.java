@@ -330,7 +330,7 @@ class DiscoverVariationF3 extends AppAbstract {
                     else deletionLengthSet.add(length);
                     indelSeq = baseS.substring(endIndex, endIndex+length);
                     i+=baseSb.length();
-                    i+=length;
+                    i+=length+1;
                 }
                 alleleCount[index]++;
                 vCnt++;
@@ -360,7 +360,7 @@ class DiscoverVariationF3 extends AppAbstract {
         public void closeDos () {
             if (currentBinIndex < 0) return;
             try {
-                dos.writeInt(Integer.MIN_VALUE);
+                dos.writeInt(Integer.MAX_VALUE);
                 dos.flush();
                 dos.close();
             }
@@ -399,10 +399,8 @@ class DiscoverVariationF3 extends AppAbstract {
         public void writeVariants () {
             this.setDos();
             try {
-                int[] allelePack = pgl.app.fastCall3.AllelePackage.getAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength, indelSeq);
-                for (int i = 0; i < allelePack.length; i++) {
-                    dos.writeInt(allelePack[i]);
-                }
+                int allelePack = AllelePackageF3.getAllelePack(binStarts[currentBinIndex], currentPos, altAllele, indelLength);
+                dos.writeInt(allelePack);
             }
             catch (Exception e) {
                 e.printStackTrace();

@@ -49,7 +49,7 @@ class CustomizeVariationLibrary extends AppAbstract {
     }
 
     public void customizeLibrary() {
-        VariationLibrary vl = new VariationLibrary(this.inputLibFileS);
+        VariationLibraryF3 vl = new VariationLibraryF3(this.inputLibFileS);
         RowTable<String> table = new RowTable<String>(this.positionFileS);
         int[] customPositions = table.getColumnAsIntArray(0);
         Arrays.sort(customPositions);

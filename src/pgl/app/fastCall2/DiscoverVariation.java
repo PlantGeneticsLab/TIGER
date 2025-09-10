@@ -202,7 +202,7 @@ class DiscoverVariation extends AppAbstract {
 
     private void variationDiscovery () {
         File outDir = new File (this.outputDirS);
-        outDir.mkdir();
+        outDir.mkdirs();
         File[] taxaOutDirs = new File[this.taxaNames.length];
         for (int i = 0; i < taxaNames.length; i++) {
             File f = new File (outDir, taxaNames[i]);
@@ -330,7 +330,7 @@ class DiscoverVariation extends AppAbstract {
                     else deletionLengthSet.add(length);
                     indelSeq = baseS.substring(endIndex, endIndex+length);
                     i+=baseSb.length();
-                    i+=length;
+                    i+=length+1;
                 }
                 alleleCount[index]++;
                 vCnt++;
@@ -360,7 +360,7 @@ class DiscoverVariation extends AppAbstract {
         public void closeDos () {
             if (currentBinIndex < 0) return;
             try {
-                dos.writeInt(Integer.MIN_VALUE);
+                dos.writeInt(Integer.MAX_VALUE);
                 dos.flush();
                 dos.close();
             }

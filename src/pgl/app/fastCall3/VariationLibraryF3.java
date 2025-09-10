@@ -7,91 +7,92 @@ import pgl.infra.utils.PArrayUtils;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.util.*;
 
-public class VariationLibrary implements Comparable<VariationLibrary> {
+public class VariationLibraryF3 implements Comparable<VariationLibraryF3> {
     short chrom = Short.MIN_VALUE;
     //set to -1, when bin-based vls are concatenated to a chrom-based vl
     int binStart = Integer.MIN_VALUE;
     int[] positions = null;
-    AllelePackage[][] allelePacks = null;
+    int[][] allelePacks = null;
     private int[] potentialPositions = null;
-    private ArrayList<AllelePackage>[] potentialAllelePackLists = null;
+    private IntArrayList[] potentialAllelePackLists = null;
+    
 
 
-    public VariationLibrary(short chrom, int binStart, int[] positions, AllelePackage[][] allelePacks) {
+    public VariationLibraryF3(short chrom, int binStart, int[] positions, int[][] allelePacks) {
         this.chrom = chrom;
         this.binStart = binStart;
         this.positions = positions;
         this.allelePacks = allelePacks;
     }
 
-    public static VariationLibrary getInstance(List<VariationLibrary> vList) {
+    public static VariationLibraryF3 getInstance(List<VariationLibraryF3> vList) {
         Collections.sort(vList);
         IntArrayList positionList = new IntArrayList();
-        List<AllelePackage[]> alleleList = new ArrayList<>();
+        List<int[]> alleleList = new ArrayList<>();
         for (int i = 0; i < vList.size(); i++) {
-            for (int j = 0; j < vList.get(i).positions.length; j++) {
-                positionList.add(vList.get(i).positions[j]);
+            for (int j = 0; j < vList.get(i).getPositionNumber(); j++) {
+                positionList.add(vList.get(i).getPosition(j));
                 alleleList.add(vList.get(i).allelePacks[j]);
             }
         }
         int[] positions = positionList.toIntArray();
-        AllelePackage[][] allelePacks = alleleList.toArray(new AllelePackage[alleleList.size()][]);
-        VariationLibrary vl = new VariationLibrary(vList.get(0).chrom, -1, positions, allelePacks);
+        int[][] allelePacks = alleleList.toArray(new int[alleleList.size()][]);
+        VariationLibraryF3 vl = new VariationLibraryF3(vList.get(0).chrom, -1, positions, allelePacks);
         return vl;
     }
 
-    public VariationLibrary(String infileS) {
+    public VariationLibraryF3(String infileS) {
         this.readBinaryFileS(infileS);
     }
 
-    public VariationLibrary(List<IndividualGenotype> ingList, int maoThresh, int maxAltNum, short chrom, int binStart) {
+    public VariationLibraryF3(List<IndividualGenotypeF3> ingList, int maoThresh, int maxAltNum, short chrom, int binStart) {
         this.chrom = chrom;
         this.binStart = binStart;
         this.mergeIngs(ingList, maoThresh, maxAltNum);
     }
 
-    private void mergeIngs (List<IndividualGenotype> ingList, int maoThresh, int maxAltNum) {
+    private void mergeIngs (List<IndividualGenotypeF3> ingList, int maoThresh, int maxAltNum) {
         IntOpenHashSet positionSet = new IntOpenHashSet();
         for (int i = 0; i < ingList.size(); i++) {
             int positionNumber = ingList.get(i).getPositionNumber();
             for (int j = 0; j < positionNumber; j++) {
                 positionSet.add(ingList.get(i).getAlleleChromPosition(j));
             }
-
         }
         potentialPositions = positionSet.toIntArray();
         Arrays.sort(potentialPositions);
-        potentialAllelePackLists = new ArrayList[potentialPositions.length];
+        potentialAllelePackLists = new IntArrayList[potentialPositions.length];
         for (int i = 0; i < potentialPositions.length; i++) {
-            potentialAllelePackLists[i] = new ArrayList<>();
+            potentialAllelePackLists[i] = new IntArrayList();
         }
         for (int i = 0; i < ingList.size(); i++) {
             int positionNum = ingList.get(i).getPositionNumber();
             int currentIndex = Integer.MIN_VALUE;
             for (int j = 0; j < positionNum; j++) {
                 currentIndex = Arrays.binarySearch(potentialPositions, ingList.get(i).getAlleleChromPosition(j));
-                potentialAllelePackLists[currentIndex].add(new AllelePackage(ingList.get(i).getAllelePack(j)));
+                potentialAllelePackLists[currentIndex].add(ingList.get(i).getAllelePack(j));
             }
         }
         List<Integer> indexList = new ArrayList<>();
-        AllelePackage[][] alts = new AllelePackage[potentialPositions.length][maxAltNum];
+        int[][] alts = new int[potentialPositions.length][maxAltNum];
         int[][] altCounts = new int[potentialPositions.length][maxAltNum];
         for (int i = 0; i < potentialPositions.length; i++) {
             indexList.add(i);
         }
         indexList.parallelStream().forEach(i -> {
-            Set<AllelePackage> alleleSet = new HashSet<>();
+            IntOpenHashSet alleleSet = new IntOpenHashSet();
             for (int j = 0; j < potentialAllelePackLists[i].size(); j++) {
-                alleleSet.add(potentialAllelePackLists[i].get(j));
+                alleleSet.add(potentialAllelePackLists[i].getInt(j));
             }
-            AllelePackage[] alleles = alleleSet.toArray(new AllelePackage[alleleSet.size()]);
+            int[] alleles = alleleSet.toIntArray();
             Arrays.sort(alleles);
             int[] alleleCount = new int[alleles.length];
             int index = Integer.MIN_VALUE;
             for (int j = 0; j < potentialAllelePackLists[i].size(); j++) {
-                index = Arrays.binarySearch(alleles, potentialAllelePackLists[i].get(j));
+                index = Arrays.binarySearch(alleles, potentialAllelePackLists[i].getInt(j));
                 alleleCount[index]++;
             }
             int[] countIndex = PArrayUtils.getIndicesByDescendingValue(alleleCount);
@@ -103,8 +104,8 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             }
         });
         IntArrayList positionList = new IntArrayList();
-        List<AllelePackage[]> allelePackLists = new ArrayList<AllelePackage[]>();
-        List<AllelePackage> allelePackList = new ArrayList<>();
+        List<int[]> allelePackLists = new ArrayList<>();
+        IntArrayList allelePackList = new IntArrayList();
         for (int i = 0; i < alts.length; i++) {
             int varifiedNum = maxAltNum;
             for (int j = maxAltNum; j > 0; j--) {
@@ -115,14 +116,17 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             for (int j = 0; j < varifiedNum; j++) {
                 allelePackList.add(alts[i][j]);
             }
-            positionList.add(alts[i][0].getAlleleChromPosition(binStart));
-            allelePackLists.add(allelePackList.toArray(new AllelePackage[allelePackList.size()]));
+            positionList.add(AllelePackageF3.getAlleleChromPosition(alts[i][0], binStart));
+            allelePackLists.add(allelePackList.toIntArray());
         }
         this.positions = positionList.toIntArray();
-        this.allelePacks = allelePackLists.toArray(new AllelePackage[allelePackLists.size()][]);
+        this.allelePacks = new int[positions.length][];
+        for (int i = 0; i < allelePacks.length; i++) {
+            allelePacks[i] = allelePackLists.get(i);
+        }
     }
 
-    public AllelePackage[] getAllelePacks (int positionIndex) {
+    public int[] getAllelePacks (int positionIndex) {
         return this.allelePacks[positionIndex];
     }
 
@@ -164,6 +168,10 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
         return this.chrom;
     }
 
+    public int getPositionNumber () {
+        return this.positions.length;
+    }
+
     public int getPosition (int positionIndex) {
         return this.positions[positionIndex];
     }
@@ -178,10 +186,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
                 dos.writeInt(positions[i]);
                 dos.writeByte((byte) this.allelePacks[i].length);
                 for (int j = 0; j < allelePacks[i].length; j++) {
-                    int num = allelePacks[i][j].getAllelePackSize();
-                    for (int k = 0; k < num; k++) {
-                        dos.writeInt(allelePacks[i][j].getAllelePack()[k]);
-                    }
+                    dos.writeInt(this.allelePacks[i][j]);
                 }
             }
             dos.flush();
@@ -204,6 +209,12 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             indexList.add(i);
         }
         int[] indices = indexList.toIntArray();
+        int missingN = customPositions.length-indices.length;
+        if (missingN > 0) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(missingN).append(" positions are missing in the variation library");
+            System.out.println(sb.toString());
+        }
         try {
             DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
             dos.writeShort(chrom);
@@ -213,10 +224,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
                 dos.writeInt(positions[indices[i]]);
                 dos.writeByte((byte) this.allelePacks[indices[i]].length);
                 for (int j = 0; j < allelePacks[indices[i]].length; j++) {
-                    int num = allelePacks[indices[i]][j].getAllelePackSize();
-                    for (int k = 0; k < num; k++) {
-                        dos.writeInt(allelePacks[indices[i]][j].getAllelePack()[k]);
-                    }
+                    dos.writeInt(this.allelePacks[indices[i]][j]);
                 }
             }
             dos.flush();
@@ -227,7 +235,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             System.exit(1);
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(positions.length).append(" polymorphic sites are written to ").append(outfileS);
+        sb.append(indices.length).append(" polymorphic sites are written to ").append(outfileS);
         System.out.println(sb.toString());
     }
 
@@ -238,20 +246,13 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
             binStart = dis.readInt();
             int positionNum = dis.readInt();
             positions = new int[positionNum];
-            allelePacks = new AllelePackage[positionNum][];
+            allelePacks = new int[positionNum][];
             for (int i = 0; i < positionNum; i++) {
                 positions[i] = dis.readInt();
                 int alleleNum = dis.readByte();
-                allelePacks[i] = new AllelePackage[alleleNum];
+                allelePacks[i] = new int[alleleNum];
                 for (int j = 0; j < alleleNum; j++) {
-                    int firstInt = dis.readInt();
-                    int packSize = AllelePackage.getAllelePackSizeFromFirstInt(firstInt);
-                    int[] allelePack = new int[packSize];
-                    allelePack[0] = firstInt;
-                    for (int k = 1; k < packSize; k++) {
-                        allelePack[k] = dis.readInt();
-                    }
-                    allelePacks[i][j] = new AllelePackage(allelePack);
+                    allelePacks[i][j] = dis.readInt();
                 }
             }
         }
@@ -263,31 +264,23 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
 
     public void writeTextFileS (String outfileS) {
         try {
+            new File(outfileS).getParentFile().mkdirs();
             BufferedWriter bw = IOUtils.getTextWriter(outfileS);
-            bw.write("Position\tAlts\tIndelLength\tIndelSeq");
+            bw.write("Position\tAlts\tIndelLength");
             bw.newLine();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < positions.length; i++) {
                 sb.setLength(0);
                 sb.append(positions[i]).append("\t");
                 for (int j = 0; j < this.allelePacks[i].length; j++) {
-                    sb.append(allelePacks[i][j].getAlleleBase()).append(",");
+                    sb.append(AllelePackageF3.getAlleleBase(allelePacks[i][j])).append(",");
                 }
                 sb.deleteCharAt(sb.length()-1).append("\t");
-                int totalLength = 0;
                 for (int j = 0; j < this.allelePacks[i].length; j++) {
-                    int indelLength = allelePacks[i][j].getIndelLength();
+                    int indelLength = AllelePackageF3.getIndelLength(allelePacks[i][j]);
                     sb.append(indelLength).append(",");
-                    totalLength+=indelLength;
                 }
                 sb.deleteCharAt(sb.length()-1);
-                if (totalLength > 0) {
-                    sb.append("\t");
-                    for (int j = 0; j < this.allelePacks[i].length; j++) {
-                        sb.append(allelePacks[i][j].getIndelSeq()).append(",");
-                    }
-                    sb.deleteCharAt(sb.length()-1);
-                }
                 bw.write(sb.toString());
                 bw.newLine();
             }
@@ -301,7 +294,7 @@ public class VariationLibrary implements Comparable<VariationLibrary> {
     }
 
     @Override
-    public int compareTo(VariationLibrary o) {
+    public int compareTo(VariationLibraryF3 o) {
         if (this.binStart < o.binStart) return -1;
         else if (this.binStart > o.binStart) return 1;
         return 0;
