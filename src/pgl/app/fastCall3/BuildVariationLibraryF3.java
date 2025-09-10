@@ -10,7 +10,6 @@ import pgl.infra.dna.FastaBit;
 import pgl.infra.utils.Benchmark;
 import pgl.infra.utils.Dyad;
 import pgl.infra.utils.IOUtils;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +18,25 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
+/**
+ * A class for building a variation library from genomic data in the FastCall3 pipeline.
+ * <p>
+ * This class extends {@link AppAbstract} to provide functionality for processing genomic data,
+ * identifying variations, and building a comprehensive variation library. It supports multi-threaded
+ * processing and can handle specific genomic regions for targeted analysis.
+ *
+ * <p>Key features include:
+ * <ul>
+ *   <li>Processing of reference genome and individual genotype data</li>
+ *   <li>Support for parallel processing of multiple taxa</li>
+ *   <li>Filtering of variations based on minor allele occurrence threshold</li>
+ *   <li>Generation of a variation library for downstream analysis</li>
+ * </ul>
+ *
+ * @author Fei Lu
+ * @version 3.0
+ * @since 1.0
+ */
 class BuildVariationLibraryF3 extends AppAbstract {
 
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
@@ -46,10 +64,11 @@ class BuildVariationLibraryF3 extends AppAbstract {
         this.mkLibrary();
     }
 
+
     @Override
     public void creatAppOptions() {
         options.addOption("app", true, "App name.");
-        options.addOption("mod", true, "Module name of FastCall 2.");
+        options.addOption("mod", true, "Module name of FastCall 3.");
         options.addOption("a", true, "Reference genome file with an index file (.fai). The reference should be in Fasta format. " +
             "Chromosomes are labelled as numbers (1,2,3,4,5...).");
         options.addOption("b", true, "Chromosome or region on which genotyping will be performed (e.g. chromosome 1 " +
@@ -60,6 +79,7 @@ class BuildVariationLibraryF3 extends AppAbstract {
         options.addOption("e", true, "Individual genotype directory.");
         options.addOption("f", true, "Variation library directory.");
     }
+
 
     @Override
     public void retrieveAppParameters(String[] args) {
@@ -108,10 +128,26 @@ class BuildVariationLibraryF3 extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"blib\" in FastCall 2.");
+        System.out.println("Below are the commands of module \"blib\" in FastCall 3.");
         this.printUsage();
     }
 
+/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+    /**
+     * Generate a genetic variation library.
+     *
+     * This function is used to generate a genetic variation library from
+     * individual genotypes. It takes the input directory of individual genotypes,
+     * the output directory for the library, and the number of threads as parameters.
+     * The library is generated in a threaded manner, with each thread building a
+     * subset of the library. The library is written to a binary file in the output
+     * directory.
+     *
+     * @param ingDirS the input directory of individual genotypes
+     * @param vLibDirS the output directory for the library
+     * @param threadsNum the number of threads used to build the library
+     */
+/* <<<<<<<<<<  109de986-8334-4f96-8bc9-ed2e33d18cf4  >>>>>>>>>>> */
     private void mkLibrary () {
         List<File> ingTaxaDirList = IOUtils.getDirListInDir(this.ingDirS);
         taxaNames = new String[ingTaxaDirList.size()];
@@ -166,12 +202,41 @@ class BuildVariationLibraryF3 extends AppAbstract {
         System.out.println("Building genetic variation library is finished.");
     }
 
+    /**
+     * A Callable class for reading individual genotype data from a file.
+     * <p>
+     * This class implements {@link Callable} to enable parallel reading of individual
+     * genotype data files. It reads and parses genotype information from a specified file
+     * and returns an {@link IndividualGenotypeF3} object containing the processed data.
+     * 
+     * <p>Usage example:
+     * <pre>
+     * ExecutorService executor = Executors.newFixedThreadPool(threadsNum);
+     * Future<IndividualGenotypeF3> future = executor.submit(new TaxonRead(genotypeFile));
+     * IndividualGenotypeF3 genotype = future.get();
+     * </pre>
+     *
+     * @see IndividualGenotypeF3
+     * @see java.util.concurrent.Callable
+     */
     class TaxonRead implements Callable<IndividualGenotypeF3> {
-        String fileS;
+        /** The file path to read the individual genotype data from */
+        String fileS = null;
+
+        /**
+         * Constructs a new TaxonRead instance for the specified genotype file.
+         *
+         * @param fileS the path to the file containing individual genotype data
+         */
         public TaxonRead (String fileS) {
             this.fileS = fileS;
         }
 
+        /**
+         * Read individual genotype from a file.
+         * @return the read individual genotype
+         * @throws Exception if any error occurs
+         */
         @Override
         public IndividualGenotypeF3 call() throws Exception {
             File f = new File (fileS);

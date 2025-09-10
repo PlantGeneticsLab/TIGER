@@ -19,7 +19,40 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.LongAdder;
 
-
+/**
+ * A comprehensive variant discovery tool for the FastCall3 pipeline.
+ * <p>
+ * This class extends {@link AppAbstract} to provide functionality for discovering
+ * genetic variations from aligned sequencing data. It processes BAM files, applies
+ * various quality filters, and identifies SNPs and indels with high confidence.
+ *
+ * <p>Key features include:
+ * <ul>
+ *   <li>Support for both whole-genome and targeted region analysis</li>
+ *   <li>Configurable quality filters for base quality, mapping quality, and read depth</li>
+ *   <li>Parallel processing of multiple samples</li>
+ *   <li>Sophisticated variant calling with support for heterozygous and homozygous variants</li>
+ *   <li>Handling of both SNPs and indels</li>
+ *   <li>Base Alignment Quality (BAQ) computation</li>
+ * </ul>
+ *
+ * <p>The class implements several quality control parameters:
+ * <ul>
+ *   <li>Mapping Quality (MQ) threshold: {\@code mappingQThresh}</li>
+ *   <li>Base Quality (BQ) threshold: {\@code baseQThresh}</li>
+ *   <li>Minimum Read Depth Count (MDC): {\@code mdcThresh}</li>
+ *   <li>Homozygous Ratio (HoR): {\@code horThresh}</li>
+ *   <li>Heterozygous Ratio (HeR): {\@code herThresh}</li>
+ *   <li>Third Allele Depth Ratio (TDR): {\@code tdrThresh}</li>
+ * </ul>
+ *
+ * @author Fei Lu
+ * @version 3.0
+ * @since 1.0
+ * @see pgl.AppAbstract
+ * @see pgl.infra.dna.FastaBit
+ * @see pgl.infra.dna.allele.AlleleEncoder
+ */
 class DiscoverVariationF3 extends AppAbstract {
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as numbers (1,2,3,4,5...).
     String referenceFileS = null;
@@ -196,7 +229,7 @@ class DiscoverVariationF3 extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"disc\" in FastCall 2.");
+        System.out.println("Below are the commands of module \"disc\" in FastCall 3.");
         this.printUsage();
     }
 
@@ -240,6 +273,33 @@ class DiscoverVariationF3 extends AppAbstract {
         System.out.println("Variantion discovery is finished.");
     }
 
+    /**
+     * A Callable class for processing individual taxon data during variant calling.
+     * <p>
+     * This class is responsible for processing sequence data for a single taxon,
+     * including base calling, quality filtering, and variant identification.
+     * It implements {@link Callable} to enable parallel processing of multiple taxa.
+     *
+     * <p>Key responsibilities include:
+     * <ul>
+     *   <li>Executing samtools commands to process BAM files</li>
+     *   <li>Processing pileup data to identify variants</li>
+     *   <li>Applying quality filters to called variants</li>
+     *   <li>Tracking allele counts and variant statistics</li>
+     *   <li>Handling both SNP and indel variants</li>
+     * </ul>
+     *
+     * <p>The class maintains several important data structures:
+     * <ul>
+     *   <li>{@code alleleCount}: Counts of each allele at the current position</li>
+     *   <li>{@code insertionLengthSet}, {@code deletionLengthSet}: Track observed indel lengths</li>
+     *   <li>{@code indelSeqL}, {@code indelSeq}: Store sequence information for indels</li>
+     *   <li>{@code binBound}, {@code binStarts}: Manage genomic binning for efficient processing</li>
+     * </ul>
+     *
+     * @see java.util.concurrent.Callable
+     * @see DiscoverVariationF3
+     */
     class TaxonCall implements Callable<TaxonCall> {
         String command = null;
         int[][] binBound = null;
@@ -275,19 +335,61 @@ class DiscoverVariationF3 extends AppAbstract {
             this.counter = counter;
         }
 
+        /**
+         * Reset variables for processing a new pileup line.
+         * <p>
+         * This method is called at the beginning of each pileup line.
+         * It resets the StringBuilder {@code baseSb} to empty, resets
+         * the current depth to 0, and sets the boolean flag {@code ifWrite}
+         * to false. This is necessary to prevent data from previous lines
+         * from interfering with the processing of the current line.
+         */
         private void initialize1 () {
             this.baseSb.setLength(0);
             this.currentDepth = 0;
             ifWrite = false;
         }
 
+/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+        /**
+         * <p>
+         * This method is called after the {@code initialize1} method.
+         * It resets the following variables:
+         * <ul>
+         *   <li>{@code alleleCount}: an array for counting the occurrence of each allele.</li>
+         *   <li>{@code insertionLengthSet}, {@code deletionLengthSet}: two sets for storing the lengths of observed insertions and deletions.</li>
+         *   <li>{@code indelLength}: the length of the current indel.</li>
+         * </ul>
+         */
+/* <<<<<<<<<<  e4719dd8-60ce-4ab5-9805-28bff15e9d7f  >>>>>>>>>>> */
         private void initialize2 () {
-            Arrays.fill(alleleCount, 0);
             insertionLengthSet.clear();
             deletionLengthSet.clear();
             indelLength = 0;
         }
 
+        /**
+         * Processes a single line from the pileup file and returns true if the site is valid and false otherwise.
+         * <p>
+         * This method processes a single line from the pileup file. It first checks if the site
+         * is at a valid position (i.e. the base is A, C, G, T, or N). It then checks if the
+         * site is at a valid depth (i.e. the depth is greater than or equal to the specified
+         * minimum depth and less than or equal to the specified maximum depth). It then checks
+         * if the site is at a valid depth ratio (i.e. the ratio of the site depth to the
+         * taxon coverage is greater than or equal to the specified minimum depth ratio and
+         * less than or equal to the specified maximum depth ratio). It then checks if the
+         * site is at a valid heterozygous depth ratio (i.e. the ratio of the second highest
+         * allele to the site depth is greater than or equal to the specified minimum
+         * heterozygous depth ratio and less than or equal to the specified maximum
+         * heterozygous depth ratio).
+         * <p>
+         * If the site is valid, this method sets the alternative allele and its depth and
+         * sets the {@code ifWrite} flag to true. If the site is not valid, it sets the
+         * {@code ifWrite} flag to false.
+         *
+         * @param line a single line from the pileup file
+         * @return true if the site is valid and false otherwise
+         */
         public boolean processPileupLine (String line) {
             lList = PStringUtils.fastSplit(line);
             if (Arrays.binarySearch(BaseEncoder.bases, lList.get(2).charAt(0)) < 0) return false;
@@ -357,6 +459,10 @@ class DiscoverVariationF3 extends AppAbstract {
             return ifWrite;
         }
 
+        /**
+         * Close the DataOutputStream and flush it. This is used to mark the end
+         * of a bin in the output file.
+         */
         public void closeDos () {
             if (currentBinIndex < 0) return;
             try {
@@ -370,6 +476,13 @@ class DiscoverVariationF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Sets the DataOutputStream to write to. This is called by the
+         * TaxonCall.writeVariants() method before writing a variant to the
+         * output file. This method is used to mark the beginning of a new bin
+         * in the output file.
+         * @return nothing
+         */
         public void setDos () {
             int binIndex = Arrays.binarySearch(binStarts, this.currentPos);
             if (binIndex < 0) binIndex = -binIndex-2;
@@ -396,6 +509,10 @@ class DiscoverVariationF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Writes the variants to the output file.
+         * @return nothing
+         */
         public void writeVariants () {
             this.setDos();
             try {
@@ -408,6 +525,15 @@ class DiscoverVariationF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Executes the command to call the genotypes for a given taxon. This
+         * method reads the output from the command, processes the output line by
+         * line, and writes the results to the output file. The output file is
+         * written in the format specified by the {@link AllelePackageF3}
+         * class.
+         * @return nothing
+         * @throws Exception if there is a problem executing the command
+         */
         @Override
         public TaxonCall call() throws Exception {
             try {
@@ -438,6 +564,16 @@ class DiscoverVariationF3 extends AppAbstract {
         }
     }
 
+        /**
+         * Parse the taxa-bam map file. The taxa-bam map file is a tab-delimited
+         * text file. Each line represents a taxon, with the first column being
+         * the taxon name, the second column being the coverage of the taxon,
+         * and the third and beyond columns being the paths to the bam files
+         * for the taxon. This method reads the file and stores the data in two
+         * maps, one for the bam paths and one for the coverage. The bam paths
+         * are stored in a sorted array.
+         * @param taxaBamMapFileS the path to the taxa-bam map file
+         */
     private void parseTaxaBamMap(String taxaBamMapFileS) {
         this.taxaBamPathMap = new HashMap<>();
         this.taxaCoverageMap = new HashMap<>();

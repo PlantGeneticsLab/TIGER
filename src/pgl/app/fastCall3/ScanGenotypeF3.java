@@ -24,6 +24,40 @@ import java.util.concurrent.atomic.LongAdder;
 
 import static cern.jet.math.Arithmetic.factorial;
 
+/**
+ * A high-performance genotyping module for the FastCall3 pipeline that processes BAM alignments
+ * to call genetic variants and generate genotype calls across multiple samples.
+ *
+ * <p>This class extends {@link AppAbstract} and implements parallel processing of genomic data
+ * to efficiently genotype variants from next-generation sequencing data. It supports both single
+ * and multi-threaded operations for optimal performance on various hardware configurations.
+ *
+ * <p>Key features include:
+ * <ul>
+ *   <li>Parallel processing of multiple samples using thread pools</li>
+ *   <li>Support for both single and multi-sample variant calling</li>
+ *   <li>Integration with samtools for efficient BAM file processing</li>
+ *   <li>Generation of VCF format output with comprehensive variant annotations</li>
+ *   <li>Quality filtering based on mapping quality and base quality scores</li>
+ *   <li>Support for both SNP and indel variant calling</li>
+ * </ul>
+ *
+ * <p>The genotyping workflow consists of:
+ * <ol>
+ *   <li>Processing input BAM files and reference genome</li>
+ *   <li>Scanning alignments to identify candidate variants</li>
+ *   <li>Computing genotype likelihoods and making genotype calls</li>
+ *   <li>Generating VCF output with variant and genotype information</li>
+ * </ol>
+ *
+ *
+ * @author Fei Lu
+ * @version 3.0
+ * @since 1.0
+ * @see AppAbstract
+ * @see IndividualGenotypeF3
+ * @see IndividualCountF3
+ */
 class ScanGenotypeF3 extends AppAbstract {
     //Reference genome file with an index file (.fai). The reference should be in Fasta format. Chromosomes are labled as 1-based numbers (1,2,3,4,5...).
     String referenceFileS = null;
@@ -184,10 +218,17 @@ class ScanGenotypeF3 extends AppAbstract {
     @Override
     public void printInstructionAndUsage() {
         System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"scan\" in FastCall 2.");
+        System.out.println("Below are the commands of module \"scan\" in FastCall 3.");
         this.printUsage();
     }
 
+/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+    /**
+     * Generates a final VCF file from individual count files.
+     *
+     * @author Fei Lu
+     */
+/* <<<<<<<<<<  3c9f6e1b-fde9-4fc1-855d-77758a6cbaf1  >>>>>>>>>>> */
     public void mkFinalVCFFromIndiCounts () {
         String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
         outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();
@@ -220,8 +261,8 @@ class ScanGenotypeF3 extends AppAbstract {
             }
             bw.write(sb.toString());
             bw.newLine();
-            List<Future<IndividualCount>> futureList = new ArrayList<>();
-            List<IndividualCount> incList = new ArrayList<>();
+            List<Future<IndividualCountF3>> futureList = new ArrayList<>();
+            List<IndividualCountF3> incList = new ArrayList<>();
             vlBinStartIndex = 0;
             vlBinEndIndex = 0;
             for (int i = 0; i < binStarts.length; i++) {
@@ -237,13 +278,13 @@ class ScanGenotypeF3 extends AppAbstract {
                         String indiTaxonDirS = new File (indiCountFolderS, taxaNames[j]).getAbsolutePath();
                         String fileS = new File (indiTaxonDirS, sb.toString()).getAbsolutePath();
                         TaxonCountRead tr = new TaxonCountRead(fileS);
-                        Future<IndividualCount> result = pool.submit(tr);
+                        Future<IndividualCountF3> result = pool.submit(tr);
                         futureList.add(result);
                     }
                     pool.shutdown();
                     pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
                     for (int j = 0; j < futureList.size(); j++) {
-                        IndividualCount inc = futureList.get(j).get();
+                        IndividualCountF3 inc = futureList.get(j).get();
                         if (inc == null) continue;
                         incList.add(inc);
                     }
@@ -295,24 +336,61 @@ class ScanGenotypeF3 extends AppAbstract {
         System.out.println("Genotyping is finished.");
     }
 
-    class TaxonCountRead implements Callable<IndividualCount> {
-        String fileS;
-        public TaxonCountRead (String fileS) {
+    /**
+     * A Callable implementation for reading and processing individual count data for a single taxon.
+     * This class is used by the thread pool in {@link #scanIndiCountsByThreadPool()} to parallelize
+     * the reading of individual count files across multiple threads.
+     *
+     * <p>Each instance processes a single taxon's count file, which contains allele count information
+     * for a specific genomic region. The file is expected to be in a binary format that can be
+     * read by the {@link IndividualCountF3} class.
+     *
+     * <p>If the specified file does not exist, this class will log a warning and return null.
+     * The calling code is responsible for handling null returns appropriately.
+     *
+     * @see IndividualCountF3
+     * @see #scanIndiCountsByThreadPool()
+     * @since 3.0
+     */
+    class TaxonCountRead implements Callable<IndividualCountF3> {
+        /** The path to the individual count file to be processed */
+        private final String fileS;
+
+        /**
+         * Creates a new TaxonCountRead for the specified file.
+         *
+         * @param fileS the path to the individual count file to be processed
+         */
+        public TaxonCountRead(String fileS) {
             this.fileS = fileS;
         }
 
         @Override
-        public IndividualCount call() throws Exception {
+        public IndividualCountF3 call() throws Exception {
             File f = new File (fileS);
             if (!f.exists()) {
                 System.out.println("Warning: "+ f.getAbsolutePath()+" does not exist");
                 return null;
             }
-            IndividualCount inc = new IndividualCount(this.fileS);
+            IndividualCountF3 inc = new IndividualCountF3(this.fileS);
             return inc;
         }
     }
 
+        /**
+         * Scan the individual count files for all taxa in the specified region in parallel across
+         * multiple threads.
+         *
+         * <p>This method uses the {@link java.util.concurrent.ExecutorService} and
+         * {@link java.util.concurrent.Future} classes to parallelize the reading of individual
+         * count files across multiple threads. The total number of threads is controlled by the
+         * {@link #threadsNum} field.
+         *
+         * <p>The method takes no arguments and returns no value. Instead, it populates the
+         * {@link #posRefMap}, {@link #posAllelePackMap}, and {@link #positions} fields with the
+         * reference base at each position, the allele pack at each position, and the positions
+         * themselves, respectively.
+         */
     public void scanIndiCountsByThreadPool () {
         FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
         posRefMap = new HashMap<>();
@@ -358,15 +436,58 @@ class ScanGenotypeF3 extends AppAbstract {
 
     }
 
+    /**
+     * A Callable implementation for processing individual sample data in parallel.
+     * This class is responsible for reading BAM files, counting alleles, and writing
+     * the results to individual count files in a binary format.
+     *
+     * <p>Each instance processes a single taxon's data across one or more genomic bins,
+     * with each bin being processed as a separate task in the thread pool. The class
+     * implements {@link Callable} to support parallel execution.</p>
+     *
+     * <p>Key responsibilities include:
+     * <ul>
+     *   <li>Executing samtools commands to process BAM files</li>
+     *   <li>Counting alleles at each variant position</li>
+     *   <li>Writing results to binary count files</li>
+     *   <li>Handling missing or empty data</li>
+     *   <li>Managing file I/O for output files</li>
+     * </ul>
+     *
+     * <p>The output files are written in a binary format that can be efficiently
+     * read by {@link IndividualCountF3} for downstream analysis.</p>
+     *
+     * @see Callable
+     * @see IndividualCountF3
+     * @see #scanIndiCountsByThreadPool()
+     * @since 3.0
+     */
     class IndiCount implements Callable<IndiCount> {
+        /** The command to execute for processing BAM files */
         String command = null;
+        
+        /** The name of the taxon being processed */
         String taxonName = null;
+        
+        /** The output directory for this taxon's count files */
         String indiTaxonDirS = null;
+        
+        /** Array of bin boundaries [start, end] for genomic regions */
         int[][] binBound = null;
+        
+        /** Array of bin start positions for quick lookup */
         int[] binStarts = null;
+        
+        /** List of BAM file paths for this taxon */
         List<String> bamPaths = null;
+        
+        /** Counter for tracking progress */
         LongAdder counter = null;
+        
+        /** Output stream for writing binary data */
         DataOutputStream dos = null;
+        
+        /** Index of the current bin being processed */
         int currentBinIndex = Integer.MIN_VALUE;
 
         public IndiCount (String command, String taxonName, int[][] binBound, int[] binStarts, List<String> bamPaths, LongAdder counter) {
@@ -381,6 +502,10 @@ class ScanGenotypeF3 extends AppAbstract {
             new File (indiTaxonDirS).mkdir();
         }
 
+        /**
+         * Closes the DataOutputStream and flushes it. This is used to mark
+         * the end of a bin in the output file.
+         */
         public void closeDos () {
             try {
                 dos.flush();
@@ -392,6 +517,12 @@ class ScanGenotypeF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Opens a new DataOutputStream for writing binary data if the current
+         * bin index is different from the previous one.
+         *
+         * @param queryPos The position of the query site.
+         */
         public void setDos (int queryPos) {
             int binIndex = Arrays.binarySearch(binStarts, queryPos);
             if (binIndex < 0) binIndex = -binIndex-2;
@@ -421,6 +552,13 @@ class ScanGenotypeF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Writes the allele counts at the current site to the output file.
+         *
+         * @param alleleCounts The allele counts, where the length of the array is
+         * the number of alleles at the site, and each element is the number of
+         * times the allele is observed.
+         */
         public void writeAlleleCounts (int[] alleleCounts) {
             try {
                 dos.writeByte((byte)alleleCounts.length);
@@ -439,6 +577,13 @@ class ScanGenotypeF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Writes a missing indicator (-1) to the output file.
+         *
+         * This is used to indicate that the current site is missing data.
+         *
+         * @see #writeAlleleCounts(int[])
+         */
         public void writeMissing () {
             try {
                 dos.writeByte((byte)-1);
@@ -449,6 +594,22 @@ class ScanGenotypeF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Writes empty files for each bin in the genomic region.
+         *
+         * If a file for a bin already exists, it is skipped.
+         *
+         * For each file, the following information is written:
+         * <ol>
+         * <li>The taxon name</li>
+         * <li>The chromosome number</li>
+         * <li>The start and end positions of the bin</li>
+         * <li>The number of sites in the bin</li>
+         * <li>For each site in the bin, a missing indicator (-1)</li>
+         * </ol>
+         *
+         * @see #writeMissing()
+         */
         public void writeEmptyFiles() {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < binStarts.length; i++) {
@@ -481,6 +642,15 @@ class ScanGenotypeF3 extends AppAbstract {
             }
         }
 
+        /**
+         * Calls mpileup program to calculate the allele counts for each site in this individual.
+         *
+         * <p>For each site, it writes a missing indicator (-1) if the site is not in the pileup file,
+         * or the allele counts if the site is in the pileup file.
+         *
+         * @throws Exception
+         * @return this object
+         */
         @Override
         public IndiCount call() throws Exception {
             try {
@@ -562,6 +732,13 @@ class ScanGenotypeF3 extends AppAbstract {
         }
     }
 
+    /**
+     * Delete the temporary files.
+     *
+     * @see #outputDirS
+     * @see #subDirS
+     * @see #vLibPosFileS
+     */
     private void deleteTemperateFile () {
         File f1 = new File(outputDirS, subDirS[0]);
         File f2 = new File(outputDirS, subDirS[1]);
@@ -577,6 +754,12 @@ class ScanGenotypeF3 extends AppAbstract {
         new File (vLibPosFileS).delete();
     }
 
+    /**
+     *
+     * @param siteCountList a list of short arrays, each is a SNP site's count of alleles.
+     * @param altAlleles an array of alternate alleles.
+     * @return a string of info and genotypes.
+     */
     private String getInfoAndGenotypes (List<short[]> siteCountList, int[] altAlleles) {
         StringBuilder genoSB = new StringBuilder("GT:AD:GL");
         StringBuilder infoSB = new StringBuilder();
@@ -636,6 +819,15 @@ class ScanGenotypeF3 extends AppAbstract {
         return infoSB.toString();
     }
 
+    /**
+     * Count the occurrence of each allele in the given pileup string.
+     * @param altAlleles the alternative alleles to be counted
+     * @param baseS the pileup string
+     * @param siteDepth the total depth at the site
+     * @param indelSb a StringBuilder to store the indel string
+     * @return an array of length (altAlleles.length+1) where the first element is the count of the reference allele
+     * and the remaining elements are the counts of the alternative alleles in the same order as in altAlleles
+     */
     private int[] getAlleleCounts (int[] altAlleles, String baseS, int siteDepth, StringBuilder indelSb) {
         byte[] baseB = baseS.getBytes();
         int[] altAlleleCounts = new int[altAlleles.length];
@@ -677,6 +869,13 @@ class ScanGenotypeF3 extends AppAbstract {
         return alleleCounts;
     }
 
+        /**
+         * Calculate the genotype of a given site from its allele counts.
+         * @param cnt the allele counts of a site.
+         * @return the genotype of the site in the format of "a1/a2:cnt1,cnt2,...,cntN:likelihood1,likelihood2,...,likelihoodN",
+         *         where a1 and a2 are the two alleles of the site, cnt1,cnt2,...,cntN are the counts of alleles, and likelihood1,likelihood2,...,likelihoodN are
+         *         the likelihoods of the corresponding genotypes.
+         */
     private String getGenotypeByShort (short[] cnt) {
         //in case some allele depth is greater than maxFactorial, to keep the original allele counts
         short[] oriCnt = null;
@@ -731,6 +930,15 @@ class ScanGenotypeF3 extends AppAbstract {
         return sb.toString();
     }
 
+    /**
+     * This method will process the variation library according to the given chromosome and region.
+     * It will output a file which contains the positions of the variation library.
+     * The file name is "{chrom}_{regionStart}_{regionEnd}.pos.txt", where {chrom} is the chromosome number,
+     * {regionStart} and {regionEnd} are the start and end positions of the region respectively.
+     * The file contains one position per line, with the format of "chrom\tPosition".
+     * If the chromosome number of the library does not match the given one, or the region is incorrectly set,
+     * the program will quit.
+     */
     private void processVariationLibrary () {
         StringBuilder sb = new StringBuilder();
         sb.append(this.chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".pos.txt");
@@ -762,6 +970,20 @@ class ScanGenotypeF3 extends AppAbstract {
         }
     }
 
+    /**
+     * Initialize a map to store the factorials from 0 to maxFactorial.
+     * The key is the index of the factorial, and the value is the corresponding factorial.
+     * For example, if maxFactorial = 5, then the map will contain the following entries:
+     * <p>
+     * 0 -> 1
+     * 1 -> 1
+     * 2 -> 2
+     * 3 -> 6
+     * 4 -> 24
+     * 5 -> 120
+     * <p>
+     * This map is used to calculate the binomial coefficients.
+     */
     private void creatFactorialMap () {
         this.factorialMap = HashIntDoubleMaps.getDefaultFactory().newMutableMap();
         for (int i = 0; i < this.maxFactorial+1; i++) {
@@ -769,6 +991,19 @@ class ScanGenotypeF3 extends AppAbstract {
         }
     }
 
+    /**
+     * This method will create a directory with the given name,
+     * and create several subdirectories with the names specified in
+     * the subDirS array.
+     * <p>
+     * The subdirectories are:
+     * <p>
+     * mpileup
+     * indiVCF
+     * VCF
+     * <p>
+     * The output directory name is specified by the outputDirS variable.
+     */
     public void mkDir () {
         File f = new File (this.outputDirS);
         f.mkdir();
@@ -778,6 +1013,16 @@ class ScanGenotypeF3 extends AppAbstract {
         }
     }
 
+    /**
+     * Parse the taxa-bam map file. The taxa-bam map file is a tab-delimited
+     * text file. Each line represents a taxon, with the first column being
+     * the taxon name, the second column being the coverage of the taxon,
+     * and the third and beyond columns being the paths to the bam files
+     * for the taxon. This method reads the file and stores the data in two
+     * maps, one for the bam paths and one for the coverage. The bam paths
+     * are stored in a sorted array.
+     * @param taxaBamMapFileS the path to the taxa-bam map file
+     */
     private void parseTaxaBamMap(String taxaBamMapFileS) {
         this.taxaBamsMap = new HashMap<>();
         this.taxaCoverageMap = new HashMap<>();

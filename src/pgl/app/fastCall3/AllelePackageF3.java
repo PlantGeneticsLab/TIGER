@@ -4,60 +4,27 @@ import pgl.infra.dna.BaseEncoder;
 import pgl.infra.dna.allele.AlleleEncoder;
 
 /**
- * A wrapper class of allele pack, which enabled {@link java.util.Set} functionality of allele pack
- * Using array of int, an allele pack stores allele state, relative position of the allele in bin, length of Indel (if it exists), and sequence of the Indel
+ * A utility class for compressing and manipulating allele information in a packed integer format.
+ * <p>
+ * This class provides methods to work with allele data that is compressed into a 32-bit integer (pack) with the following structure:
+ * - Bits 0-22 (23 bits): Position within a bin (max value: 8,388,607)
+ * - Bits 23-25 (3 bits): Allele coding
+ * - Bits 26-31 (6 bits): Indel length (max value: 63)
+ *
+ * @author Fei Lu
+ * @version 3.0
+ * @since 1.0
  */
-class AllelePackageF3 implements Comparable<AllelePackageF3>{
-    int[] allelePack = null;
+class AllelePackageF3 {
 
-    public AllelePackageF3(int[] allelePacks) {
-        this.allelePack = allelePacks;
-    }
-
-    public int[] getAllelePack() {
-        return this.allelePack;
-    }
-
-    public int getFirstIntOfAllelePack() {
-        return this.allelePack[0];
-    }
-
-    public int getAllelePackSize () {
-        return this.allelePack.length;
-    }
-
-    public byte getAlleleCoding () {
-        return getAlleleCoding(getFirstIntOfAllelePack());
-    }
-
-    public char getAlleleBase () {
-        return getAlleleBase(getFirstIntOfAllelePack());
-    }
-
-    public byte getIndelLength () {
-        return getIndelLength(getFirstIntOfAllelePack());
-    }
-
-    public String getIndelSeq () {
-        if (this.getAllelePackSize() == 1) return "";
-        int[] des = new int[this.getAllelePackSize()-1];
-        System.arraycopy(this.allelePack, 1, des, 0, des.length);
-        return BaseEncoder.getSequenceFromInts(des).substring(0, this.getIndelLength());
-    }
-
-    public int getAlleleChromPosition (int binStart) {
-        return getAlleleChromPosition (getFirstIntOfAllelePack(), binStart);
-    }
-
-    public StringBuilder getAlleleInfo (int binStart, StringBuilder sb) {
-        sb.setLength(0);
-        sb.append(this.getAlleleChromPosition(binStart)).append("\t").append(this.getAlleleBase());
-        if (this.getIndelLength() != 0) {
-            sb.append("\t").append(this.getIndelSeq());
-        }
-        return sb;
-    }
-
+    /**
+     * Get the allele information given an allele pack, bin start and StringBuilder.
+     * The format of the returned string is: chromPosition\talleleBase\tindelLength
+     * @param allelePack
+     * @param binStart
+     * @param sb
+     * @return
+     */
     static StringBuilder getAlleleInfo (int allelePack, int binStart, StringBuilder sb) {
         sb.setLength(0);
         sb.append(getAlleleChromPosition(allelePack,binStart)).append("\t").append(getAlleleBase(allelePack));
@@ -66,44 +33,6 @@ class AllelePackageF3 implements Comparable<AllelePackageF3>{
             sb.append("\t").append(indelLength);
         }
         return sb;
-    }
-
-    @Override
-    public int compareTo(AllelePackageF3 o) {
-        if (allelePack.length != o.allelePack.length) {
-            return allelePack.length - o.allelePack.length;
-        }
-        else {
-            for (int i = 0; i < allelePack.length; i++) {
-              if (allelePack[i] < o.allelePack[i]) {
-                  return -1;
-              }
-              else if (allelePack[i] > o.allelePack[i]) {
-                  return 1;
-              }
-              else continue;
-            }
-        }
-        return 0;
-    }
-
-    public int hashCode() {
-        return allelePack[0];
-    }
-
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof AllelePackageF3)) {
-            return false;
-        }
-        AllelePackageF3 other = (AllelePackageF3) o;
-        if (allelePack.length != other.allelePack.length) return false;
-        for (int i = 0; i < allelePack.length; i++) {
-            if (allelePack[i] != other.allelePack[i]) return false;
-        }
-        return true;
     }
 
     /**
@@ -141,25 +70,6 @@ class AllelePackageF3 implements Comparable<AllelePackageF3>{
         }
     }
 
-    /**
-     * Return the int size of an allele pack from the first int of the allele pack
-     * @param firstIntOfAllelePack
-     * @return
-     */
-    static int getAllelePackSizeFromFirstInt (int firstIntOfAllelePack) {
-        int indelLength = getIndelLength(firstIntOfAllelePack);
-        return getAllelePackSizeFromIndelLength(indelLength);
-    }
-
-    /**
-     * Return the chromosomal position of the allele
-     * @param allelePack
-     * @param binStart
-     * @return
-     */
-    static int getAlleleChromPosition(int[] allelePack, int binStart) {
-        return (allelePack[0] >>> 9) + binStart;
-    }
 
     /**
      * Return the chromosomal position of the allele
@@ -182,10 +92,20 @@ class AllelePackageF3 implements Comparable<AllelePackageF3>{
         return (byte)v;
     }
 
+    /**
+     * Returns the base of an allele given an allele pack
+     * @param allelePack a compressed information of an allele
+     * @return the base of the allele
+     */
     static char getAlleleBase (int allelePack) {
         return AlleleEncoder.alleleCodingToBaseMap.get(getAlleleCoding(allelePack));
     }
 
+    /**
+     * Return the length of an indel given an allele pack
+     * @param allelePack a compressed information of an allele
+     * @return the length of the indel
+     */
     static byte getIndelLength (int allelePack) {
         return (byte)(FastCall3.maxIndelLength & allelePack);
     }
