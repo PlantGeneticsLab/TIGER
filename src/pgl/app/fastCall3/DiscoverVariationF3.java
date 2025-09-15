@@ -363,6 +363,7 @@ class DiscoverVariationF3 extends AppAbstract {
          */
 /* <<<<<<<<<<  e4719dd8-60ce-4ab5-9805-28bff15e9d7f  >>>>>>>>>>> */
         private void initialize2 () {
+            Arrays.fill(alleleCount, 0);
             insertionLengthSet.clear();
             deletionLengthSet.clear();
             indelLength = 0;
