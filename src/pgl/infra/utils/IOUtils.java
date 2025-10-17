@@ -109,6 +109,18 @@ public class IOUtils {
         return br;
     }
 
+    public static DataOutputStream getBigBufferedBinaryGzipWriter (String outfileS) {
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outfileS), 1 << 20), 1 << 20));
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dos;
+    }
+
     public static DataOutputStream getBinaryGzipWriter (String outfileS) {
         DataOutputStream dos = null;
         try {

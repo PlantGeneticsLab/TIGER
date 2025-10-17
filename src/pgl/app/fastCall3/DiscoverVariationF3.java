@@ -495,7 +495,8 @@ class DiscoverVariationF3 extends AppAbstract {
                 sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ing.gz");
                 String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
 //                System.out.println(outfileS);
-                dos = IOUtils.getBinaryGzipWriter(outfileS);
+//                dos = IOUtils.getBinaryGzipWriter(outfileS);
+                dos = IOUtils.getBigBufferedBinaryGzipWriter(outfileS); // TODO: better buffered for easy write io load.
                 try {
                     dos.writeUTF(this.taxon);
                     dos.writeShort((short)chrom);
@@ -537,25 +538,52 @@ class DiscoverVariationF3 extends AppAbstract {
          */
         @Override
         public TaxonCall call() throws Exception {
+            Runtime rt = Runtime.getRuntime();
+            Process p = rt.exec(command);
+
             try {
-                Runtime rt = Runtime.getRuntime();
-                Process p = rt.exec(command);
+                p.getOutputStream().close();
+            } catch (Exception ignore) {}
+
+            Thread errDrainer = new Thread(() -> {
+                try (BufferedReader ebr = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                    String errLine;
+                    while ((errLine = ebr.readLine()) != null) {
+                        if (errLine.startsWith("[mpileup]") && errLine.contains("samples in") && errLine.contains("input files")) {
+                            continue;
+                        }
+                        System.err.println("[samtools std err]: " + errLine);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }, "samtools-stderr-drainer");
+            errDrainer.setDaemon(true);
+            errDrainer.start();
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                 String temp = null;
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 while ((temp = br.readLine()) != null) {
                     if(!this.processPileupLine(temp)) continue;
                     this.writeVariants();
                 }
                 this.closeDos();
-                br.close();
-                p.waitFor();
-                System.out.println("Individual genotype is completed for taxon "+ this.taxon);
             }
-            catch (Exception e) {
-                System.out.println("Problems with taxon " + this.taxon);
-                e.printStackTrace();
-                System.exit(1);
+
+            boolean finished = p.waitFor(5, TimeUnit.HOURS);    // set 5 hours for one sample
+            if (!finished) {
+                p.destroyForcibly();
+                throw new RuntimeException("Command timed out: " + command);
             }
+
+            errDrainer.join();
+
+            int exit = p.exitValue();
+            if (exit != 0) {
+                throw new RuntimeException("Command failed (exit=" + exit + "): " + command);
+            }
+            System.out.println("Individual genotype is completed for taxon "+ this.taxon);
+
             counter.increment();
             int count = counter.intValue();
             if (count%50 == 0) {

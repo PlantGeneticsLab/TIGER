@@ -12,10 +12,8 @@ import pgl.PGLConstraints;
 import pgl.infra.dna.FastaBit;
 import pgl.infra.dna.FastaRecordBit;
 import pgl.infra.dna.allele.AlleleEncoder;
-import pgl.infra.utils.Benchmark;
-import pgl.infra.utils.Dyad;
-import pgl.infra.utils.IOUtils;
-import pgl.infra.utils.PStringUtils;
+import pgl.infra.utils.*;
+
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -263,8 +261,9 @@ class ScanGenotypeF3 extends AppAbstract {
             bw.newLine();
             List<Future<IndividualCountF3>> futureList = new ArrayList<>();
             List<IndividualCountF3> incList = new ArrayList<>();
-            vlBinStartIndex = 0;
-            vlBinEndIndex = 0;
+//            vlBinStartIndex = 0;
+//            vlBinEndIndex = 0;
+            int offset = 0;
             for (int i = 0; i < binStarts.length; i++) {
                 futureList.clear();
                 incList.clear();
@@ -294,15 +293,27 @@ class ScanGenotypeF3 extends AppAbstract {
                     e.printStackTrace();
                     System.exit(1);
                 }
-                vlBinEndIndex = vlBinStartIndex + incList.get(0).alleleNum.length;
-                List<Integer> indexList = new ArrayList<>();
-                for (int j = 0; j < incList.get(0).alleleNum.length; j++) {
-                    indexList.add(j);
-                }
+
+                final int binSiteCount = incList.get(0).alleleNum.length;
+                final int binOffset = offset;
+                List<Integer> indexList = PArrayUtils.getIndexList(binSiteCount);
+//                vlBinEndIndex = vlBinStartIndex + incList.get(0).alleleNum.length;
+//                List<Integer> indexList = new ArrayList<>();
+//                for (int j = 0; j < incList.get(0).alleleNum.length; j++) {
+//                    indexList.add(j);
+//                }
+
                 String[] vcfRecords = new String[indexList.size()];
                 indexList.parallelStream().forEach(index -> {
+                    int posIdx = binOffset + index;
+                    if (posIdx < 0 || posIdx >= positions.length) {
+                        throw new ArrayIndexOutOfBoundsException("positions index " + posIdx + " out of " + positions.length);
+                    }
                     StringBuilder vsb = new StringBuilder();
-                    int currentPosition = positions[index+vlBinStartIndex];
+                    int currentPosition = positions[posIdx];
+//                    StringBuilder vsb = new StringBuilder();
+//                    int currentPosition = positions[index+vlBinStartIndex];
+
                     vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
                             .append("\t").append(posRefMap.get(currentPosition)).append("\t");
                     int[] altAlleles = posAllelePackMap.get(currentPosition);
@@ -321,7 +332,10 @@ class ScanGenotypeF3 extends AppAbstract {
                     bw.write(vcfRecords[j]);
                     bw.newLine();
                 }
-                vlBinStartIndex = vlBinEndIndex;
+
+                offset += binSiteCount;
+//                vlBinStartIndex = vlBinEndIndex;
+
                 System.out.println(sb.toString().split("\\.")[0]+ " genotyping is finished.");
             }
             bw.flush();
@@ -537,12 +551,14 @@ class ScanGenotypeF3 extends AppAbstract {
                     dos.writeShort((short)chrom);
                     dos.writeInt(binBound[binIndex][0]);
                     dos.writeInt(binBound[binIndex][1]);
-                    vlBinStartIndex = vl.getStartIndex(binBound[binIndex][0]);
-                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]-1);
-//                    if (vlBinStartIndex < 0 || vlBinEndIndex < 0) {
-////                        unlikely to happen
-//                    }
-                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);
+
+                    int startIdx = vl.getStartIndex(binBound[binIndex][0]);
+                    int endIdx = vl.getEndIndex(binBound[binIndex][1] - 1);
+                    int sites = (startIdx == Integer.MIN_VALUE || endIdx == Integer.MIN_VALUE) ? 0 : Math.max(0, endIdx - startIdx);
+                    dos.writeInt(sites);
+//                    vlBinStartIndex = vl.getStartIndex(binBound[binIndex][0]);
+//                    vlBinEndIndex = vl.getEndIndex(binBound[binIndex][1]-1);
+//                    dos.writeInt(vlBinEndIndex-vlBinStartIndex);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -624,12 +640,17 @@ class ScanGenotypeF3 extends AppAbstract {
                     dos.writeShort((short)chrom);
                     dos.writeInt(binBound[i][0]);
                     dos.writeInt(binBound[i][1]);
-                    vlBinStartIndex = vl.getStartIndex(binBound[i][0]);
-                    vlBinEndIndex = vl.getEndIndex(binBound[i][1]-1);
-                    int len = vlBinEndIndex-vlBinStartIndex;
-                    if (vlBinStartIndex == Integer.MIN_VALUE || vlBinEndIndex == Integer.MIN_VALUE) {
-                        len = 0;
-                    }
+
+                    int startIdx = vl.getStartIndex(binBound[i][0]);
+                    int endIdx = vl.getEndIndex(binBound[i][1] - 1);
+                    int len = (startIdx == Integer.MIN_VALUE || endIdx == Integer.MIN_VALUE) ? 0 : Math.max(0, endIdx - startIdx);
+//                    vlBinStartIndex = vl.getStartIndex(binBound[i][0]);
+//                    vlBinEndIndex = vl.getEndIndex(binBound[i][1]-1);
+//                    int len = vlBinEndIndex-vlBinStartIndex;
+//                    if (vlBinStartIndex == Integer.MIN_VALUE || vlBinEndIndex == Integer.MIN_VALUE) {
+//                        len = 0;
+//                    }
+
                     dos.writeInt(len);
                     for (int j = 0; j < len; j++) {
                         this.writeMissing();
@@ -653,12 +674,32 @@ class ScanGenotypeF3 extends AppAbstract {
          */
         @Override
         public IndiCount call() throws Exception {
+            Runtime rt = Runtime.getRuntime();
+            Process p = rt.exec(command);
+
             try {
-                Runtime rt = Runtime.getRuntime();
-                Process p = rt.exec(command);
+                p.getOutputStream().close();
+            } catch (Exception e) {}
+
+            Thread errDrainer = new Thread(() -> {
+                try (BufferedReader ebr = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                    String errLine;
+                    while ((errLine = ebr.readLine()) != null) {
+                        if (errLine.startsWith("[mpileup]") && errLine.contains("samples in") && errLine.contains("input files")) {
+                            continue;
+                        }
+                        System.err.println("[samtools std err]: " + errLine);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }, "samtools-stderr-drainer");
+            errDrainer.setDaemon(true);
+            errDrainer.start();
+
+            try {
                 String temp = null;
                 BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                BufferedReader bre = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 DataOutputStream dis = null;
                 String current = br.readLine();
                 List<String> currentList = null;
@@ -710,17 +751,29 @@ class ScanGenotypeF3 extends AppAbstract {
                 }
                 this.closeDos();
                 br.close();
-                p.waitFor();
-                this.writeEmptyFiles();
-                StringBuilder sb = new StringBuilder();
-                sb.append("mpileup command: ").append(command).append("\n");
-                sb.append("mpileup error profile: ");
-                while ((current = bre.readLine()) != null) {
-                    sb.append(current).append("\n");
-                }
-                sb.append("Individual allele counting is completed for taxon ").append(this.taxonName).append("\n");
-                System.out.println(sb.toString());
 
+                boolean finished = p.waitFor(5, TimeUnit.HOURS);    // set 5 hours for one sample
+                if (!finished) {
+                    p.destroyForcibly();
+                    throw new RuntimeException("Command timed out: " + command);
+                }
+
+                this.writeEmptyFiles();
+//                StringBuilder sb = new StringBuilder();
+//                sb.append("mpileup command: ").append(command).append("\n");
+//                sb.append("mpileup error profile: ");
+//                while ((current = bre.readLine()) != null) {
+//                    sb.append(current).append("\n");
+//                }
+//                sb.append("Individual allele counting is completed for taxon ").append(this.taxonName).append("\n");
+//                System.out.println(sb.toString());
+                errDrainer.join();
+
+                int exit = p.exitValue();
+                if (exit != 0) {
+                    throw new RuntimeException("Command failed (exit=" + exit + "): " + command);
+                }
+                System.out.println("Individual allele counting is completed for taxon " + this.taxonName);
             }
             catch (Exception ee) {
                 ee.printStackTrace();
@@ -1053,7 +1106,7 @@ class ScanGenotypeF3 extends AppAbstract {
                 System.out.println("Taxa names are not unique. Programs quits");
                 System.exit(0);
             }
-            System.out.println("Created TaxaBamMap from" + taxaBamMapFileS);
+            System.out.println("Created TaxaBamMap from " + taxaBamMapFileS);
             System.out.println("Taxa number:\t"+String.valueOf(taxaNames.length));
             System.out.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
         }
