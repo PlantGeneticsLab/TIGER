@@ -29,3 +29,5 @@ hs_err_pid*
 # IntelliJ build output
 out/
 test_popdep/
+.idea/
+.vscode/

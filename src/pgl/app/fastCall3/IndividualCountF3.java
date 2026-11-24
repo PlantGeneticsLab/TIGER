@@ -3,9 +3,11 @@ package pgl.app.fastCall3;
 import pgl.infra.utils.IOUtils;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * A class for storing and managing allele count information for individual samples in the FastCall3 pipeline.
@@ -63,53 +65,6 @@ class IndividualCountF3 implements Comparable<IndividualCountF3> {
         this.alleleCounts = alleleCounts;
     }
 
-    /**
-     * Sum allele counts from source taxa at each site. A missing source site is treated as zero.
-     * The site stays missing only when every source is missing.
-     */
-    static IndividualCountF3 mergeSources(String mergedName, List<IndividualCountF3> sources) {
-        if (sources == null || sources.isEmpty()) {
-            throw new IllegalArgumentException("No source individual counts to merge for " + mergedName);
-        }
-        IndividualCountF3 first = sources.get(0);
-        int n = first.alleleNum.length;
-        for (int i = 1; i < sources.size(); i++) {
-            if (sources.get(i).alleleNum.length != n) {
-                throw new IllegalArgumentException("Site-count mismatch when merging " + mergedName
-                        + ": " + first.taxonName + "=" + n + " vs " + sources.get(i).taxonName
-                        + "=" + sources.get(i).alleleNum.length);
-            }
-        }
-        byte[] alleleNum = new byte[n];
-        short[][] alleleCounts = new short[n][];
-        for (int i = 0; i < n; i++) {
-            short[] sum = null;
-            for (IndividualCountF3 src : sources) {
-                short[] cnt = src.alleleCounts[i];
-                if (cnt == null) continue;
-                if (sum == null) {
-                    sum = new short[cnt.length];
-                }
-                else if (sum.length != cnt.length) {
-                    throw new IllegalArgumentException("Allele-number mismatch at site " + i
-                            + " when merging " + mergedName);
-                }
-                for (int j = 0; j < cnt.length; j++) {
-                    int v = sum[j] + cnt[j];
-                    sum[j] = (v > Short.MAX_VALUE) ? Short.MAX_VALUE : (short) v;
-                }
-            }
-            if (sum == null) {
-                alleleNum[i] = (byte) -1;
-            }
-            else {
-                alleleNum[i] = (byte) sum.length;
-                alleleCounts[i] = sum;
-            }
-        }
-        return new IndividualCountF3(mergedName, first.chrom, first.binStart, first.binEnd, alleleNum, alleleCounts);
-    }
-
     void writeBinaryFileS(String outfileS) {
         try {
             DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
@@ -132,7 +87,7 @@ class IndividualCountF3 implements Comparable<IndividualCountF3> {
             dos.close();
         }
         catch (Exception e) {
-            System.out.println(outfileS);
+            System.err.println(outfileS);
             e.printStackTrace();
             System.exit(1);
         }
@@ -173,7 +128,7 @@ class IndividualCountF3 implements Comparable<IndividualCountF3> {
             dis.close();
         }
         catch (Exception e) {
-            System.out.println(infileS);
+            System.err.println(infileS);
             e.printStackTrace();
             System.exit(1);
         }
@@ -242,5 +197,68 @@ class IndividualCountF3 implements Comparable<IndividualCountF3> {
     @Override
     public int compareTo(IndividualCountF3 o) {
         return this.taxonName.compareTo(o.taxonName);
+    }
+
+    /**
+     * Sequential reader for one {@code .iac.gz}. Sites are yielded in library order
+     * so a bin can be genotyped without loading every taxon into memory.
+     */
+    static final class SiteStream implements Closeable {
+        final String taxonName;
+        final short chrom;
+        final int binStart;
+        final int binEnd;
+        final int positionNum;
+        private final DataInputStream dis;
+        private int remaining;
+
+        private SiteStream(String taxonName, short chrom, int binStart, int binEnd,
+                           int positionNum, DataInputStream dis) {
+            this.taxonName = taxonName;
+            this.chrom = chrom;
+            this.binStart = binStart;
+            this.binEnd = binEnd;
+            this.positionNum = positionNum;
+            this.dis = dis;
+            this.remaining = positionNum;
+        }
+
+        static SiteStream open(String infileS) throws IOException {
+            File f = new File(infileS);
+            if (!f.exists()) {
+                return null;
+            }
+            DataInputStream dis = IOUtils.getBinaryGzipReader(infileS);
+            if (dis == null) {
+                throw new IOException("Cannot open individual count file: " + infileS);
+            }
+            String taxonName = dis.readUTF();
+            short chrom = dis.readShort();
+            int binStart = dis.readInt();
+            int binEnd = dis.readInt();
+            int positionNum = dis.readInt();
+            return new SiteStream(taxonName, chrom, binStart, binEnd, positionNum, dis);
+        }
+
+        short[] readSite() throws IOException {
+            if (this.remaining <= 0) {
+                throw new IOException("No remaining sites in individual count stream for " + this.taxonName);
+            }
+            this.remaining--;
+            byte n = this.dis.readByte();
+            if (n < 0) {
+                return null;
+            }
+            short[] counts = new short[n];
+            for (int i = 0; i < n; i++) {
+                counts[i] = this.dis.readShort();
+            }
+            return counts;
+        }
+
+        @Override
+        public void close() throws IOException {
+            this.dis.close();
+        }
     }
 }

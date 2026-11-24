@@ -149,7 +149,7 @@ class DiscoverVariationF3 extends AppAbstract {
                     this.baqMode = "-B ";
                 }
                 else {
-                    System.out.println("Warning: Incorrect input for -c option. The BAQ computation is disabled by default");
+                    System.err.println("Warning: Incorrect input for -c option. The BAQ computation is disabled by default");
                 }
                 inOpt = null;
             }
@@ -196,9 +196,9 @@ class DiscoverVariationF3 extends AppAbstract {
             String[] tem = line.getOptionValue("l").split(":");
             this.chrom = Integer.parseInt(tem[0]);
             long start = System.nanoTime();
-            System.out.println("Reading reference genome from "+ referenceFileS);
+            System.err.println("Reading reference genome from "+ referenceFileS);
             FastaBit genomeFa = new FastaBit(referenceFileS);
-            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            System.err.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
             int chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
@@ -220,7 +220,7 @@ class DiscoverVariationF3 extends AppAbstract {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.println("\nThere are input errors in the command line. Program stops.");
+            System.err.println("\nThere are input errors in the command line. Program stops.");
             this.printInstructionAndUsage();
             System.exit(0);
         }
@@ -228,8 +228,8 @@ class DiscoverVariationF3 extends AppAbstract {
 
     @Override
     public void printInstructionAndUsage() {
-        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"disc\" in FastCall 3.");
+        System.err.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.err.println("Below are the commands of module \"disc\" in FastCall 3.");
         this.printUsage();
     }
 
@@ -258,7 +258,7 @@ class DiscoverVariationF3 extends AppAbstract {
                 }
                 sb.append(" -r ").append(this.chrom).append(":").append(this.regionStart).append("-").append(regionEnd-1);
                 String command = sb.toString();
-//                System.out.println(command);
+//                System.err.println(command);
                 TaxonCall tc = new TaxonCall(command, binBound, binStarts, taxaNames[i], taxaOutDirs[i], counter);
                 Future<TaxonCall> f = pool.submit(tc);
             }
@@ -269,8 +269,8 @@ class DiscoverVariationF3 extends AppAbstract {
             e.printStackTrace();
             System.exit(1);
         }
-        System.out.println("Individual genotype of "+ String.valueOf(this.taxaNames.length)+" taxa is completed.");
-        System.out.println("Variantion discovery is finished.");
+        System.err.println("Individual genotype of "+ String.valueOf(this.taxaNames.length)+" taxa is completed.");
+        System.err.println("Variantion discovery is finished.");
     }
 
     /**
@@ -496,7 +496,7 @@ class DiscoverVariationF3 extends AppAbstract {
                 StringBuilder sb = new StringBuilder();
                 sb.append(chrom).append("_").append(binBound[binIndex][0]).append("_").append(binBound[binIndex][1]).append(".ing.gz");
                 String outfileS = new File (outDir, sb.toString()).getAbsolutePath();
-//                System.out.println(outfileS);
+//                System.err.println(outfileS);
 //                dos = IOUtils.getBinaryGzipWriter(outfileS);
                 dos = IOUtils.getBigBufferedBinaryGzipWriter(outfileS); // TODO: better buffered for easy write io load.
                 try {
@@ -584,12 +584,12 @@ class DiscoverVariationF3 extends AppAbstract {
             if (exit != 0) {
                 throw new RuntimeException("Command failed (exit=" + exit + "): " + command);
             }
-            System.out.println("Individual genotype is completed for taxon "+ this.taxon);
+            System.err.println("Individual genotype is completed for taxon "+ this.taxon);
 
             counter.increment();
             int count = counter.intValue();
             if (count%50 == 0) {
-                System.out.println("Variation calling has been performed for "+ String.valueOf(count)+ " taxa.");
+                System.err.println("Variation calling has been performed for "+ String.valueOf(count)+ " taxa.");
             }
             return null;
         }
@@ -631,12 +631,12 @@ class DiscoverVariationF3 extends AppAbstract {
             Arrays.sort(taxaNames);
             HashSet<String> taxaSet = new HashSet<>(taxaList);
             if (taxaSet.size() != taxaNames.length) {
-                System.out.println("Taxa names are not unique. Programs quits");
+                System.err.println("Taxa names are not unique. Programs quits");
                 System.exit(0);
             }
-            System.out.println("Created TaxaBamMap from " + taxaBamMapFileS);
-            System.out.println("Taxa number:\t"+String.valueOf(taxaNames.length));
-            System.out.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
+            System.err.println("Created TaxaBamMap from " + taxaBamMapFileS);
+            System.err.println("Taxa number:\t"+String.valueOf(taxaNames.length));
+            System.err.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
         }
         catch (Exception e) {
             e.printStackTrace();

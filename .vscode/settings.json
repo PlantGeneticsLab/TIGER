@@ -25,5 +25,6 @@
   "java.project.referencedLibraries": [
     "lib/**/*.jar"
   ],
-  "java.server.launchMode": "Standard"
+"java.server.launchMode": "Standard",
+"r.lsp.promptToInstall": false
 }

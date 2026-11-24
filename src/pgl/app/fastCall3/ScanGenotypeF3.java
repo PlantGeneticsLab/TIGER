@@ -15,6 +15,7 @@ import pgl.infra.dna.allele.AlleleEncoder;
 import pgl.infra.utils.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -79,8 +80,6 @@ class ScanGenotypeF3 extends AppAbstract {
     //Minimum read depth ratio (MiDR) relative to the taxon's coverage. Same default as disc.
     // DP=1 is not filtered by an absolute MDC cutoff: at ~3x it is mostly Poisson sampling, not deletion.
     double mindrThresh = 0.2;
-    //Maximum read depth ratio (MaDR) relative to the taxon's coverage. Same default as disc.
-    double maxdrThresh = 3;
     //The path of samtools
     String samtoolsPath = null;
     //VCF output directory
@@ -89,7 +88,7 @@ class ScanGenotypeF3 extends AppAbstract {
     String inputScanDirS = null;
     //scan3: map of merged taxon -> source taxa
     String mergeMapFileS = null;
-    //When true, apply MiDR/MaDR when writing VCF (scan, scan2, and scan3).
+    //When true, apply MiDR when writing VCF (scan, scan2, scan3, and scan4).
     boolean filterDepthAtGenotype = true;
     String scanModuleName = "scan";
     //Number of threads (taxa number to be processed at the same time)
@@ -134,31 +133,52 @@ class ScanGenotypeF3 extends AppAbstract {
     }
 
     public ScanGenotypeF3(String[] args, String stepFlag) {
+        if ("iac".equals(stepFlag)) {
+            this.runScanIac(args);
+            return;
+        }
         if ("3".equals(stepFlag)) {
             this.runScan3(args);
             return;
         }
-        if (!"2".equals(stepFlag)) {
-            new ScanGenotypeF3(args);
+        if ("2".equals(stepFlag) || "4".equals(stepFlag)) {
+            this.creatAppOptions();
+            this.retrieveStep2Parameters(args);
+            this.scanModuleName = "4".equals(stepFlag) ? "scan4" : "scan2";
+
+            this.processVariationLibrary();
+            this.creatFactorialMap();
+
+            FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
+            positions = new int[vlEndIndex-vlStartIndex];
+            for (int i = vlStartIndex; i < vlEndIndex; i++) {
+                posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1)));
+                posAllelePackMap.put(vl.positions[i], vl.getAllelePacks(i));
+                positions[i-vlStartIndex] = vl.positions[i];
+            }
+
+            if ("4".equals(stepFlag)) {
+                this.mkFinalVCFStreamingFromIndiCounts();
+            }
+            else {
+                this.mkFinalVCFFromIndiCounts();
+            }
             return;
         }
+        new ScanGenotypeF3(args);
+    }
 
+    /**
+     * Same pileup counting as {@code scan}, but stops after writing {@code indiCounts/*.iac.gz}.
+     */
+    private void runScanIac(String[] args) {
+        this.scanModuleName = "scan_iac";
         this.creatAppOptions();
-        this.retrieveStep2Parameters(args);
-        this.scanModuleName = "scan2";
-
-        this.processVariationLibrary(); // create a file store positions in the region
-        this.creatFactorialMap();
-
-        FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);    // store by Sequence3Bit field, which is inherited by FastaRecordBit
-        positions = new int[vlEndIndex-vlStartIndex];   // ok, it is the same. but how?
-        for (int i = vlStartIndex; i < vlEndIndex; i++) {
-            posRefMap.put(vl.positions[i], String.valueOf(frb.getBase(vl.positions[i]-1))); // base in reference genome, but why the positionIndex needs to - 1? every base needs a K-V map, is big for memory.
-            posAllelePackMap.put(vl.positions[i], vl.getAllelePacks(i));    // key: position; value: AllelePackage[] (alleles at one position)
-            positions[i-vlStartIndex] = vl.positions[i];    // make positions in this region store into a new int[]
-        }
-
-        this.mkFinalVCFFromIndiCounts();
+        this.retrieveAppParameters(args);
+        this.mkDir();
+        this.processVariationLibrary();
+        this.scanIndiCountsByThreadPool();
+        System.err.println("Individual allele counts written to " + new File(this.outputDirS, subDirS[1]).getAbsolutePath());
     }
 
     private void runScan3(String[] args) {
@@ -166,7 +186,7 @@ class ScanGenotypeF3 extends AppAbstract {
         this.filterDepthAtGenotype = true;
         this.creatAppOptions();
         this.retrieveScan3Parameters(args);
-        this.mkDir();
+        new File(this.outputDirS).mkdirs();
         this.processVariationLibrary();
         this.creatFactorialMap();
         FastaRecordBit frb = genomeFa.getFastaRecordBit(chromIndex);
@@ -176,8 +196,7 @@ class ScanGenotypeF3 extends AppAbstract {
             posAllelePackMap.put(vl.positions[i], vl.getAllelePacks(i));
             positions[i-vlStartIndex] = vl.positions[i];
         }
-        this.mergeSourceIndiCounts();
-        this.mkFinalVCFFromIndiCounts();
+        this.mkFinalVCFStreamingFromMergedIndiCounts();
     }
 
     public void retrieveStep2Parameters(String[] args) {
@@ -192,9 +211,9 @@ class ScanGenotypeF3 extends AppAbstract {
             this.chrom = Integer.parseInt(tem[0]);
             this.referenceFileS = line.getOptionValue("a");
             long start = System.nanoTime();
-            System.out.println("Reading reference genome from "+ referenceFileS);
+            System.err.println("Reading reference genome from "+ referenceFileS);
             this.genomeFa = new FastaBit(referenceFileS);
-            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            System.err.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
             this.chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
@@ -224,7 +243,7 @@ class ScanGenotypeF3 extends AppAbstract {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.println("\nThere are input errors in the command line. Program stops.");
+            System.err.println("\nThere are input errors in the command line. Program stops.");
             this.printInstructionAndUsage();
             System.exit(0);
         }
@@ -246,9 +265,9 @@ class ScanGenotypeF3 extends AppAbstract {
             String[] tem = line.getOptionValue("d").split(":");
             this.chrom = Integer.parseInt(tem[0]);
             long start = System.nanoTime();
-            System.out.println("Reading reference genome from "+ referenceFileS);
+            System.err.println("Reading reference genome from "+ referenceFileS);
             this.genomeFa = new FastaBit(referenceFileS);
-            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            System.err.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
             this.chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
@@ -276,33 +295,40 @@ class ScanGenotypeF3 extends AppAbstract {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.println("\nThere are input errors in the command line. Program stops.");
+            System.err.println("\nThere are input errors in the command line. Program stops.");
             this.printInstructionAndUsage();
             System.exit(0);
         }
     }
 
     /**
-     * Merge map columns: mergedTaxon, coverage, sourceTaxon1, sourceTaxon2, ...
-     * Coverage '.' means sum source coverages from the optional taxaBamMap (-b).
+     * taxaCombineMap columns: mergedTaxon, coverageToken, sourceTaxon1, sourceTaxon2, ...
+     * A taxon that is not merged is listed as its own single source
+     * (mergedTaxon\t.\tmergedTaxon), so the same file can drive both the merged
+     * columns and the pass-through columns. Coverage is the sum of the source
+     * coverages from taxaBamMap (-b). A numeric second column is still accepted
+     * as an explicit coverage.
      */
     private LinkedHashMap<String, List<String>> mergedSourceMap = new LinkedHashMap<>();
+    //source taxon -> the merged taxon that consumed it, used to catch double counting
+    private HashMap<String, String> sourceOwnerMap = new HashMap<>();
 
     private void parseMergeMap(String mergeMapFileS) {
         HashMap<String, Double> sourceCoverageMap = this.taxaCoverageMap;
         this.taxaCoverageMap = new HashMap<>();
         this.mergedSourceMap.clear();
+        this.sourceOwnerMap.clear();
         try {
             BufferedReader br = IOUtils.getTextReader(mergeMapFileS);
             String temp = br.readLine();
             if (temp == null) {
                 throw new IllegalArgumentException("Merge map is empty: " + mergeMapFileS);
             }
-            if (!temp.startsWith("#") && !temp.toLowerCase().startsWith("merged")) {
+            if (!this.isMergeMapHeader(temp)) {
                 this.addMergeMapLine(temp, sourceCoverageMap);
             }
             while ((temp = br.readLine()) != null) {
-                if (temp.trim().isEmpty() || temp.startsWith("#")) continue;
+                if (temp.trim().isEmpty() || this.isMergeMapHeader(temp)) continue;
                 this.addMergeMapLine(temp, sourceCoverageMap);
             }
             br.close();
@@ -313,31 +339,60 @@ class ScanGenotypeF3 extends AppAbstract {
         }
         this.taxaNames = this.mergedSourceMap.keySet().toArray(new String[0]);
         Arrays.sort(this.taxaNames);
-        System.out.println("scan3 merge groups:\t" + this.taxaNames.length);
+        System.err.println("scan3 merge groups:\t" + this.taxaNames.length);
         for (String name : this.taxaNames) {
-            System.out.println("  " + name + " coverage=" + this.taxaCoverageMap.get(name)
+            System.err.println("  " + name + " coverage=" + this.taxaCoverageMap.get(name)
                     + " sources=" + this.mergedSourceMap.get(name));
+        }
+    }
+
+    private boolean isMergeMapHeader(String line) {
+        if (line.startsWith("#")) return true;
+        String first = line.split("\t", 2)[0].trim().toLowerCase();
+        return first.equals("taxa") || first.equals("merged") || first.equals("mergedtaxa") || first.startsWith("merged");
+    }
+
+    /**
+     * A numeric or '.' second column is coverage (old merge map). Otherwise every column
+     * after the merged name is a source taxon, and coverage is the sum from -b.
+     */
+    private boolean isCoverageToken(String token) {
+        if (token == null) return true;
+        String t = token.trim();
+        if (t.isEmpty() || t.equals(".")) return true;
+        try {
+            Double.parseDouble(t);
+            return true;
+        }
+        catch (NumberFormatException e) {
+            return false;
         }
     }
 
     private void addMergeMapLine(String line, HashMap<String, Double> sourceCoverageMap) {
         String[] tem = line.split("\t");
-        if (tem.length < 3) {
-            throw new IllegalArgumentException("Merge map line must be: mergedTaxon\\tcoverage\\tsource1\\tsource2...\n" + line);
+        if (tem.length < 2) {
+            throw new IllegalArgumentException("Merge map line needs a merged taxon and at least one source taxon:\n" + line);
         }
-        String merged = tem[0];
+        String merged = tem[0].trim();
+        int sourceStart = this.isCoverageToken(tem[1]) ? 2 : 1;
         List<String> sources = new ArrayList<>();
-        for (int i = 2; i < tem.length; i++) {
+        for (int i = sourceStart; i < tem.length; i++) {
             if (tem[i].trim().isEmpty()) continue;
-            sources.add(tem[i].trim());
+            String src = tem[i].trim();
+            if (sources.contains(src)) {
+                throw new IllegalArgumentException("Source taxon " + src + " is listed more than once for merged taxon "
+                        + merged + ", which would double its allele counts:\n" + line);
+            }
+            sources.add(src);
         }
         if (sources.isEmpty()) {
-            throw new IllegalArgumentException("No source taxa for merged taxon " + merged);
+            throw new IllegalArgumentException("Merged taxon " + merged + " needs at least one source taxon:\n" + line);
         }
         double coverage;
-        if (tem[1].equals(".") || tem[1].isEmpty()) {
+        if (sourceStart == 1 || tem[1].trim().isEmpty() || tem[1].trim().equals(".")) {
             if (sourceCoverageMap == null) {
-                throw new IllegalArgumentException("Coverage '.' for " + merged + " requires -b taxaBamMap.");
+                throw new IllegalArgumentException("Merged taxon " + merged + " needs -b taxaBamMap to sum source coverages.");
             }
             coverage = 0;
             for (String src : sources) {
@@ -349,64 +404,232 @@ class ScanGenotypeF3 extends AppAbstract {
             }
         }
         else {
-            coverage = Double.parseDouble(tem[1]);
+            coverage = Double.parseDouble(tem[1].trim());
+        }
+        for (String src : sources) {
+            String owner = this.sourceOwnerMap.put(src, merged);
+            if (owner != null && !owner.equals(merged)) {
+                System.err.println("Warning: source taxon " + src + " is used by both " + owner
+                        + " and " + merged + "; it will appear in two output columns.");
+            }
         }
         this.mergedSourceMap.put(merged, sources);
         this.taxaCoverageMap.put(merged, coverage);
     }
 
     /**
-     * Sum unfiltered source .iac files into one merged taxon per group, then write to output indiCounts/.
+     * scan3: reads the unfiltered source .iac files a window of sites at a time, sums the
+     * allele counts of each merge group on the fly, and writes the merged genotypes to
+     * stdout. No merged .iac is written; the source indiCounts/ stays untouched.
      */
-    private void mergeSourceIndiCounts() {
-        File inCounts = new File(this.inputScanDirS, subDirS[1]);
-        if (!inCounts.isDirectory()) {
-            System.out.println("scan3 input indiCounts directory does not exist: " + inCounts.getAbsolutePath());
-            System.exit(1);
-        }
-        File outCounts = new File(this.outputDirS, subDirS[1]);
-        outCounts.mkdirs();
-        Dyad<int[][], int[]> d = FastCall3.getBins(this.regionStart, this.regionEnd, FastCall3.scanBinSize);
-        int[][] binBound = d.getFirstElement();
-        StringBuilder sb = new StringBuilder();
-        for (String merged : this.taxaNames) {
-            File mergedDir = new File(outCounts, merged);
-            mergedDir.mkdirs();
-            List<String> sources = this.mergedSourceMap.get(merged);
-            for (int i = 0; i < binBound.length; i++) {
+    private void mkFinalVCFStreamingFromMergedIndiCounts () {
+        final int window = FastCall3.scanVcfWindowSites;
+        IndividualCountF3.SiteStream[] streams = null;
+        ExecutorService readPool = null;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
+            Date dt = new Date();
+            String S = sdf.format(dt);
+            OutputStream stdoutNoClose = new FilterOutputStream(System.out) {
+                @Override
+                public void close() throws IOException {
+                    flush();
+                }
+            };
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(stdoutNoClose, StandardCharsets.UTF_8), 65536);
+            bw.write("##fileformat=VCFv4.1\n");
+            bw.write("##fileDate="+S.split(" ")[0]+"\n");
+            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">\n");
+            bw.write("##FORMAT=<ID=GL,Number=G,Type=Integer,Description=\"Genotype likelihoods for 0/0, 0/1, 1/1, or  0/0, 0/1, 0/2, 1/1, 1/2, 2/2 if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
+            bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
+            bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
+            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of allele occurence across taxa in order listed\">\n");
+            bw.write("##INFO=<ID=IS,Number=.,Type=Integer,Description=\"Indel sequence of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
+            bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
+            bw.write("##ALT=<ID=D,Description=\"Deletion\">\n");
+            bw.write("##ALT=<ID=I,Description=\"Insertion\">\n");
+            Dyad<int[][], int[]> d = FastCall3.getBins(this.regionStart, this.regionEnd, FastCall3.scanBinSize);
+            int[][] binBound = d.getFirstElement();
+            int[] binStarts = d.getSecondElement();
+            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
+            for (int i = 0; i < taxaNames.length; i++) {
+                sb.append("\t").append(taxaNames[i]);
+            }
+            bw.write(sb.toString());
+            bw.newLine();
+
+            File inCounts = new File(this.inputScanDirS, subDirS[1]);
+            if (!inCounts.isDirectory()) {
+                throw new IllegalStateException("scan3 input indiCounts directory does not exist: " + inCounts.getAbsolutePath());
+            }
+            String inCountsFolderS = inCounts.getAbsolutePath();
+            // A source taxon can feed more than one merge group; read each source once.
+            List<String> sourceNames = new ArrayList<>();
+            HashMap<String, Integer> sourceIndexMap = new HashMap<>();
+            for (int t = 0; t < taxaNames.length; t++) {
+                for (String src : this.mergedSourceMap.get(taxaNames[t])) {
+                    if (!sourceIndexMap.containsKey(src)) {
+                        sourceIndexMap.put(src, sourceNames.size());
+                        sourceNames.add(src);
+                    }
+                }
+            }
+            int nTaxa = taxaNames.length;
+            int[][] groupSourceIndices = new int[nTaxa][];
+            for (int t = 0; t < nTaxa; t++) {
+                List<String> sources = this.mergedSourceMap.get(taxaNames[t]);
+                int[] indices = new int[sources.size()];
+                for (int s = 0; s < indices.length; s++) {
+                    indices[s] = sourceIndexMap.get(sources.get(s));
+                }
+                groupSourceIndices[t] = indices;
+            }
+            int nSources = sourceNames.size();
+            int readThreads = Math.max(1, Math.min(this.threadsNum, nSources));
+            readPool = Executors.newFixedThreadPool(readThreads);
+            int offset = 0;
+            for (int i = 0; i < binStarts.length; i++) {
                 sb.setLength(0);
                 sb.append(chrom).append("_").append(binBound[i][0]).append("_").append(binBound[i][1]).append(".iac.gz");
-                String binName = sb.toString();
-                List<IndividualCountF3> sourcesInc = new ArrayList<>();
-                for (String src : sources) {
-                    File srcFile = new File(new File(inCounts, src), binName);
-                    if (!srcFile.exists()) {
-                        System.out.println("Warning: missing source iac " + srcFile.getAbsolutePath());
+                String iacName = sb.toString();
+                streams = new IndividualCountF3.SiteStream[nSources];
+                int positionNum = -1;
+                int nMissing = 0;
+                for (int s = 0; s < nSources; s++) {
+                    String fileS = new File(new File(inCountsFolderS, sourceNames.get(s)), iacName).getAbsolutePath();
+                    IndividualCountF3.SiteStream st = IndividualCountF3.SiteStream.open(fileS);
+                    if (st == null) {
+                        System.err.println("Warning: "+ fileS +" does not exist");
+                        nMissing++;
                         continue;
                     }
-                    sourcesInc.add(new IndividualCountF3(srcFile.getAbsolutePath()));
+                    if (positionNum < 0) {
+                        positionNum = st.positionNum;
+                    }
+                    else if (st.positionNum != positionNum) {
+                        throw new IllegalStateException("Site-count mismatch in " + fileS + ": "
+                                + st.positionNum + " vs " + positionNum);
+                    }
+                    streams[s] = st;
                 }
-                File outFile = new File(mergedDir, binName);
-                if (sourcesInc.isEmpty()) {
-                    this.writeMissingMergedIac(outFile.getAbsolutePath(), merged, binBound[i]);
-                    continue;
+                if (positionNum < 0) {
+                    // No source file for this bin at all: keep the positions, call every taxon missing.
+                    positionNum = this.getBinSiteNum(binBound[i][0], binBound[i][1]);
                 }
-                IndividualCountF3 mergedInc = IndividualCountF3.mergeSources(merged, sourcesInc);
-                mergedInc.writeBinaryFileS(outFile.getAbsolutePath());
+                if (offset + positionNum > positions.length) {
+                    throw new ArrayIndexOutOfBoundsException("iac sites " + positionNum
+                            + " at offset " + offset + " exceed library positions " + positions.length);
+                }
+
+                final IndividualCountF3.SiteStream[] binStreams = streams;
+                int remaining = positionNum;
+                int localOffset = 0;
+                while (remaining > 0) {
+                    final int w = Math.min(window, remaining);
+                    final short[][][] sourceCounts = new short[w][nSources][];
+                    List<Future<?>> reads = new ArrayList<>(nSources);
+                    for (int s = 0; s < nSources; s++) {
+                        final int source = s;
+                        reads.add(readPool.submit(() -> {
+                            IndividualCountF3.SiteStream st = binStreams[source];
+                            for (int k = 0; k < w; k++) {
+                                sourceCounts[k][source] = (st == null) ? null : st.readSite();
+                            }
+                            return null;
+                        }));
+                    }
+                    for (int r = 0; r < reads.size(); r++) {
+                        reads.get(r).get();
+                    }
+
+                    final int binOffset = offset + localOffset;
+                    final String[] vcfRecords = new String[w];
+                    List<Integer> indexList = PArrayUtils.getIndexList(w);
+                    indexList.parallelStream().forEach(index -> {
+                        int posIdx = binOffset + index;
+                        StringBuilder vsb = new StringBuilder();
+                        int currentPosition = positions[posIdx];
+                        vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
+                                .append("\t").append(posRefMap.get(currentPosition)).append("\t");
+                        int[] altAlleles = posAllelePackMap.get(currentPosition);
+                        for (int j = 0; j < altAlleles.length; j++) {
+                            vsb.append(AllelePackageF3.getAlleleBase(altAlleles[j])).append(",");
+                        }
+                        vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
+                        List<short[]> siteCountsList = new ArrayList<>(nTaxa);
+                        for (int t = 0; t < nTaxa; t++) {
+                            siteCountsList.add(sumSourceAlleleCounts(sourceCounts[index], groupSourceIndices[t]));
+                        }
+                        vsb.append(this.getInfoAndGenotypes(siteCountsList, altAlleles));
+                        vcfRecords[index] = vsb.toString();
+                    });
+                    for (int j = 0; j < w; j++) {
+                        bw.write(vcfRecords[j]);
+                        bw.newLine();
+                    }
+                    remaining -= w;
+                    localOffset += w;
+                }
+                closeSiteStreams(streams);
+                streams = null;
+                offset += positionNum;
+                if (nMissing > 0) {
+                    System.err.println("Missing source iac files in this bin:\t" + nMissing);
+                }
+                System.err.println(iacName.split("\\.")[0]+ " genotyping is finished.");
             }
-            System.out.println("Merged allele counts written for taxon " + merged);
+            readPool.shutdown();
+            bw.flush();
+            bw.close();
         }
+        catch (Exception e) {
+            e.printStackTrace();
+            closeSiteStreams(streams);
+            if (readPool != null) {
+                readPool.shutdownNow();
+            }
+            System.exit(1);
+        }
+        System.err.println("Final VCF written to stdout");
+        System.err.println("Genotyping is finished.");
     }
 
-    private void writeMissingMergedIac(String outfileS, String mergedName, int[] bound) {
-        int startIdx = vl.getStartIndex(bound[0]);
-        int endIdx = vl.getEndIndex(bound[1] - 1);
-        int sites = (startIdx == Integer.MIN_VALUE || endIdx == Integer.MIN_VALUE) ? 0 : Math.max(0, endIdx - startIdx);
-        byte[] alleleNum = new byte[sites];
-        short[][] alleleCounts = new short[sites][];
-        Arrays.fill(alleleNum, (byte) -1);
-        IndividualCountF3 missing = new IndividualCountF3(mergedName, (short) this.chrom, bound[0], bound[1], alleleNum, alleleCounts);
-        missing.writeBinaryFileS(outfileS);
+    /**
+     * Sums the allele counts of one merge group at a single site. A missing source
+     * contributes zero; the site stays missing only when every source is missing.
+     */
+    private static short[] sumSourceAlleleCounts(short[][] sourceCounts, int[] groupSourceIndices) {
+        short[] sum = null;
+        for (int s = 0; s < groupSourceIndices.length; s++) {
+            short[] counts = sourceCounts[groupSourceIndices[s]];
+            if (counts == null) continue;
+            if (sum == null) {
+                sum = (groupSourceIndices.length == 1) ? counts : counts.clone();
+                continue;
+            }
+            if (sum.length != counts.length) {
+                throw new IllegalArgumentException("Allele-number mismatch when merging a site: "
+                        + sum.length + " vs " + counts.length);
+            }
+            for (int j = 0; j < sum.length; j++) {
+                int v = sum[j] + counts[j];
+                sum[j] = (v > Short.MAX_VALUE) ? Short.MAX_VALUE : (short) v;
+            }
+        }
+        return sum;
+    }
+
+    /**
+     * Number of library sites in a bin, as recorded in the .iac header by scan.
+     */
+    private int getBinSiteNum(int binStart, int binEnd) {
+        int startIdx = vl.getStartIndex(binStart);
+        int endIdx = vl.getEndIndex(binEnd - 1);
+        return (startIdx == Integer.MIN_VALUE || endIdx == Integer.MIN_VALUE) ? 0 : Math.max(0, endIdx - startIdx);
     }
 
     @Override
@@ -429,15 +652,16 @@ class ScanGenotypeF3 extends AppAbstract {
             "likely to be genotyped as homozygote when the combined error rate is high.");
         options.addOption("i", true, "The path of samtools.");
         options.addOption("j", true, "Number of threads. It is 32 by default.");
-        options.addOption("k", true, "The directory of VCF output.");
-        options.addOption("m", true, "Minimum read depth ratio (MiDR) for genotyping in scan/scan2/scan3. Sites with depth lower than " +
+        options.addOption("k", true, "Output directory for scan files (pos.txt; indiCounts only for scan and scan_iac). " +
+            "scan3 reads its input from -o and writes no iac. The VCF is written to stdout.");
+        options.addOption("m", true, "Minimum read depth ratio (MiDR) for genotyping in scan/scan2/scan3/scan4. Sites with depth lower than " +
             "the MiDR of the individual sequencing coverage are treated as missing. It is 0.2 by default. " +
-            "There is no absolute minimum depth (MDC); depth=1 is kept.");
-        options.addOption("n", true, "Maximum read depth ratio (MaDR) for genotyping in scan/scan2/scan3. Sites with depth higher than " +
-            "the MaDR of the individual sequencing coverage are treated as missing. It is 3 by default.");
+            "There is no maximum depth filter (MaDR) and no absolute minimum depth (MDC) at scan; abnormally high depth is kept.");
         options.addOption("o", true, "scan3: input directory of a previous scan run (must contain indiCounts/).");
-        options.addOption("p", true, "scan3: merge map file. Each line: mergedTaxon\\tcoverage\\tsourceTaxon1\\tsourceTaxon2... " +
-            "Use '.' as coverage to sum source coverages from -b.");
+        options.addOption("p", true, "scan3: taxaCombineMap. Each line: mergedTaxon\\tsourceTaxon1[\\tsourceTaxon2...]. " +
+            "At least one source taxon, so a taxon that is not merged can be listed as its own single source " +
+            "(mergedTaxon\\t.\\tmergedTaxon) and passes through unchanged. Coverage is the sum of those sources from -b. " +
+            "An optional numeric coverage may still be given as the second column.");
     }
 
     @Override
@@ -452,9 +676,9 @@ class ScanGenotypeF3 extends AppAbstract {
             String[] tem = line.getOptionValue("d").split(":");
             this.chrom = Integer.parseInt(tem[0]);
             long start = System.nanoTime();
-            System.out.println("Reading reference genome from "+ referenceFileS);
+            System.err.println("Reading reference genome from "+ referenceFileS);
             this.genomeFa = new FastaBit(referenceFileS);
-            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            System.err.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
             this.chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
@@ -474,7 +698,7 @@ class ScanGenotypeF3 extends AppAbstract {
                     this.baqMode = "-B ";
                 }
                 else {
-                    System.out.println("Warning: Incorrect input for -c option. The BAQ computation is disabled by default");
+                    System.err.println("Warning: Incorrect input for -c option. The BAQ computation is disabled by default");
                 }
                 inOpt = null;
             }
@@ -504,7 +728,7 @@ class ScanGenotypeF3 extends AppAbstract {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.println("\nThere are input errors in the command line. Program stops.");
+            System.err.println("\nThere are input errors in the command line. Program stops.");
             this.printInstructionAndUsage();
             System.exit(0);
         }
@@ -512,36 +736,31 @@ class ScanGenotypeF3 extends AppAbstract {
     }
 
     /**
-     * Parse optional MiDR / MaDR thresholds. Defaults match disc: 0.2 / 3.
-     * Absolute MDC is not used: depth=1 is retained for genotyping.
+     * Parse optional MiDR. Default 0.2, same as disc. Scan does not apply MaDR or MDC.
      */
     private void parseDepthCoverageOptions(CommandLine line) {
         String inOpt = line.getOptionValue("m");
         if (inOpt != null) {
             this.mindrThresh = Double.parseDouble(inOpt);
         }
-        inOpt = line.getOptionValue("n");
-        if (inOpt != null) {
-            this.maxdrThresh = Double.parseDouble(inOpt);
-        }
     }
 
     /**
-     * Return true if site depth passes MiDR / MaDR relative to the taxon's mean coverage.
-     * Depth=0 is already missing upstream; depth=1 is not removed by an absolute cutoff.
+     * Return true if site depth passes MiDR relative to the taxon's mean coverage.
+     * Depth=0 is already missing upstream. High depth is kept: disc already filtered
+     * discovery, and reads matching the library are treated as valid even if unusually deep.
      */
     private boolean passDepthCoverageFilter(int siteDepth, double taxonCoverage) {
         if (taxonCoverage <= 0) return true;
         double siteDepthRatio = (double) siteDepth / taxonCoverage;
         if (siteDepthRatio < this.mindrThresh) return false;
-        if (siteDepthRatio > this.maxdrThresh) return false;
         return true;
     }
 
     @Override
     public void printInstructionAndUsage() {
-        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"" + this.scanModuleName + "\" in FastCall 3.");
+        System.err.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.err.println("Below are the commands of module \"" + this.scanModuleName + "\" in FastCall 3.");
         this.printUsage();
     }
 
@@ -553,13 +772,17 @@ class ScanGenotypeF3 extends AppAbstract {
      */
 /* <<<<<<<<<<  3c9f6e1b-fde9-4fc1-855d-77758a6cbaf1  >>>>>>>>>>> */
     public void mkFinalVCFFromIndiCounts () {
-        String outfileS = new File(outputDirS, subDirS[2]).getAbsolutePath();
-        outfileS = new File(outfileS, "chr"+PStringUtils.getNDigitNumber(3, chrom)+".vcf").getAbsolutePath();
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
             Date dt = new Date();
             String S = sdf.format(dt);
-            BufferedWriter bw = IOUtils.getTextWriter(outfileS);
+            OutputStream stdoutNoClose = new FilterOutputStream(System.out) {
+                @Override
+                public void close() throws IOException {
+                    flush();
+                }
+            };
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(stdoutNoClose, StandardCharsets.UTF_8), 65536);
             bw.write("##fileformat=VCFv4.1\n");
             bw.write("##fileDate="+S.split(" ")[0]+"\n");
             bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
@@ -668,7 +891,7 @@ class ScanGenotypeF3 extends AppAbstract {
                 offset += binSiteCount;
 //                vlBinStartIndex = vlBinEndIndex;
 
-                System.out.println(sb.toString().split("\\.")[0]+ " genotyping is finished.");
+                System.err.println(sb.toString().split("\\.")[0]+ " genotyping is finished.");
             }
             bw.flush();
             bw.close();
@@ -678,8 +901,172 @@ class ScanGenotypeF3 extends AppAbstract {
             System.exit(1);
         }
 //        this.deleteTemperateFile();
-        System.out.println("Final VCF is completed at " + outfileS);
-        System.out.println("Genotyping is finished.");
+        System.err.println("Final VCF written to stdout");
+        System.err.println("Genotyping is finished.");
+    }
+
+    /**
+     * Same genotypes as {@link #mkFinalVCFFromIndiCounts()}, but reads {@code .iac.gz}
+     * a window of sites at a time, writes those VCF lines, then discards the AD.
+     */
+    public void mkFinalVCFStreamingFromIndiCounts () {
+        final int window = FastCall3.scanVcfWindowSites;
+        IndividualCountF3.SiteStream[] streams = null;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS");
+            Date dt = new Date();
+            String S = sdf.format(dt);
+            OutputStream stdoutNoClose = new FilterOutputStream(System.out) {
+                @Override
+                public void close() throws IOException {
+                    flush();
+                }
+            };
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(stdoutNoClose, StandardCharsets.UTF_8), 65536);
+            bw.write("##fileformat=VCFv4.1\n");
+            bw.write("##fileDate="+S.split(" ")[0]+"\n");
+            bw.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n");
+            bw.write("##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">\n");
+            bw.write("##FORMAT=<ID=GL,Number=G,Type=Integer,Description=\"Genotype likelihoods for 0/0, 0/1, 1/1, or  0/0, 0/1, 0/2, 1/1, 1/2, 2/2 if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n");
+            bw.write("##INFO=<ID=NZ,Number=1,Type=Integer,Description=\"Number of taxa with called genotypes\">\n");
+            bw.write("##INFO=<ID=AD,Number=.,Type=Integer,Description=\"Total allelelic depths in order listed starting with REF\">\n");
+            bw.write("##INFO=<ID=AC,Number=.,Type=Integer,Description=\"Numbers of allele occurence across taxa in order listed\">\n");
+            bw.write("##INFO=<ID=IS,Number=.,Type=Integer,Description=\"Indel sequence of ALT alleles in order listed\">\n");
+            bw.write("##INFO=<ID=GN,Number=.,Type=Integer,Description=\"Number of taxa with genotypes AA,AB,BB or AA,AB,AC,BB,BC,CC if 2 alt alleles\">\n");
+            bw.write("##INFO=<ID=HT,Number=1,Type=Integer,Description=\"Number of heterozygotes\">\n");
+            bw.write("##INFO=<ID=MAF,Number=1,Type=Float,Description=\"Minor allele frequency\">\n");
+            bw.write("##ALT=<ID=D,Description=\"Deletion\">\n");
+            bw.write("##ALT=<ID=I,Description=\"Insertion\">\n");
+            Dyad<int[][], int[]> d = FastCall3.getBins(this.regionStart, this.regionEnd, FastCall3.scanBinSize);
+            int[][] binBound = d.getFirstElement();
+            int[] binStarts = d.getSecondElement();
+            StringBuilder sb = new StringBuilder("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT");
+            for (int i = 0; i < taxaNames.length; i++) {
+                sb.append("\t").append(taxaNames[i]);
+            }
+            bw.write(sb.toString());
+            bw.newLine();
+
+            String indiCountFolderS = new File(outputDirS, subDirS[1]).getAbsolutePath();
+            int nTaxa = taxaNames.length;
+            int readThreads = Math.max(1, Math.min(this.threadsNum, nTaxa));
+            int offset = 0;
+            for (int i = 0; i < binStarts.length; i++) {
+                sb.setLength(0);
+                sb.append(chrom).append("_").append(binBound[i][0]).append("_").append(binBound[i][1]).append(".iac.gz");
+                String iacName = sb.toString();
+                streams = new IndividualCountF3.SiteStream[nTaxa];
+                int positionNum = -1;
+                int nMissing = 0;
+                for (int t = 0; t < nTaxa; t++) {
+                    String fileS = new File(new File(indiCountFolderS, taxaNames[t]), iacName).getAbsolutePath();
+                    IndividualCountF3.SiteStream st = IndividualCountF3.SiteStream.open(fileS);
+                    if (st == null) {
+                        System.err.println("Warning: "+ fileS +" does not exist");
+                        nMissing++;
+                        continue;
+                    }
+                    if (positionNum < 0) {
+                        positionNum = st.positionNum;
+                    }
+                    else if (st.positionNum != positionNum) {
+                        throw new IllegalStateException("Site-count mismatch in " + fileS + ": "
+                                + st.positionNum + " vs " + positionNum);
+                    }
+                    streams[t] = st;
+                }
+                if (positionNum < 0) {
+                    throw new IllegalStateException("No individual count files found for " + iacName);
+                }
+                if (offset + positionNum > positions.length) {
+                    throw new ArrayIndexOutOfBoundsException("iac sites " + positionNum
+                            + " at offset " + offset + " exceed library positions " + positions.length);
+                }
+
+                ExecutorService readPool = Executors.newFixedThreadPool(readThreads);
+                int remaining = positionNum;
+                int localOffset = 0;
+                while (remaining > 0) {
+                    final int w = Math.min(window, remaining);
+                    final short[][][] windowCounts = new short[w][nTaxa][];
+                    final IndividualCountF3.SiteStream[] binStreams = streams;
+                    List<Future<?>> reads = new ArrayList<>(nTaxa);
+                    for (int t = 0; t < nTaxa; t++) {
+                        final int taxon = t;
+                        reads.add(readPool.submit(() -> {
+                            IndividualCountF3.SiteStream st = binStreams[taxon];
+                            for (int s = 0; s < w; s++) {
+                                windowCounts[s][taxon] = (st == null) ? null : st.readSite();
+                            }
+                            return null;
+                        }));
+                    }
+                    for (int r = 0; r < reads.size(); r++) {
+                        reads.get(r).get();
+                    }
+
+                    final int binOffset = offset + localOffset;
+                    final String[] vcfRecords = new String[w];
+                    List<Integer> indexList = PArrayUtils.getIndexList(w);
+                    indexList.parallelStream().forEach(index -> {
+                        int posIdx = binOffset + index;
+                        StringBuilder vsb = new StringBuilder();
+                        int currentPosition = positions[posIdx];
+                        vsb.append(chrom).append("\t").append(currentPosition).append("\t").append(chrom).append("-").append(currentPosition)
+                                .append("\t").append(posRefMap.get(currentPosition)).append("\t");
+                        int[] altAlleles = posAllelePackMap.get(currentPosition);
+                        for (int j = 0; j < altAlleles.length; j++) {
+                            vsb.append(AllelePackageF3.getAlleleBase(altAlleles[j])).append(",");
+                        }
+                        vsb.deleteCharAt(vsb.length()-1).append("\t.\t.\t");
+                        vsb.append(this.getInfoAndGenotypes(Arrays.asList(windowCounts[index]), altAlleles));
+                        vcfRecords[index] = vsb.toString();
+                    });
+                    for (int j = 0; j < w; j++) {
+                        bw.write(vcfRecords[j]);
+                        bw.newLine();
+                    }
+                    remaining -= w;
+                    localOffset += w;
+                }
+                readPool.shutdown();
+                readPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+                closeSiteStreams(streams);
+                streams = null;
+                offset += positionNum;
+                if (nMissing > 0) {
+                    System.err.println("Missing individual count files in this bin:\t" + nMissing);
+                }
+                System.err.println(iacName.split("\\.")[0]+ " genotyping is finished.");
+            }
+            bw.flush();
+            bw.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            closeSiteStreams(streams);
+            System.exit(1);
+        }
+        System.err.println("Final VCF written to stdout");
+        System.err.println("Genotyping is finished.");
+    }
+
+    private static void closeSiteStreams(IndividualCountF3.SiteStream[] streams) {
+        if (streams == null) {
+            return;
+        }
+        for (int i = 0; i < streams.length; i++) {
+            if (streams[i] == null) {
+                continue;
+            }
+            try {
+                streams[i].close();
+            }
+            catch (Exception ignore) {
+            }
+            streams[i] = null;
+        }
     }
 
     /**
@@ -715,7 +1102,7 @@ class ScanGenotypeF3 extends AppAbstract {
         public IndividualCountF3 call() throws Exception {
             File f = new File (fileS);
             if (!f.exists()) {
-                System.out.println("Warning: "+ f.getAbsolutePath()+" does not exist");
+                System.err.println("Warning: "+ f.getAbsolutePath()+" does not exist");
                 return null;
             }
             IndividualCountF3 inc = new IndividualCountF3(this.fileS);
@@ -766,7 +1153,7 @@ class ScanGenotypeF3 extends AppAbstract {
             sb.append(" -l ").append(vLibPosFileS).append(" -r ");
             sb.append(chrom).append(":").append(this.regionStart).append("-").append(this.regionEnd);
             String command = sb.toString();
-//            System.out.println(command);
+//            System.err.println(command);
             IndiCount idv = new IndiCount(command, taxaList.get(i), binBound, binStarts, bamPaths, counter);
             Future<IndiCount> result = pool.submit(idv);
             resultList.add(result);
@@ -1076,7 +1463,7 @@ class ScanGenotypeF3 extends AppAbstract {
                             this.writeMissing();
                         }
                         else {
-                            System.out.println("Current position is greater than pileup position. It should not happen. Program quits");
+                            System.err.println("Current position is greater than pileup position. It should not happen. Program quits");
                             System.exit(1);
                         }
                     }
@@ -1098,21 +1485,21 @@ class ScanGenotypeF3 extends AppAbstract {
 //                    sb.append(current).append("\n");
 //                }
 //                sb.append("Individual allele counting is completed for taxon ").append(this.taxonName).append("\n");
-//                System.out.println(sb.toString());
+//                System.err.println(sb.toString());
                 errDrainer.join();
 
                 int exit = p.exitValue();
                 if (exit != 0) {
                     throw new RuntimeException("Command failed (exit=" + exit + "): " + command);
                 }
-                System.out.println("Individual allele counting is completed for taxon " + this.taxonName);
+                System.err.println("Individual allele counting is completed for taxon " + this.taxonName);
             }
             catch (Exception ee) {
                 ee.printStackTrace();
             }
             counter.increment();
             int cnt = counter.intValue();
-            if (cnt%50 == 0) System.out.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
+            if (cnt%50 == 0) System.err.println("Finished individual genotype allele counting in " + String.valueOf(cnt) + " taxa. Total: " + String.valueOf(taxaBamsMap.size()));
             return this;
         }
     }
@@ -1349,14 +1736,14 @@ class ScanGenotypeF3 extends AppAbstract {
         this.vLibPosFileS = new File (this.outputDirS, sb.toString()).getAbsolutePath();
         this.vl = new VariationLibraryF3(this.libFileS);
         if (this.chrom != vl.getChrom()) {
-            System.out.println("The chromosome number of library and the specified one do not match. Program quits.");
+            System.err.println("The chromosome number of library and the specified one do not match. Program quits.");
             System.exit(0);
         }
         try {
             vlStartIndex = vl.getStartIndex(this.regionStart);
             vlEndIndex = vl.getEndIndex(this.regionEnd);
             if (vlStartIndex == Integer.MIN_VALUE || vlEndIndex == Integer.MIN_VALUE) {
-                System.out.println("The chromosome region was incorrectly set. Program quits.");
+                System.err.println("The chromosome region was incorrectly set. Program quits.");
                 System.exit(0);
             }
             BufferedWriter bw = IOUtils.getTextWriter(this.vLibPosFileS);
@@ -1454,12 +1841,12 @@ class ScanGenotypeF3 extends AppAbstract {
             Arrays.sort(taxaNames);
             HashSet<String> taxaSet = new HashSet<>(taxaList);
             if (taxaSet.size() != taxaNames.length) {
-                System.out.println("Taxa names are not unique. Programs quits");
+                System.err.println("Taxa names are not unique. Programs quits");
                 System.exit(0);
             }
-            System.out.println("Created TaxaBamMap from " + taxaBamMapFileS);
-            System.out.println("Taxa number:\t"+String.valueOf(taxaNames.length));
-            System.out.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
+            System.err.println("Created TaxaBamMap from " + taxaBamMapFileS);
+            System.err.println("Taxa number:\t"+String.valueOf(taxaNames.length));
+            System.err.println("Bam file number in TaxaBamMap:\t"+String.valueOf(nBam));
         }
         catch (Exception e) {
             e.printStackTrace();

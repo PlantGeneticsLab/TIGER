@@ -63,7 +63,7 @@ class CustomizeVariationLibraryF3 extends AppAbstract {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.println("\nThere are input errors in the command line. Program stops.");
+            System.err.println("\nThere are input errors in the command line. Program stops.");
             this.printInstructionAndUsage();
             System.exit(0);
         }
@@ -93,8 +93,8 @@ class CustomizeVariationLibraryF3 extends AppAbstract {
 
     @Override
     public void printInstructionAndUsage() {
-        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"clib\" in FastCall 3.");
+        System.err.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.err.println("Below are the commands of module \"clib\" in FastCall 3.");
         this.printUsage();
     }
 }

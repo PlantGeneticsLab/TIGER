@@ -261,7 +261,7 @@ public class VariationLibraryF3 implements Comparable<VariationLibraryF3> {
         }
         StringBuilder sb = new StringBuilder();
         sb.append(positions.length).append(" polymorphic sites are written to ").append(outfileS);
-        System.out.println(sb.toString());
+        System.err.println(sb.toString());
     }
 
     /**
@@ -284,7 +284,7 @@ public class VariationLibraryF3 implements Comparable<VariationLibraryF3> {
         if (missingN > 0) {
             StringBuilder sb = new StringBuilder();
             sb.append(missingN).append(" positions are missing in the variation library");
-            System.out.println(sb.toString());
+            System.err.println(sb.toString());
         }
         try {
             DataOutputStream dos = IOUtils.getBinaryGzipWriter(outfileS);
@@ -307,7 +307,7 @@ public class VariationLibraryF3 implements Comparable<VariationLibraryF3> {
         }
         StringBuilder sb = new StringBuilder();
         sb.append(indices.length).append(" polymorphic sites are written to ").append(outfileS);
-        System.out.println(sb.toString());
+        System.err.println(sb.toString());
     }
 
     /**

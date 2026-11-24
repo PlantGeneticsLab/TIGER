@@ -22,8 +22,10 @@ import pgl.infra.utils.PArrayUtils;
  *   <li><b>vlib</b>: Views and inspects the variation library in text format</li>
  *   <li><b>clib</b>: Customizes the variation library based on specific positions</li>
  *   <li><b>scan</b>: Performs genotyping of samples using the variation library</li>
+ *   <li><b>scan_iac</b>: Writes individual allele-count files and stops before genotyping</li>
  *   <li><b>scan2</b>: Rebuilds a VCF from existing individual allele-count files</li>
  *   <li><b>scan3</b>: Merges source taxa allele counts, then filters and genotypes</li>
+ *   <li><b>scan4</b>: Rebuilds a VCF from individual allele-count files by streaming sites</li>
  * </ul>
  *
  * <p>Key features:
@@ -46,14 +48,16 @@ import pgl.infra.utils.PArrayUtils;
  */
 public class FastCall3 {
 
-    String[] toolNames = {"disc","blib", "scan", "scan2", "scan3"};
+    String[] toolNames = {"disc","blib", "scan", "scan_iac", "scan2", "scan3", "scan4"};
 
     String currentTool = null;
 
     //genome block size for variation discovery. The max bin size should be less than 2^23. see {@link AllelePackage}
     static int disBinSize = 5000000;
     //genome block size for genotype scanning
-    static int scanBinSize = 2000000;
+    static int scanBinSize = 5000000;
+    // scan4: sites kept in memory at once when streaming .iac into VCF
+    static int scanVcfWindowSites = 256;
     // maximum of the number of alternative alleles
     static int maxAltNum = 2;
     static int maxIndelLength = 63;
@@ -72,41 +76,49 @@ public class FastCall3 {
             }
         }
         if (currentTool.equals("disc")) {
-            System.out.println("Discovering genetic variation...");
+            System.err.println("Discovering genetic variation...");
             new DiscoverVariationF3(args);
         }
         else if (currentTool.equals("blib")) {
-            System.out.println("Building the library of genetic variation from all samples...");
+            System.err.println("Building the library of genetic variation from all samples...");
             new BuildVariationLibraryF3(args);
         }
         else if (currentTool.equals("vlib")) {
-            System.out.println("View the library of genetic variation in text");
+            System.err.println("View the library of genetic variation in text");
             new ViewVariationLibraryF3(args);
         }
         else if (currentTool.equals("clib")) {
-            System.out.println("customize the library of genetic variation from position list");
+            System.err.println("customize the library of genetic variation from position list");
             new CustomizeVariationLibraryF3(args);
         }
         else if (currentTool.equals("scan")) {
-            System.out.println("Genotyping samples based on the variation library...");
+            System.err.println("Genotyping samples based on the variation library...");
             new ScanGenotypeF3(args);
         }
+        else if (currentTool.equals("scan_iac")) {
+            System.err.println("Counting alleles and writing individual allele-count files...");
+            new ScanGenotypeF3(args, "iac");
+        }
         else if (currentTool.equals("scan2")) {
-            System.out.println("Genotyping samples based on the variation library in step 2...");
+            System.err.println("Genotyping samples based on the variation library in step 2...");
             new ScanGenotypeF3(args, "2");
         }
         else if (currentTool.equals("scan3")) {
-            System.out.println("Merging source taxa allele counts, then filtering and genotyping...");
+            System.err.println("Merging source taxa allele counts, then filtering and genotyping...");
             new ScanGenotypeF3(args, "3");
         }
+        else if (currentTool.equals("scan4")) {
+            System.err.println("Genotyping samples from individual allele counts (streaming)...");
+            new ScanGenotypeF3(args, "4");
+        }
         else {
-            System.out.println("Input errors in setting steps of FastCall 3. Programs stops.");
+            System.err.println("Input errors in setting steps of FastCall 3. Programs stops.");
             System.exit(0);
         }
         StringBuilder sb = new StringBuilder("FastCall 3 is finished in ");
         sb.append((float)Benchmark.getTimeSpanHours(timeStart)).append(" hours.");
-        System.out.println(sb.toString());
-        System.out.println();
+        System.err.println(sb.toString());
+        System.err.println();
     }
 
     /**

@@ -91,9 +91,9 @@ class BuildVariationLibraryF3 extends AppAbstract {
             String[] tem = line.getOptionValue("b").split(":");
             this.chrom = Short.parseShort(tem[0]);
             long start = System.nanoTime();
-            System.out.println("Reading reference genome from "+ referenceFileS);
+            System.err.println("Reading reference genome from "+ referenceFileS);
             FastaBit genomeFa = new FastaBit(referenceFileS);
-            System.out.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
+            System.err.println("Reading reference genome took " + String.format("%.2f", Benchmark.getTimeSpanSeconds(start)) + "s");
             int chromIndex = genomeFa.getIndexByDescription(String.valueOf(this.chrom));
             if (tem.length == 1) {
                 this.regionStart = 1;
@@ -119,7 +119,7 @@ class BuildVariationLibraryF3 extends AppAbstract {
         }
         catch(Exception e) {
             e.printStackTrace();
-            System.out.println("\nThere are input errors in the command line. Program stops.");
+            System.err.println("\nThere are input errors in the command line. Program stops.");
             this.printInstructionAndUsage();
             System.exit(0);
         }
@@ -127,8 +127,8 @@ class BuildVariationLibraryF3 extends AppAbstract {
 
     @Override
     public void printInstructionAndUsage() {
-        System.out.println(PGLAPPEntrance.getTIGERIntroduction());
-        System.out.println("Below are the commands of module \"blib\" in FastCall 3.");
+        System.err.println(PGLAPPEntrance.getTIGERIntroduction());
+        System.err.println("Below are the commands of module \"blib\" in FastCall 3.");
         this.printUsage();
     }
 
@@ -199,7 +199,7 @@ class BuildVariationLibraryF3 extends AppAbstract {
         sb.setLength(0);
         sb.append(chrom).append("_").append(this.regionStart).append("_").append(regionEnd).append(".lib.gz");
         chromVl.writeBinaryFileS(new File (f, sb.toString()).getAbsolutePath());
-        System.out.println("Building genetic variation library is finished.");
+        System.err.println("Building genetic variation library is finished.");
     }
 
     /**
