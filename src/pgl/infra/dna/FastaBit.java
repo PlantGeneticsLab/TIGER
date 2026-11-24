@@ -104,7 +104,7 @@ public class FastaBit extends FastaAbstract {
     
     @Override
     public void readFasta (String infileS, IOFileFormat format) {
-        System.out.println("Reading Fasta file...");
+        System.err.println("Reading Fasta file...");
         List<FastaRecordBit> fl = new ArrayList<>();
         try {
             BufferedReader br = null;
@@ -130,7 +130,7 @@ public class FastaBit extends FastaAbstract {
                         fl.add(fr);
                         sb = new StringBuilder();
                         if (cnt%1000000 == 0) {
-                            System.out.println("Read "+String.valueOf(cnt)+" sequences");
+                            System.err.println("Read "+String.valueOf(cnt)+" sequences");
                         }
                         cnt++;
                     }
@@ -148,7 +148,7 @@ public class FastaBit extends FastaAbstract {
             }
             records = fl.toArray(new FastaRecordBit[fl.size()]);
             sType = sortType.byID;
-            System.out.println(records.length + " sequences in the file " + infileS);
+            System.err.println(records.length + " sequences in the file " + infileS);
         }
         catch (Exception e) {
             e.printStackTrace();

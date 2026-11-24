@@ -11,6 +11,8 @@ import pgl.app.fastCall2.FastCall2;
 import pgl.app.fastCall3.FastCall3;
 import pgl.app.hapScanner.HapScanner;
 import pgl.app.popdep.PopDep;
+import pgl.app.popdep.PopDepCrossChr;
+import pgl.app.popdep.PopDepFull;
 
 /**
  * This provides the interface between users and TIGER apps
@@ -64,7 +66,13 @@ public class PGLAPPEntrance {
             new FastCall3(args);
         }
         else if (app.equals(AppNames.PopDep.getName())) {
-            new PopDep(this.parameterPath);
+            new PopDep(args);
+        }
+        else if (app.equals(AppNames.PopDepFull.getName())) {
+            new PopDepFull(args);
+        }
+        else if (app.equals(AppNames.PopDepCrossChr.getName())) {
+            new PopDepCrossChr(args);
         }
         else if (app.equals(AppNames.HapScanner.getName())) {
             new HapScanner(this.parameterPath);

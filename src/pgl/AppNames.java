@@ -36,7 +36,17 @@ public enum AppNames implements Comparable <AppNames> {
     /**
      * Depth profiling in a population using whole-genome sequence data
      */
-    PopDep ("PopDep");
+    PopDep ("PopDep"),
+
+    /**
+     * PopDep variant: one sequential samtools depth scan per taxon per chromosome
+     */
+    PopDepFull ("PopDepFull"),
+
+    /**
+     * PopDep variant: one samtools depth scan per taxon across all chromosomes
+     */
+    PopDepCrossChr ("PopDepCrossChr");
     
     public final String name;
     

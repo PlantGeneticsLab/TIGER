@@ -65,7 +65,7 @@ public class IndividualGenotypeF3 implements Comparable<IndividualGenotypeF3> {
             dis.close();
         }
         catch (Exception e) {
-            System.out.println(fileS);
+            System.err.println(fileS);
             e.printStackTrace();
         }
 

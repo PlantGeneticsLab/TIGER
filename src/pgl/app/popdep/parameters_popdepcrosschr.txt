@@ -1,0 +1,34 @@
+#App:	PopDepCrossChr
+#Author:	Fei Lu
+#Email:	flu@genetics.ac.cn; dr.lufei@gmail.com
+#Homepage:	https://plantgeneticslab.github.io/home/
+
+# PopDepCrossChr profiles mean/SD depth across taxa for ALL chromosomes in one BAM pass
+# per taxon. Compared with running PopDepFull once per chromosome, total HDD reads drop
+# by roughly the number of chromosomes (e.g. ~43x for chicken).
+#
+# Output columns per chromosome file {chr}.popdep.txt.gz:
+#   Position  Depth_Mean  Depth_SD  RelativeDepth_Mean  RelativeDepth_SD
+# RelativeDepth = depth / per-taxon genome-wide mean depth (taxaBamMap column 2),
+# which removes between-sample sequencing-depth differences from the site statistics.
+#
+# Command line example:
+# java -Xmx200g -jar TIGER.jar -app PopDepCrossChr \
+#   -a taxaBamMap.txt -b chromosomeLength.txt -d /usr/local/bin/samtools \
+#   -e 16 -f /path/to/popdep_out/
+
+#Parameter 1: taxaBamMap file -> Taxa<TAB>Coverage<TAB>Bam1[<TAB>Bam2...]
+# (column 2 Coverage = genome-wide mean depth of the taxon; reuse the existing taxaBamMap.txt)
+/path/to/taxaBamMap.txt
+
+# Chromosome length file: Chr\tLength\tnTaxa (third column = PopDepFull tb row count per chr)
+/path/to/chromosomeLength.txt
+
+#Parameter 3: samtools path
+/usr/local/bin/samtools
+
+#Parameter 4: concurrent taxa threads (-e); on HDD try 8-16
+16
+
+#Parameter 5: output directory
+/path/to/popdep_out/
